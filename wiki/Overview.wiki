@@ -1,4 +1,5 @@
 #summary Overview of the mojito-webserver project in two (or three) words
+#labels Featured
 
 = What mojito is =
 
