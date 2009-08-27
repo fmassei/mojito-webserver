@@ -1,0 +1,37 @@
+#summary Compiling
+#labels Phase-Deploy,Featured
+
+= Pre-requisites =
+Any linux enviroment should do. The main builds right know are done on a Gentoo box (kernel-2.6.30, gcc-4.3.2, glibc-2.9), but on all the linux boxes on which I tried to compile Mojito everything went fine.
+
+----
+= Compiling =
+Do a "`make clean all`" on the root folder.
+
+----
+= Installing =
+There is no install facility right now (aka no "`make install`"), so you need to follow the following two steps:
+
+== Installing Mojito manually ==
+You have to manually move the file named "mojito" to the desired folder. Typically you will want to copy the "config.ini" template too, and modify the parameters according to your enviroment.
+
+== Installing the Mojito's modules manually ==
+If (_and only if_) you build with dynamic modules, you will want to copy the built modules too. A "`find <projectpath> -name '*.so.1'`" will tell you which files you have to move/copy. Change the "_module_basepath_" option in the "config.ini" file to point to the desired folder.
+
+----
+= Makefiles (compile-time options) =
+
+== Main Makefile ==
+The Makefiles are a bit tricky. The most important switches are located in the Makefile on the project root folder.
+ * the *PSTATUS* variable accepts two values: "debug" and "release". The first one will activate the debugging informations (-g) and deactivates the optimizations (-O0) on gcc for all the .c files, while the second one will activate optimizations (-O3) and set the NDEBUG macro.
+ * the *LOGGER* and *CACHE* variables accept two values: "lstatic" and "lshared". The first one will link statically the relative module, while the second will activate the shared linkage mode. Activating one or more _lshared_ modules, the "dynamic" variables will set, and passed to the compiler too.
+
+== Modules Makefiles ==
+The modules Makefiles always build *both* the static *and* the shared version of them.
+
+== IMPORTANT NOTE ==
+Right now the Makefiles are set to build a *debug* and *dynamic* version by default. If you want to help us debugging Mojito leave them as-they-are, but for a more stable program you probably will want to change them to build a static-release version.
+
+----
+= Running =
+I suggest you to *run mojito in a chrooted environment*. To start it, just run `./mojito` from it's folder.
