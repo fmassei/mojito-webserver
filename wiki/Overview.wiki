@@ -1,0 +1,33 @@
+#summary Overview of the mojito-webserver project in two (or three) words
+
+= What mojito is =
+
+Mojito is a lightweight webserver. 
+
+= Does it work? Does Mojito really serve pages over the Internet? =
+Of course it does! :) In this very moment it is running websites, logging requests and responses, searching for its bugs on its own.
+
+= Is it stable? Which configuration is the most stable? =
+It depends on the choosen options. Right now we don't have a _development_ or _production_ revision, so that the last known configuration that shows more bugs or performe worst will be the default one.
+
+Refer to the specific page to read how to configure Mojito with its last known _best_ configuration.
+
+= Mojito-webserver's goals =
+
+The very first thing to focus in new open-source projects is the direction in which you want it to move.
+
+ * In the short term, Mojito is trying to mantain it's core simple and robust while moving or adding code in "modules". The writing of test programs and the increment of the configurable options (both at compile-time and at run-time) are the other two priorities.
+
+ * In the long run Mojito wants to become an highly configurable tool, intended for dedicated applications on the HTTP protocol. It will be suitable for acting as both a  lightweight/high-speed static content server, and a set of library modules to be included in a custom application.
+
+= Mojito's history =
+
+I started writing a little webserver a sunday afternoon because I was getting bored, joining some functions I had from an old project. Step by step the program started to assume a real shape and, well, here we are. 
+
+The name "Mojito" was suggested by Polaretto (aka Matteo Mirk), while we were talking about monkeys and modern webservers: we were thirsty too, and "mojito" was enough mokeyish.
+
+The mojito-webserver's logo was realized by DSegno (aka Marco Dignani).
+
+= Why mojito =
+
+Mojito is *really* lightweight. It has very few features but each one is heavily tested (if you find an untested feature please complain, or join the project and write some tests with us!). The code is short and modular, thus is easy to add, modify or delete (un)wanted features.
