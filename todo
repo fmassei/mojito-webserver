@@ -1,6 +1,8 @@
 | directory listing
 ? compression
 ? request correctness check
+*** IMPORTANT - cache shm module and random cache drops
+*** IMPORTANT - cache don't check content dates before sending!
 *** MISSING THE IMPORTANT 5.2 POINT OF HTTP/1.1 COMPLIANCE!
 Insert a #define like "let_it_leek" and remove the free()s :-)
 Check if the gzip/deflate stuff is correctly done!
