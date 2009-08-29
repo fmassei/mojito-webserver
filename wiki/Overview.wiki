@@ -9,7 +9,7 @@ Mojito is a lightweight webserver.
 Of course it does! :) In this very moment it is running websites, logging requests and responses, searching for its bugs on its own.
 
 = Is it stable? Which configuration is the most stable? =
-It depends on the choosen options. Right now we don't have a _development_ or _production_ revision, so that the last known configuration that shows more bugs or performe worst will be the default one.
+It depends on the choosen options. Take the most recent release _branch_ in the svn repository, which is set to be configured in the most stable way. In the _development_ revision, the last known configuration that shows more bugs or performe worst will usually be the default one.
 
 Refer to the specific page to read how to configure Mojito with its last known _best_ configuration.
 
