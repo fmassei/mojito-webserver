@@ -160,10 +160,12 @@ int main(const int argc, char * const argv[])
         logmsg(LOG_ERROR, "Filter registration failed. Dying.");
         return EXIT_FAILURE;
     }
+#ifndef NOCACHE
     if (cache_init()!=0) {
         logmsg(LOG_ERROR, "Could not start cache. Going on.");
         /*return EXIT_FAILURE;*/
     }
+#endif
     logmsg(LOG_INFO, "Server started");
     logflush();
     while (1) {
