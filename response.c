@@ -148,6 +148,7 @@ static int check_method()
     return 0;
 }
 
+#ifndef NOCACHE
 /* send a cached file */
 static void send_cached_file(struct cache_entry_s *cache_file, int sock)
 {
@@ -174,6 +175,7 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock)
     addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
     ident_filter->worker(addr, sock, clen);
 }
+#endif
 
 /* send the response */
 void send_file(int sock, const char *uri)
@@ -182,18 +184,22 @@ void send_file(int sock, const char *uri)
     extern int method;
     extern struct qhead_s *accept_encoding;
     extern int keeping_alive;
-    struct qhead_s *aep;
     struct stat sb;
-    struct cache_entry_s *cache_file;
     unsigned char *addr;
     char *filename;
     long clen;
-    int fd, cfd;
+    int fd;
+#ifndef NOCACHE
+    struct cache_entry_s *cache_file;
+    struct qhead_s *aep;
+    int cfd;
+#endif
 
     if (check_method()!=0) {
         send_501(sock);
         return;
     }
+#ifndef NOCACHE
     /* check if we have a file in cache */
     for (aep=accept_encoding; aep!=NULL; aep=aep->next) {
         if (!strcmp(aep->id, "identity"))
@@ -204,6 +210,7 @@ void send_file(int sock, const char *uri)
         }
     }
     DEBUG_LOG((LOG_DEBUG, "Normal sending"));
+#endif
     /* no cache? build one */
     strip_uri(uri);
     if ((filename = malloc(strlen(params.http_root)+strlen(page)+1))==NULL) {
@@ -258,7 +265,9 @@ redo:
     /* add in cache (only if filter != identity!) */
     if (!strcmp(filter->name, "identity"))
         return;
+#ifndef NOCACHE
     if ((cfd = cache_create_file(uri, filter->name, mime_gettype(filename)))>=0)
         filter->worker(addr, cfd, sb.st_size);
+#endif
 }
 
