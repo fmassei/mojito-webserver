@@ -4,6 +4,8 @@
 = Pre-requisites =
 Any linux enviroment should do. The main builds right know are done on a Gentoo box (kernel-2.6.30, gcc-4.3.2, glibc-2.9), but on all the linux boxes on which I tried to compile Mojito everything went fine.
 
+You need the ability to build with zlib too.
+
 ----
 = Compiling =
 Do a "`make clean all`" on the root folder.
