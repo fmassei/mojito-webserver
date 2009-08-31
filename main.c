@@ -50,9 +50,6 @@ void sig_term(int signal)
 #ifdef DYNAMIC_LOGGER
 int logger_loadmod(char *fname, char **error);
 #endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-int cache_loadmod(char *fname, char **error);
-#endif /* DYNAMIC_CACHE */
 
 /* dynamically load requested modules */
 int dynamic_module_load(fparams_st *prm) {
@@ -85,7 +82,7 @@ int dynamic_module_load(fparams_st *prm) {
             return -1;
         sprintf(buf, "%s/libcache%s.so.1", prm->module_basepath,
                                             prm->module_cache);
-        if (cache_loadmod(buf, &error)<0) {
+        if (cache_add_dynamic_mod(buf, &error)<0) {
             fprintf(stderr, "%s\n", error);
             free(buf);
             return -1;
@@ -94,6 +91,11 @@ int dynamic_module_load(fparams_st *prm) {
     cache_set_global_parameters(prm);
     if (buf!=NULL)
         free(buf);
+#else
+    if (cache_add_static_mod(shmgetmodule)) {
+        fpritnf(stderr, "Error loading static cache module\n");
+        return -1;
+    }
 #endif /* DYNAMIC_CACHE */
     return 0;
 }

@@ -34,13 +34,13 @@ static char *buildkey(const char *URI, const char *filter_id)
 }
 
 /* set global parameters */
-void cache_set_global_parameters(fparams_st *params)
+static void cache_set_global_parameters(fparams_st *params)
 {
     global_params = params;
 }
 
 /* search the cache for the URI and filter */
-struct cache_entry_s *cache_lookup(const char *URI, const char *filter_id)
+static struct cache_entry_s *cache_lookup(const char *URI,const char *filter_id)
 {
     struct cache_entry_s *ret;
     struct entry_s *p;
@@ -93,7 +93,8 @@ static int cache_install(const char *URI, char *fname,
 }
 
 /* create a cache file and return its file description */
-int cache_create_file(const char *URI, char *filter_id, char *content_type)
+static int cache_create_file(const char *URI, char *filter_id,
+                                                            char *content_type)
 {
     static char cache_file[2049];
     int fd;
@@ -111,15 +112,30 @@ int cache_create_file(const char *URI, char *filter_id, char *content_type)
     return fd;
 }
 
-int cache_init()
+static int cache_init()
 {
     if ((page_cache = lhcreate(65536))==NULL)
         return -1;
     return 0;
 }
 
-void cache_fini()
+static void cache_fini()
 {
     lhdestroy(page_cache);
+}
+
+/* define LINKAGEMODE in the Makefile! */
+struct module_cache_s *LINKAGEMODEgetmodule()
+{
+    struct module_cache_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base->module_init = cache_init;
+    p->base->module_fini = cache_fini;
+    p->base->module_set_params = NULL;
+    p->base->cache_set_global_parameters = cache_set_global_parameters;
+    p->base->cache_lookup = cache_lookup;
+    p->base->cache_create_file = cache_create_file;
+    return p;
 }
 
