@@ -34,16 +34,13 @@ endif
 ifeq ($(CACHE), lstatic)
 	CACHE_LNK = shm
 	CACHE_LINK = -Lcache/$(CACHE_LNK) -lcache$(CACHE_LNK)
-	CACHE_OBJS =
 endif
 ifeq ($(CACHE), lshared)
-	CACHE_OBJS = cache/dlloader/cache_loader.o
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_LOGGER
 	DYNAMIC = -DDYNAMIC
 	LIBS := $(LIBS) -ldl
 endif
 ifeq ($(CACHE), lnone)
-	CACHE_OBJS =
 	CACHE_LINK =
 	MISSING_LINKAGE := $(MISSING_LINKAGE) -DNOCACHE
 	TARGET_CACHES =
@@ -67,7 +64,7 @@ endif
 #--------------------------
 OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
 	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
-	$(CACHE_OBJS) $(LOGGER_OBJS)
+	cache/cache.o $(LOGGER_OBJS)
 
 all: $(TARGET_CACHES) $(TARGET_LOGGERS) mojito
 

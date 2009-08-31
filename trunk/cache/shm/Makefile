@@ -20,10 +20,10 @@ lib: $(STATIC_OBJS) $(SHARED_OBJS)
 	$(AR) $(STATIC_PNAME) $(STATIC_OBJS)
 
 .c.oh:
-	$(GCC) -c $< -o $@ $(SHARED_CFLAGS)
+	$(GCC) -c $< -o $@ $(SHARED_CFLAGS) -DLINKAGEMODE=
 
 .c.ot:
-	$(GCC) -c $< -o $@ $(STATIC_CFLAGS)
+	$(GCC) -c $< -o $@ $(STATIC_CFLAGS) -DLINKAGEMODE=shm
 
 clean:
 	-$(RM) *.oh
