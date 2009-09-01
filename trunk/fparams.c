@@ -42,14 +42,18 @@ static int assign_to_int(char *value, int *res)
     return errno!=0;
 }
 
+static int normalize_string(char **str)
+{
+    if (strlen(*str)<=0) return -1;
+    *str = str_trim(*str);
+    if (strlen(*str)<=0) return -1;
+    return 0;
+}
+
 /* try assign a parameter to a variable */
 static int assign_param(char *name, char *value, fparams_st *params)
 {
-    if ((strlen(name)<=0) || (strlen(value)<=0))
-        return -1;
-    name = str_trim(name);
-    value = str_trim(value);
-    if ((strlen(name)<=0) || (strlen(value)<=0))
+    if (normalize_string(&name)<0 || normalize_string(&value)<0)
         return -1;
     if (!strcmp(name, "pidfile")) {
         if ((params->pidfile = strdup(value))==NULL) return -1;
@@ -227,11 +231,13 @@ int params_loadFromINIFile(const char *fname, fparams_st *params)
             } else if (c=='\n') {
                 continue;
             } else if (c=='[') {
-                bname = addr+i;
+                bname = addr+(++i);
                 for(;((i<len)&&(*(addr+i)!='\n')&&(*(addr+i)!=']')); ++i) ;
-                addr[i++]='\0';
+                addr[i]='\0';
                 if (add_section(params, bname)<0)
                     goto done;
+                for (;((i<len)&&(*(addr+i)!='\n')); ++i) ;
+                continue;
             }
             bname = addr+i;
             state = PARSE_NAME;
@@ -250,6 +256,8 @@ int params_loadFromINIFile(const char *fname, fparams_st *params)
                     if (assign_param(bname, bval, params)<0)
                         goto done;
                 } else {
+                    if (normalize_string(&bname)<0 || normalize_string(&bval)<0)
+                        goto done;
                     if (plist_insert(&(params->mod_params->params),
                                                             bname, bval, 0)<0)
                         goto done;
