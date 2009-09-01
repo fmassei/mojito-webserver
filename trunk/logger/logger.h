@@ -54,6 +54,8 @@ struct module_logger_s {
     void (*logflush)(void);
     /* log when a page was hit */
     void (*loghit)(char *, char *, char *);
+    /* list */
+    struct module_logger_s *next;
 };
 
 void logger_set_global_parameters(fparams_st *pars);
