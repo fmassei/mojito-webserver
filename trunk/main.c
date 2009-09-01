@@ -92,9 +92,12 @@ int dynamic_module_load(fparams_st *prm) {
     if (buf!=NULL)
         free(buf);
 #else
-    if (cache_add_static_mod(shmgetmodule)) {
-        fpritnf(stderr, "Error loading static cache module\n");
-        return -1;
+    {
+        extern struct module_cache_s *shm_getmodule(void);
+        if (cache_add_static_mod(shm_getmodule)) {
+            fprintf(stderr, "Error loading static cache module\n");
+            return -1;
+        }
     }
 #endif /* DYNAMIC_CACHE */
     return 0;
