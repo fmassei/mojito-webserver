@@ -41,54 +41,68 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
 /* get the cache module */
 int module_get_cache(fparams_st *prm)
 {
+    struct module_cache_s *mod;
+    struct module_params_s *mpars;
 #ifdef DYNAMIC_CACHE
-    char *buf, *error;
-    if (prm->module_cache!=NULL) {
-        if ((buf = getlibname(prm, "cache", prm->module_cache))==NULL)
-            return -1;
-        if (cache_add_dynamic_mod(buf, &error)<0) {
-            fprintf(stderr, "%s\n", error);
-            free(buf);
-            return -1;
-        }
+    char *buf, *error, *modname;
+#else
+    extern struct module_cache_s *shm_getmodule(void);
+#endif
+    if ((mpars = params_getModuleParams(prm, "logger"))==NULL)
+        return -1;
+#ifdef DYNAMIC_CACHE
+    if ((modname = plist_search(mpars->params, "module"))==NULL)
+        return -1;
+    if ((buf = getlibname(prm, "cache", prm->modname))==NULL)
+        return -1;
+    if ((mod = cache_add_dynamic_mod(buf, &error))==NULL) {
+        fprintf(stderr, "%s\n", error);
+        free(buf);
+        return -1;
     }
     if (buf!=NULL)
         free(buf);
-#else /* DYNAMIC_CACHE */
-    extern struct module_cache_s *shm_getmodule(void);
-    if (cache_add_static_mod(shm_getmodule)) {
+#else
+    if ((mod = cache_add_static_mod(shm_getmodule))==NULL) {
         fprintf(stderr, "Error loading static cache module\n");
         return -1;
     }
-#endif /* DYNAMIC_CACHE */
-    cache_set_global_parameters(prm);
+#endif
+    mod->base.module_set_params(mpars->params);
     return 0;
 }
 
 /* get the cache module */
 int module_get_logger(fparams_st *prm)
 {
+     struct module_logger_s *mod;
+    struct module_params_s *mpars;
+#ifdef DYNAMIC_CACHE
+    char *buf, *error, *modname;
+#else
+    extern struct module_logger_s *std_getmodule(void);
+#endif
+    if ((mpars = params_getModuleParams(prm, "cache"))==NULL)
+        return -1;
 #ifdef DYNAMIC_LOGGER
-    char *buf, *error;
-    if (prm->module_logger!=NULL) {
-        if ((buf = getlibname(prm, "logger", prm->module_logger))==NULL)
-            return -1;
-        if (logger_add_dynamic_mod(buf, &error)<0) {
-            fprintf(stderr, "%s\n", error);
-            free(buf);
-            return -1;
-        }
+    if ((modname = plist_search(mpars->params, "module"))==NULL)
+        return -1;
+    if ((buf = getlibname(prm, "logger", prm->modname))==NULL)
+        return -1;
+    if ((mod = logger_add_dynamic_mod(buf, &error))==NULL) {
+        fprintf(stderr, "%s\n", error);
+        free(buf);
+        return -1;
     }
     if (buf!=NULL)
         free(buf);
-#else /* DYNAMIC_CACHE */
-    extern struct module_logger_s *std_getmodule(void);
-    if (logger_add_static_mod(std_getmodule)) {
+#else
+    if ((mod = logger_add_static_mod(std_getmodule))==NULL) {
         fprintf(stderr, "Error loading static logger module\n");
         return -1;
     }
-#endif /* DYNAMIC_CACHE */
-    logger_set_global_parameters(prm);
+#endif
+    mod->base.module_set_params(mpars->params);
     return 0;
 }
 
