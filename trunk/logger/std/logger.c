@@ -22,6 +22,9 @@
 static char datestr[30];
 static char *errs[] = { "error", "warning", "info", "debug" };
 
+static char *logfile, *errfile;
+FILE *flog, *ferr;
+
 static struct plist_s *params;
 
 /* return a date formatted for logs */
@@ -34,24 +37,47 @@ static char *outdate()
 }
 
 /* get the module parameters */
-static void _logger_set_params(struct plist_s *pars)
+static int _logger_set_params(struct plist_s *pars)
 {
     params = pars;
+    if ((logfile = plist_search(params, "logfile"))==NULL)
+        return -1;
+    if ((errfile = plist_search(params, "errfile"))==NULL)
+        return -1;
+    return 0;
+}
+
+/* init 
+ * TODO check this part better! */
+static int _logger_init(void)
+{
+    if ((flog = fopen(logfile, "w+"))==NULL)
+        return -1;
+    if ((ferr = fopen(logfile, "w+"))==NULL)
+        return -1;
+    return 0;
+}
+
+/* fini
+ * TODO check if this is really called */
+static int _logger_fini(void)
+{
+    fclose(flog);
+    fclose(ferr);
 }
 
 /* format an "hit" log entry */
 static void _loghit(char *in_ip, char *method_str, char *uri)
 {
-    printf("%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
+    fprintf(flog, "%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
 }
 
 /* log a generic message, on a specific file */
 static void _f_logmsg(int prio, char *fmt, va_list argp)
 {
-    FILE *f = stderr;
-    fprintf(f, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
-    vfprintf(f, fmt, argp);
-    fprintf(f, "\n");
+    fprintf(ferr, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
+    vfprintf(ferr, fmt, argp);
+    fprintf(ferr, "\n");
 }
 
 /* log a generic message */
@@ -66,8 +92,8 @@ static void _logmsg(int prio, char *fmt, ...)
 /* flush the logger stream */
 static void _logflush()
 {
-    fflush(stdout);
-    fflush(stderr);
+    fflush(flog);
+    fflush(ferr);
 }
 
 #ifdef MODULE_STATIC
@@ -79,8 +105,8 @@ struct module_logger_s *getmodule()
     struct module_logger_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
         return NULL;
-    p->base.module_init = NULL;
-    p->base.module_fini = NULL;
+    p->base.module_init = _logger_init;
+    p->base.module_fini = _logger_fini;
     p->base.module_set_params = _logger_set_params;
     p->loghit = _loghit;
     p->f_logmsg = _f_logmsg;

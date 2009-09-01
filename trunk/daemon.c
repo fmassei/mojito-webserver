@@ -44,28 +44,6 @@ static int save_pid(fparams_st *params)
     return 0;
 }
 
-/* that's tricky. If we reopen the stdout and stderr on a non-valid file we
- * don't know where to send the error :-) So let's check the validity of the
- * files before */
-static int precheck_stds(fparams_st *params)
-{
-    int fd;
-    if (params->logfile!=NULL) {
-        if ((fd = open(params->logfile, LOGFILE_OMODE, LOGFILE_MODE))<0) {
-            logmsg(LOG_ERROR, "Error opening log file: %s", strerror(errno));
-            return -1;
-        }
-        close(fd);
-    }
-    if (params->errfile!=NULL) {
-        if ((fd = open(params->errfile, LOGFILE_OMODE, LOGFILE_MODE))<0) {
-            logmsg(LOG_ERROR, "Error opening err file: %s", strerror(errno));
-            return -1;
-        }
-        close(fd);
-    }
-    return 0;
-}
 
 /* that function is a pain: no logging possible and too much things that can
  * go wrong. */
@@ -75,20 +53,8 @@ static int reopen_stds(fparams_st *params)
     for (i=getdtablesize(); i>=0; --i)
         close(i);
     if (open("/dev/null", O_RDWR)!=0) return -1;
-    if (params->logfile!=NULL) {
-        if (open(params->logfile, LOGFILE_OMODE, LOGFILE_MODE)!=1)
-            return -1;
-    } else {
-        if (dup(0)!=1)
-            return -1;
-    }
-    if (params->errfile!=NULL) {
-        if (open(params->errfile, LOGFILE_OMODE, LOGFILE_MODE)!=2)
-            return -1;
-    } else {
-        if (dup(1)!=2)
-            return -1;
-    }
+    if (dup(0)!=1) return -1;
+    if (dup(0)!=2) return -1;
     return 0;
 }
 
@@ -126,7 +92,6 @@ int fork_to_background(fparams_st *params, void(*termfunc)(int))
 {
     pid_t i;
     if (getppid()==1) return 0;/* already a daemon */
-    if (precheck_stds(params)<0) return -1;
     i = fork();
     if (i<0) return -1; /* fork error */
     if (i>0) exit(0); /* parent exit */

@@ -41,8 +41,6 @@ struct module_params_s {
 
 /* server parameters */
 typedef struct fparams_s {
-    char *logfile;
-    char *errfile;
     char *pidfile;
     char *http_root;
     char *default_page;
