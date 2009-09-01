@@ -56,12 +56,14 @@ struct module_logger_s {
     struct module_logger_s *next;
 };
 
-void logger_set_global_parameters(fparams_st *pars);
 void logmsg(int prio, char *fmt, ...);
 void logflush();
 void loghit(char *in_ip, char *method_str, char *uri);
+int logger_init();
+int logger_fini();
 
-int logger_add_static_mod(struct module_logger_s*(*get_module)(void));
-int logger_add_dynamic_mod(char *fname, char **error);
+struct module_logger_s *logger_add_static_mod(
+                                    struct module_logger_s*(*get_module)(void));
+struct module_logger_s *logger_add_dynamic_mod(char *fname, char **error);
 
 #endif /* H_LOGGER_H */

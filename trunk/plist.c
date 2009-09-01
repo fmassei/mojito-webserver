@@ -31,8 +31,7 @@ static void plist_destroy_node(struct plist_s *plist)
 
 static int plist_insert_nocheck(struct plist_s **plist, char *key, char *value)
 {
-    struct plist_s *p, *q;
-
+    struct plist_s *p;
     if ( ((p = malloc(sizeof(*p)))==NULL) ||
             ((p->key = strdup(key))==NULL) ||
             ((p->value = strdup(value))==NULL)) {
@@ -76,7 +75,7 @@ void plist_destroy(struct plist_s **plist)
 char *plist_search(struct plist_s *plist, char *key)
 {
     struct plist_s *p;
-    for (p=plist; p!=NULL; p->next)
+    for (p=plist; p!=NULL; p=p->next)
         if (!strcmp(p->key, key))
             return p->value;
     return NULL;

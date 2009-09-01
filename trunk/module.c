@@ -53,7 +53,7 @@ int module_get_cache(fparams_st *prm)
 #ifdef DYNAMIC_CACHE
     if ((modname = plist_search(mpars->params, "module"))==NULL)
         return -1;
-    if ((buf = getlibname(prm, "cache", prm->modname))==NULL)
+    if ((buf = getlibname(prm, "cache", modname))==NULL)
         return -1;
     if ((mod = cache_add_dynamic_mod(buf, &error))==NULL) {
         fprintf(stderr, "%s\n", error);
@@ -78,7 +78,7 @@ int module_get_cache(fparams_st *prm)
 /* get the cache module */
 int module_get_logger(fparams_st *prm)
 {
-     struct module_logger_s *mod;
+    struct module_logger_s *mod;
     struct module_params_s *mpars;
 #ifdef DYNAMIC_CACHE
     char *buf, *error, *modname;
@@ -90,7 +90,7 @@ int module_get_logger(fparams_st *prm)
 #ifdef DYNAMIC_LOGGER
     if ((modname = plist_search(mpars->params, "module"))==NULL)
         return -1;
-    if ((buf = getlibname(prm, "logger", prm->modname))==NULL)
+    if ((buf = getlibname(prm, "logger", modname))==NULL)
         return -1;
     if ((mod = logger_add_dynamic_mod(buf, &error))==NULL) {
         fprintf(stderr, "%s\n", error);

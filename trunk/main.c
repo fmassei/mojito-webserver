@@ -96,6 +96,10 @@ int main(const int argc, char * const argv[])
         logmsg(LOG_ERROR, "Error backgrounding");
         return EXIT_FAILURE;
     }
+    #ifndef NOLOGGER
+    /* FIXME adjust the order!! */
+        logger_init();
+    #endif
     if (server_start(params.listen_port, params.listen_queue)<0) {
         perror("Error starting server");
         return EXIT_FAILURE;
