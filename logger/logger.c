@@ -3,14 +3,6 @@
 
 struct module_logger_s *logger_modules = NULL;
 
-void logger_set_global_parameters(fparams_st *pars)
-{
-    struct module_logger_s *p;
-    for (p=logger_modules; p!=NULL; p=p->next)
-        if (p->logger_set_global_parameters!=NULL)
-            p->logger_set_global_parameters(pars);
-}
-
 void logmsg(int prio, char *fmt, ...)
 {
     struct module_logger_s *p;
@@ -31,6 +23,26 @@ void logflush()
             p->logflush();
 }
 
+int logger_init()
+{
+    struct module_logger_s *p;
+    int ret;
+    for (p=logger_modules; p!=NULL; p=p->next)
+        if (p->base.module_init!=NULL)
+            ret = p->base.module_init();
+    return ret;
+}
+
+int logger_fini()
+{
+    struct module_logger_s *p;
+    int ret;
+    for (p=logger_modules; p!=NULL; p=p->next)
+        if (p->base.module_fini!=NULL)
+            ret = p->base.module_fini();
+    return ret;
+}
+
 void loghit(char *in_ip, char *method_str, char *uri)
 {
     struct module_logger_s *p;
@@ -40,30 +52,31 @@ void loghit(char *in_ip, char *method_str, char *uri)
 }
 
 /* static library "loader" */
-int logger_add_static_mod(struct module_logger_s*(*get_module)(void))
+struct module_logger_s *logger_add_static_mod(
+                                    struct module_logger_s*(*get_module)(void))
 {
     struct module_logger_s *p;
     if ((p = get_module())==NULL)
-        return -1;
+        return NULL;
     p->next = logger_modules;
     logger_modules = p;
-    return 0;
+    return p;
 }
 
 #ifdef DYNAMIC
 /* dynamic library loader */
-int logger_add_dynamic_mod(char *fname, char **error)
+struct module_logger_s *logger_add_dynamic_mod(char *fname, char **error)
 {
     struct module_logger_s*(*get_module)(void);
     void *handle;
     if ((handle = dlopen(fname, RTLD_NOW | RTLD_GLOBAL))==NULL) {
         *error = dlerror();
-        return -1;
+        return NULL;
     }
     dlerror();
     *(void**)(&get_module) = dlsym(handle, "getmodule");
     if ((*error = dlerror())!=NULL)
-        return -1;
+        return NULL;
     return logger_add_static_mod(get_module);
 }
 #endif /* DYNAMIC */

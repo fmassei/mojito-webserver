@@ -64,6 +64,7 @@ static int _logger_fini(void)
 {
     fclose(flog);
     fclose(ferr);
+    return 0;
 }
 
 /* format an "hit" log entry */
@@ -78,15 +79,6 @@ static void _f_logmsg(int prio, char *fmt, va_list argp)
     fprintf(ferr, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
     vfprintf(ferr, fmt, argp);
     fprintf(ferr, "\n");
-}
-
-/* log a generic message */
-static void _logmsg(int prio, char *fmt, ...)
-{
-    va_list argp;
-    va_start(argp, fmt);
-    _f_logmsg(prio, fmt, argp);
-    va_end(argp);
 }
 
 /* flush the logger stream */

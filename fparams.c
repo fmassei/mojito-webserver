@@ -51,7 +51,7 @@ static int assign_param(char *name, char *value, fparams_st *params)
     value = str_trim(value);
     if ((strlen(name)<=0) || (strlen(value)<=0))
         return -1;
-    } else if (!strcmp(name, "pidfile")) {
+    if (!strcmp(name, "pidfile")) {
         if ((params->pidfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "tmp_dir")) {
         if ((params->tmp_dir = strdup(value))==NULL) return -1;
@@ -198,8 +198,8 @@ static int add_section(fparams_st *params, char *bname)
         return -1;
     }
     p->params = NULL;
-    p->next = params->modparams;
-    params->modparams = p;
+    p->next = params->mod_params;
+    params->mod_params = p;
     return 0;
 }
 
