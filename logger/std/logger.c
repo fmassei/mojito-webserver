@@ -22,7 +22,7 @@
 static char datestr[30];
 static char *errs[] = { "error", "warning", "info", "debug" };
 
-static fparams_st *global_params;
+static struct plist_s *params;
 
 /* return a date formatted for logs */
 static char *outdate()
@@ -33,10 +33,10 @@ static char *outdate()
     return datestr;
 }
 
-/* get the global parameters */
-static void _logger_set_global_parameters(fparams_st *pars)
+/* get the module parameters */
+static void _logger_set_params(struct plist_s *pars)
 {
-    global_params = pars;
+    params = pars;
 }
 
 /* format an "hit" log entry */
@@ -81,8 +81,7 @@ struct module_logger_s *getmodule()
         return NULL;
     p->base.module_init = NULL;
     p->base.module_fini = NULL;
-    p->base.module_set_params = NULL;
-    p->logger_set_global_parameters = _logger_set_global_parameters;
+    p->base.module_set_params = _logger_set_params;
     p->loghit = _loghit;
     p->f_logmsg = _f_logmsg;
     p->logflush = _logflush;

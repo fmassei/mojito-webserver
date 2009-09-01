@@ -73,3 +73,12 @@ void plist_destroy(struct plist_s **plist)
     *plist = NULL;
 }
 
+char *plist_search(struct plist_s *plist, char *key)
+{
+    struct plist_s *p;
+    for (p=plist; p!=NULL; p->next)
+        if (!strcmp(p->key, key))
+            return p->value;
+    return NULL;
+}
+

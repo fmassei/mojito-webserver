@@ -32,5 +32,6 @@ struct plist_s {
 
 void plist_destroy(struct plist_s **plist);
 int plist_insert(struct plist_s **plist, char *key, char *value, int checkdup);
+char *plist_search(struct plist_s *plist, char *key);
 
 #endif /* H_PLIST_H */

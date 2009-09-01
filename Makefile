@@ -63,7 +63,7 @@ endif
 #--------------------------
 OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
 	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
-	module.o cache/cache.o logger/logger.o
+	module.o plist.o cache/cache.o logger/logger.o
 
 all: $(TARGET_CACHES) $(TARGET_LOGGERS) mojito
 

@@ -46,8 +46,6 @@
 struct module_logger_s {
     /* init/fini/params */
     struct module_fnc_s base;
-    /* TODO to be removed. get the global parameters */
-    void (*logger_set_global_parameters)(fparams_st *);
     /* log a message */
     void (*f_logmsg)(int, char *, va_list);
     /* flush the logger stream */

@@ -21,7 +21,8 @@
 #include "../cache.h"
 
 static struct lh_s *page_cache;
-static fparams_st *global_params;
+static struct plist_s *params;
+static char *cache_dir;
 
 static char *buildkey(const char *URI, const char *filter_id)
 {
@@ -34,9 +35,13 @@ static char *buildkey(const char *URI, const char *filter_id)
 }
 
 /* set global parameters */
-static void _cache_set_global_parameters(fparams_st *params)
+static void _cache_set_parameters(struct plist_s *pars)
 {
-    global_params = params;
+    params = pars;
+    if ((cache_dir = plist_search("cache_dir"))==NULL)
+        return;
+    if (cache_dir[strlen(cache_dir)-1]=='/')
+        cache_dir[strlen(cache_dir)-1] = '\0';
 }
 
 /* search the cache for the URI and filter */
@@ -99,8 +104,7 @@ static int _cache_create_file(const char *URI, char *filter_id,
 {
     static char cache_file[2049];
     int fd;
-    snprintf(cache_file, 2049, "%s/mojito-cache.XXXXXX",
-                                                    global_params->cache_dir);
+    snprintf(cache_file, 2049, "%s/mojito-cache.XXXXXX", cache_dir);
     if ((fd = mkstemp(cache_file))==-1) {
         perror("mkstemp");
         return -1;
@@ -138,8 +142,7 @@ struct module_cache_s *getmodule()
         return NULL;
     p->base.module_init = _cache_init;
     p->base.module_fini = _cache_fini;
-    p->base.module_set_params = NULL;
-    p->cache_set_global_parameters = _cache_set_global_parameters;
+    p->base.module_set_params = _cache_set_parameters;
     p->cache_lookup = _cache_lookup;
     p->cache_create_file = _cache_create_file;
     return p;

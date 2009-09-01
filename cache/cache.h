@@ -44,8 +44,6 @@ struct cache_entry_s {
 struct module_cache_s {
     /* init/fini/params */
     struct module_fnc_s base;
-    /* TODO To be removed in a near future */
-    void (*cache_set_global_parameters)(fparams_st *params);
     /* lookup/install */
     struct cache_entry_s *(*cache_lookup)(const char *, const char *);
     int (*cache_create_file)(const char *, char *, char *);
@@ -57,9 +55,9 @@ struct cache_entry_s *cache_lookup(const char *URI, const char *filter_id);
 int cache_create_file(const char *URI, char *filter_id, char *content_type);
 int cache_init();
 void cache_fini();
-void cache_set_global_parameters(fparams_st *params);
 
-int cache_add_static_mod(struct module_cache_s*(*get_module)(void));
-int cache_add_dynamic_mod(char *fname, char **error);
+struct module_cache_s *cache_add_static_mod(
+                                    struct module_cache_s*(*get_module)(void));
+struct module_cache_s *cache_add_dynamic_mod(char *fname, char **error);
 
 #endif /* H_CACHE_H */

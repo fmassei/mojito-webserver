@@ -42,40 +42,32 @@ void cache_fini()
             p->base.module_fini();
 }
 
-/* set global parameters */
-void cache_set_global_parameters(fparams_st *params)
-{
-    struct module_cache_s *p;
-    for (p=cache_modules; p!=NULL; p=p->next)
-        if (p->cache_set_global_parameters!=NULL)
-            p->cache_set_global_parameters(params);
-}
-
 /* static library "loader" */
-int cache_add_static_mod(struct module_cache_s*(*get_module)(void))
+struct module_cache_s *cache_add_static_mod(
+                                    struct module_cache_s*(*get_module)(void))
 {
     struct module_cache_s *p;
     if ((p = get_module())==NULL)
-        return -1;
+        return NULL;
     p->next = cache_modules;
     cache_modules = p;
-    return 0;
+    return p;
 }
 
 #ifdef DYNAMIC
 /* dynamic library loader */
-int cache_add_dynamic_mod(char *fname, char **error)
+struct module_cache_s *cache_add_dynamic_mod(char *fname, char **error)
 {
     struct module_cache_s*(*get_module)(void);
     void *handle;
     if ((handle = dlopen(fname, RTLD_NOW | RTLD_GLOBAL))==NULL) {
         *error = dlerror();
-        return -1;
+        return NULL;
     }
     dlerror();
     *(void**)(&get_module) = dlsym(handle, "getmodule");
     if ((*error = dlerror())!=NULL)
-        return -1;
+        return NULL;
     return cache_add_static_mod(get_module);
 }
 #endif /* DYNAMIC */
