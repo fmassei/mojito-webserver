@@ -36,7 +36,7 @@ ifeq ($(CACHE), lstatic)
 	CACHE_LINK = -Lcache/$(CACHE_LNK) -lcache$(CACHE_LNK)
 endif
 ifeq ($(CACHE), lshared)
-	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_LOGGER
+	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_CACHE
 	DYNAMIC = -DDYNAMIC
 	LIBS := $(LIBS) -ldl
 endif
@@ -53,7 +53,7 @@ ifeq ($(LOGGER), lstatic)
 endif
 ifeq ($(LOGGER), lshared)
 	LOGGER_OBJS = logger/dlloader/logger_loader.o
-	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_CACHE
+	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_LOGGER
 	DYNAMIC = -DDYNAMIC
 	LIBS := $(LIBS) -ldl
 endif

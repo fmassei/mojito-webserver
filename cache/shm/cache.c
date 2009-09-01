@@ -126,8 +126,12 @@ static int _cache_fini()
     return 0;
 }
 
-/* define LINKAGEMODE in the Makefile! */
-struct module_cache_s *LINKAGEMODEgetmodule()
+/* define MODULE_STATIC in the Makefile! */
+#ifdef MODULE_STATIC
+struct module_cache_s *shm_getmodule()
+#else
+struct module_cache_s *getmodule()
+#endif
 {
     struct module_cache_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
