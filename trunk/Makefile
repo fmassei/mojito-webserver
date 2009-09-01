@@ -6,6 +6,7 @@ RM  =   rm -f
 
 INCDIR  =   -I.
 LIBS	:=   -lz -lrt
+LDFLAGS = -Wl,-E
 
 AFLAGS  =
 PNAME   =   mojito
@@ -21,8 +22,8 @@ TARGET_CACHES = caches
 #debug or release
 PSTATUS = debug
 #lstatic, lshared or lnone
-LOGGER = lstatic
-CACHE = lstatic
+LOGGER = lshared
+CACHE = lshared
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
