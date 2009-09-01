@@ -26,10 +26,10 @@ void logflush()
 int logger_init()
 {
     struct module_logger_s *p;
-    int ret;
+    int ret = 0;
     for (p=logger_modules; p!=NULL; p=p->next)
         if (p->base.module_init!=NULL)
-            ret = p->base.module_init();
+            ret |= p->base.module_init();
     return ret;
 }
 
