@@ -23,7 +23,7 @@ lib: $(STATIC_OBJS) $(SHARED_OBJS)
 	$(GCC) -c $< -o $@ $(SHARED_CFLAGS)
 
 .c.ot:
-	$(GCC) -c $< -o $@ $(STATIC_CFLAGS)
+	$(GCC) -c $< -o $@ $(STATIC_CFLAGS) -DMODULE_STATIC
 
 clean:
 	-$(RM) *.oh

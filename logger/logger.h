@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "../fparams.h"
+#include "../module.h"
 
 #define LOG_ERROR   0
 #define LOG_WARN    1
@@ -42,13 +43,25 @@
 #define DEBUG_LOG(args)
 #endif
 
-/* get the global parameters */
+struct module_logger_s {
+    /* init/fini/params */
+    struct module_fnc_s base;
+    /* TODO to be removed. get the global parameters */
+    void (*logger_set_global_parameters)(fparams_st *);
+    /* log a message */
+    void (*f_logmsg)(int, char *, va_list);
+    /* flush the logger stream */
+    void (*logflush)(void);
+    /* log when a page was hit */
+    void (*loghit)(char *, char *, char *);
+};
+
 void logger_set_global_parameters(fparams_st *pars);
-/* log a message */
 void logmsg(int prio, char *fmt, ...);
-/* flush the logger stream */
 void logflush();
-/* log when a page was hit */
 void loghit(char *in_ip, char *method_str, char *uri);
+
+int logger_add_static_mod(struct module_logger_s*(*get_module)(void));
+int logger_add_dynamic_mod(char *fname, char **error);
 
 #endif /* H_LOGGER_H */

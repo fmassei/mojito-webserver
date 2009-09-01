@@ -22,10 +22,16 @@
 
 #include "plist.h"
 
+/* basic module functions */
 struct module_fnc_s {
+    /* init/fini */
     int(*module_init)(void);
     int(*module_fini)(void);
+    /* set module parameters */
     int(*module_set_params)(struct plist_s *);
 };
+
+int module_get_logger(fparams_st *prm);
+int module_get_cache(fparams_st *prm);
 
 #endif /* H_MODULE_H */

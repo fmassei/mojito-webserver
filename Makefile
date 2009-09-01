@@ -49,10 +49,8 @@ endif
 ifeq ($(LOGGER), lstatic)
 	LOGGER_LNK = std
 	LOGGER_LINK = -Llogger/$(LOGGER_LNK) -llogger$(LOGGER_LNK)
-	LOGGER_OBJS = 
 endif
 ifeq ($(LOGGER), lshared)
-	LOGGER_OBJS = logger/dlloader/logger_loader.o
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_LOGGER
 	DYNAMIC = -DDYNAMIC
 	LIBS := $(LIBS) -ldl
@@ -64,7 +62,7 @@ endif
 #--------------------------
 OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
 	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
-	cache/cache.o $(LOGGER_OBJS)
+	cache/cache.o logger/logger.o
 
 all: $(TARGET_CACHES) $(TARGET_LOGGERS) mojito
 
