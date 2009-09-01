@@ -58,6 +58,7 @@ int cache_create_file(const char *URI, char *filter_id, char *content_type);
 int cache_init();
 void cache_fini();
 void cache_set_global_parameters(fparams_st *params);
+
 int cache_add_static_mod(struct module_cache_s*(*get_module)(void));
 int cache_add_dynamic_mod(char *fname, char **error);
 

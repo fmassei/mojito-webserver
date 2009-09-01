@@ -34,19 +34,19 @@ static char *outdate()
 }
 
 /* get the global parameters */
-void logger_set_global_parameters(fparams_st *pars)
+static void _logger_set_global_parameters(fparams_st *pars)
 {
     global_params = pars;
 }
 
 /* format an "hit" log entry */
-void loghit(char *in_ip, char *method_str, char *uri)
+static void _loghit(char *in_ip, char *method_str, char *uri)
 {
     printf("%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
 }
 
 /* log a generic message, on a specific file */
-void _f_logmsg(int prio, char *fmt, va_list argp)
+static void _f_logmsg(int prio, char *fmt, va_list argp)
 {
     FILE *f = stderr;
     fprintf(f, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
@@ -55,7 +55,7 @@ void _f_logmsg(int prio, char *fmt, va_list argp)
 }
 
 /* log a generic message */
-void logmsg(int prio, char *fmt, ...)
+static void _logmsg(int prio, char *fmt, ...)
 {
     va_list argp;
     va_start(argp, fmt);
@@ -64,9 +64,28 @@ void logmsg(int prio, char *fmt, ...)
 }
 
 /* flush the logger stream */
-void logflush()
+static void _logflush()
 {
     fflush(stdout);
     fflush(stderr);
+}
+
+#ifdef MODULE_STATIC
+struct module_logger_s *std_getmodule()
+#else
+struct module_logger_s *getmodule()
+#endif
+{
+    struct module_logger_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base.module_init = NULL;
+    p->base.module_fini = NULL;
+    p->base.module_set_params = NULL;
+    p->logger_set_global_parameters = _logger_set_global_parameters;
+    p->loghit = _loghit;
+    p->f_logmsg = _f_logmsg;
+    p->logflush = _logflush;
+    return p;
 }
 

@@ -32,6 +32,7 @@
 #include "daemon.h"
 #include "response.h"
 #include "filter.h"
+#include "module.h"
 
 extern char *uri;
 fparams_st params;
@@ -43,66 +44,6 @@ void sig_term(int signal)
     logmsg(LOG_INFO, "caught SIGTERM(%d). Stopping", signal);
     exit(0);
 }
-
-#ifdef DYNAMIC
-
-/* define external module loader functions */
-#ifdef DYNAMIC_LOGGER
-int logger_loadmod(char *fname, char **error);
-#endif /* DYNAMIC_LOGGER */
-
-/* dynamically load requested modules */
-int dynamic_module_load(fparams_st *prm) {
-    char *buf = NULL, *error;
-    if (prm->module_basepath==NULL)
-        return -1;
-#ifdef DYNAMIC_LOGGER
-    if (prm->module_logger!=NULL) {
-        if ((buf = malloc(strlen(prm->module_basepath) +
-                            strlen("liblogger.so.1") +
-                            strlen(prm->module_logger) + 2))==NULL)
-            return -1;
-        sprintf(buf, "%s/liblogger%s.so.1", prm->module_basepath,
-                                            prm->module_logger);
-        if (logger_loadmod(buf, &error)<0) {
-            free(buf);
-            fprintf(stderr, "%s\n", error);
-            return -1;
-        }
-    }
-    logger_set_global_parameters(prm);
-    if (buf!=NULL)
-        free(buf);
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    if (prm->module_cache!=NULL) {
-        if ((buf = malloc(strlen(prm->module_basepath) +
-                            strlen("libcache.so.1") +
-                            strlen(prm->module_cache) + 2))==NULL)
-            return -1;
-        sprintf(buf, "%s/libcache%s.so.1", prm->module_basepath,
-                                            prm->module_cache);
-        if (cache_add_dynamic_mod(buf, &error)<0) {
-            fprintf(stderr, "%s\n", error);
-            free(buf);
-            return -1;
-        }
-    }
-    cache_set_global_parameters(prm);
-    if (buf!=NULL)
-        free(buf);
-#else
-    {
-        extern struct module_cache_s *shm_getmodule(void);
-        if (cache_add_static_mod(shm_getmodule)) {
-            fprintf(stderr, "Error loading static cache module\n");
-            return -1;
-        }
-    }
-#endif /* DYNAMIC_CACHE */
-    return 0;
-}
-#endif
 
 /* regitser known filters, trying to go on on errors. An error on the idendity
  * filter is considered critical.
@@ -147,12 +88,10 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-#ifdef DYNAMIC
-    if (dynamic_module_load(&params)<0) {
+    if (module_get_cache(&params)<0 || module_get_logger(&params)<0) {
         perror("Error loading dynamic modules!");
         return EXIT_FAILURE;
     }
-#endif
     if (fork_to_background(&params, sig_term)<0) {
         logmsg(LOG_ERROR, "Error backgrounding");
         return EXIT_FAILURE;
