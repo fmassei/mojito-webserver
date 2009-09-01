@@ -39,24 +39,29 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
 #endif /* DYNAMIC */
 
 /* get the cache module */
-int module_get_cache(fparams_st *prm)
+int module_get_cache(fparams_st *prm, char **error)
 {
     struct module_cache_s *mod;
     struct module_params_s *mpars;
 #ifdef DYNAMIC_CACHE
-    char *buf, *error, *modname;
+    char *buf, *modname;
 #else
     extern struct module_cache_s *shm_getmodule(void);
 #endif
-    if ((mpars = params_getModuleParams(prm, "logger"))==NULL)
+    if ((mpars = params_getModuleParams(prm, "cache"))==NULL) {
+        *error = "section [logger] not found in config.ini";
         return -1;
+    }
 #ifdef DYNAMIC_CACHE
-    if ((modname = plist_search(mpars->params, "module"))==NULL)
+    if ((modname = plist_search(mpars->params, "module"))==NULL) {
+        *error = "value for \"module\" not found in section [cache]";
         return -1;
-    if ((buf = getlibname(prm, "cache", modname))==NULL)
+    }
+    if ((buf = getlibname(prm, "cache", modname))==NULL) {
+        *error = "Couldn't get libname for cache";
         return -1;
-    if ((mod = cache_add_dynamic_mod(buf, &error))==NULL) {
-        fprintf(stderr, "%s\n", error);
+    }
+    if ((mod = cache_add_dynamic_mod(buf, error))==NULL) {
         free(buf);
         return -1;
     }
@@ -64,36 +69,41 @@ int module_get_cache(fparams_st *prm)
         free(buf);
 #else
     if ((mod = cache_add_static_mod(shm_getmodule))==NULL) {
-        fprintf(stderr, "Error loading static cache module\n");
+        *error = "Error loading static cache module";
         return -1;
     }
 #endif
     if (mod->base.module_set_params(mpars->params)<0) {
-        fprintf(stderr, "Failed passing parameters to module");
+        *error = "Failed passing parameters to module";
         return -2;
     }
     return 0;
 }
 
 /* get the cache module */
-int module_get_logger(fparams_st *prm)
+int module_get_logger(fparams_st *prm, char **error)
 {
     struct module_logger_s *mod;
     struct module_params_s *mpars;
 #ifdef DYNAMIC_CACHE
-    char *buf, *error, *modname;
+    char *buf, *modname;
 #else
     extern struct module_logger_s *std_getmodule(void);
 #endif
-    if ((mpars = params_getModuleParams(prm, "cache"))==NULL)
+    if ((mpars = params_getModuleParams(prm, "logger"))==NULL) {
+        *error = "section [logger] not found in config.ini";
         return -1;
+    }
 #ifdef DYNAMIC_LOGGER
-    if ((modname = plist_search(mpars->params, "module"))==NULL)
+    if ((modname = plist_search(mpars->params, "module"))==NULL) {
+        *error = "value for \"module\" not found in section [logger]";
         return -1;
-    if ((buf = getlibname(prm, "logger", modname))==NULL)
+    }
+    if ((buf = getlibname(prm, "logger", modname))==NULL) {
+        *error = "Couldn't get libname for logger";
         return -1;
-    if ((mod = logger_add_dynamic_mod(buf, &error))==NULL) {
-        fprintf(stderr, "%s\n", error);
+    }
+    if ((mod = logger_add_dynamic_mod(buf, error))==NULL) {
         free(buf);
         return -1;
     }
@@ -101,12 +111,12 @@ int module_get_logger(fparams_st *prm)
         free(buf);
 #else
     if ((mod = logger_add_static_mod(std_getmodule))==NULL) {
-        fprintf(stderr, "Error loading static logger module\n");
+        *error = "Error loading static logger module";
         return -1;
     }
 #endif
     if (mod->base.module_set_params(mpars->params)<0) {
-        fprintf(stderr, "Failed passing parameters to module");
+        *error = "Failed passing parameters to module";
         return -2;
     }
     return 0;

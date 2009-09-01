@@ -38,10 +38,17 @@ extern char *uri;
 fparams_st params;
 int keeping_alive;
 
+void clean_quit()
+{
+    cache_fini();
+    logger_fini();
+}
+
 /* SIGTERM callback */
 void sig_term(int signal)
 {
     logmsg(LOG_INFO, "caught SIGTERM(%d). Stopping", signal);
+    clean_quit();
     exit(0);
 }
 
@@ -69,6 +76,7 @@ int main(const int argc, char * const argv[])
     int cl_sock, i;
     pid_t cpid;
     int opt;
+    char *error;
     extern char *in_ip, *method_str, *uri;
 
     while ((opt = getopt(argc, argv, "v"))!=-1) {
@@ -88,20 +96,24 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-    if (module_get_logger(&params)<0 || module_get_cache(&params)<0) {
-        perror("Error loading dynamic modules!");
+    if (module_get_logger(&params, &error)<0 ||
+            module_get_cache(&params, &error)<0) {
+        fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;
     }
     if (fork_to_background(&params, sig_term)<0) {
-        logmsg(LOG_ERROR, "Error backgrounding");
+        fprintf(stderr, "Forking to background failed.\n");
         return EXIT_FAILURE;
     }
-    #ifndef NOLOGGER
+#ifndef NOLOGGER
     /* FIXME adjust the order!! */
-        logger_init();
-    #endif
+    if (logger_init()!=0) {
+        fprintf(stderr, "Failed to start logger.\n");
+        return EXIT_FAILURE;
+    }
+#endif
     if (server_start(params.listen_port, params.listen_queue)<0) {
-        perror("Error starting server");
+        logmsg(LOG_ERROR, "Error starting server");
         return EXIT_FAILURE;
     }
     if (register_known_filters()!=0) {
@@ -110,8 +122,7 @@ int main(const int argc, char * const argv[])
     }
 #ifndef NOCACHE
     if (cache_init()!=0) {
-        logmsg(LOG_ERROR, "Could not start cache. Going on.");
-        /*return EXIT_FAILURE;*/
+        logmsg(LOG_ERROR, "Could not start cache. Trying to go on.");
     }
 #endif
     logmsg(LOG_INFO, "Server started");
@@ -149,7 +160,7 @@ client_kill:
         close(cl_sock);
         exit(0);
     }
-    cache_fini();
-    return EXIT_SUCCESS;
+    clean_quit();
+    return EXIT_FAILURE;    /* this is not the best exit point :) */
 }
 

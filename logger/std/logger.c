@@ -47,24 +47,28 @@ static int _logger_set_params(struct plist_s *pars)
     return 0;
 }
 
-/* init 
- * TODO check this part better! */
+/* init */
 static int _logger_init(void)
 {
-    if ((flog = fopen(logfile, "w+"))==NULL)
+    if ((flog = fopen(logfile, "w+"))==NULL) {
+        fprintf(stderr, "Logger: Error opening file %s\n", logfile);
         return -1;
-    if ((ferr = fopen(logfile, "w+"))==NULL)
+    }
+    if ((ferr = fopen(errfile, "w+"))==NULL) {
+        fprintf(stderr, "Logger: Error opening file %s\n", errfile);
+        fclose(flog);
         return -1;
+    }
     return 0;
 }
 
-/* fini
- * TODO check if this is really called */
+/* fini */
 static int _logger_fini(void)
 {
-    fclose(flog);
-    fclose(ferr);
-    return 0;
+    int ret = 0;
+    ret |= fclose(flog);
+    ret |= fclose(ferr);
+    return !(ret==0);
 }
 
 /* format an "hit" log entry */
