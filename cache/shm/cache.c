@@ -35,13 +35,14 @@ static char *buildkey(const char *URI, const char *filter_id)
 }
 
 /* set global parameters */
-static void _cache_set_parameters(struct plist_s *pars)
+static int _cache_set_parameters(struct plist_s *pars)
 {
     params = pars;
-    if ((cache_dir = plist_search("cache_dir"))==NULL)
-        return;
+    if ((cache_dir = plist_search(params, "cache_dir"))==NULL)
+        return -1;
     if (cache_dir[strlen(cache_dir)-1]=='/')
         cache_dir[strlen(cache_dir)-1] = '\0';
+    return 0;
 }
 
 /* search the cache for the URI and filter */

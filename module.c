@@ -68,7 +68,10 @@ int module_get_cache(fparams_st *prm)
         return -1;
     }
 #endif
-    mod->base.module_set_params(mpars->params);
+    if (mod->base.module_set_params(mpars->params)<0) {
+        fprintf(stderr, "Failed passing parameters to module");
+        return -2;
+    }
     return 0;
 }
 
@@ -102,7 +105,10 @@ int module_get_logger(fparams_st *prm)
         return -1;
     }
 #endif
-    mod->base.module_set_params(mpars->params);
+    if (mod->base.module_set_params(mpars->params)<0) {
+        fprintf(stderr, "Failed passing parameters to module");
+        return -2;
+    }
     return 0;
 }
 

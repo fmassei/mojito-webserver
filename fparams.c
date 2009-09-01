@@ -51,10 +51,6 @@ static int assign_param(char *name, char *value, fparams_st *params)
     value = str_trim(value);
     if ((strlen(name)<=0) || (strlen(value)<=0))
         return -1;
-    if (!strcmp(name, "logfile")) {
-        if ((params->logfile = strdup(value))==NULL) return -1;
-    } else if (!strcmp(name, "errfile")) {
-        if ((params->errfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "pidfile")) {
         if ((params->pidfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "tmp_dir")) {
@@ -117,10 +113,6 @@ static int assign_param(char *name, char *value, fparams_st *params)
 static int check_fparams(fparams_st *params)
 {
     int err = 0;
-    if (params->logfile==NULL) {
-        fprintf(stderr, "Missing config option \"logfile\"\n");
-        err = -1;
-    }
     if (params->pidfile==NULL) {
         fprintf(stderr, "Missing config option \"pidfile\"\n");
         err = -1;
@@ -183,8 +175,6 @@ static int check_fparams(fparams_st *params)
 static void zero_fparams(fparams_st *params)
 {
     if (params==NULL) return;
-    params->logfile = NULL;
-    params->errfile = NULL;
     params->pidfile = NULL;
     params->tmp_dir = NULL;
     params->http_root = NULL;
@@ -283,8 +273,6 @@ done:
 void params_free(fparams_st *params)
 {
     struct module_params_s *p, *q;
-    if (params->logfile) free(params->logfile);
-    if (params->errfile) free(params->errfile);
     if (params->pidfile) free(params->pidfile);
     if (params->http_root) free(params->http_root);
     if (params->default_page) free(params->default_page);
