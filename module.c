@@ -18,20 +18,23 @@
 */
 
 #include "module.h"
+#include "cache/cache.h"
+#include "logger/logger.h"
 
 #ifdef DYNAMIC
 /* get the library full path given the basename and the libname */
 static char *getlibname(fparams_st *params, char *basename, char *libname)
 {
-    char *libname;
+    char *lname;
     size_t nlen;
-    nlen = strlen(params->module_basepath)+strlen(basename)+strlen(libname)+1;
-    if ((libname = malloc(nlen))==NULL)
+    nlen = strlen(params->module_basepath)+strlen(basename)+strlen(libname)+
+            strlen("lib.so.1")+1;
+    if ((lname = malloc(nlen))==NULL)
         return NULL;
-    sprintf(libname, "%s/lib%s%s.so.1", params->module_basepath,
+    sprintf(lname, "%s/lib%s%s.so.1", params->module_basepath,
                                         basename,
                                         libname);
-    return libname;
+    return lname;
 }
 #endif /* DYNAMIC */
 
@@ -39,6 +42,7 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
 int module_get_cache(fparams_st *prm)
 {
 #ifdef DYNAMIC_CACHE
+    char *buf, *error;
     if (prm->module_cache!=NULL) {
         if ((buf = getlibname(prm, "cache", prm->module_cache))==NULL)
             return -1;
@@ -65,6 +69,7 @@ int module_get_cache(fparams_st *prm)
 int module_get_logger(fparams_st *prm)
 {
 #ifdef DYNAMIC_LOGGER
+    char *buf, *error;
     if (prm->module_logger!=NULL) {
         if ((buf = getlibname(prm, "logger", prm->module_logger))==NULL)
             return -1;
@@ -86,6 +91,4 @@ int module_get_logger(fparams_st *prm)
     logger_set_global_parameters(prm);
     return 0;
 }
-
-#ifdef DYNAMIC
 

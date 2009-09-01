@@ -62,6 +62,7 @@ int cache_add_static_mod(struct module_cache_s*(*get_module)(void))
     return 0;
 }
 
+#ifdef DYNAMIC
 /* dynamic library loader */
 int cache_add_dynamic_mod(char *fname, char **error)
 {
@@ -77,4 +78,5 @@ int cache_add_dynamic_mod(char *fname, char **error)
         return -1;
     return cache_add_static_mod(get_module);
 }
+#endif /* DYNAMIC */
 

@@ -8,7 +8,7 @@ void logger_set_global_parameters(fparams_st *pars)
     struct module_logger_s *p;
     for (p=logger_modules; p!=NULL; p=p->next)
         if (p->logger_set_global_parameters!=NULL)
-            p->logger_set_global_parameters(params);
+            p->logger_set_global_parameters(pars);
 }
 
 void logmsg(int prio, char *fmt, ...)
@@ -40,7 +40,7 @@ void loghit(char *in_ip, char *method_str, char *uri)
 }
 
 /* static library "loader" */
-int loger_add_static_mod(struct module_logger_s*(*get_module)(void))
+int logger_add_static_mod(struct module_logger_s*(*get_module)(void))
 {
     struct module_logger_s *p;
     if ((p = get_module())==NULL)
@@ -50,6 +50,7 @@ int loger_add_static_mod(struct module_logger_s*(*get_module)(void))
     return 0;
 }
 
+#ifdef DYNAMIC
 /* dynamic library loader */
 int logger_add_dynamic_mod(char *fname, char **error)
 {
@@ -65,4 +66,5 @@ int logger_add_dynamic_mod(char *fname, char **error)
         return -1;
     return logger_add_static_mod(get_module);
 }
+#endif /* DYNAMIC */
 

@@ -88,7 +88,7 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-    if (module_get_cache(&params)<0 || module_get_logger(&params)<0) {
+    if (module_get_logger(&params)<0 || module_get_cache(&params)<0) {
         perror("Error loading dynamic modules!");
         return EXIT_FAILURE;
     }

@@ -20,6 +20,7 @@
 #ifndef H_MODULE_H
 #define H_MODULE_H
 
+#include "fparams.h"
 #include "plist.h"
 
 /* basic module functions */

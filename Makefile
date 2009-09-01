@@ -21,8 +21,8 @@ TARGET_CACHES = caches
 #debug or release
 PSTATUS = debug
 #lstatic, lshared or lnone
-LOGGER = lshared
-CACHE = lshared
+LOGGER = lstatic
+CACHE = lstatic
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
@@ -62,7 +62,7 @@ endif
 #--------------------------
 OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
 	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
-	cache/cache.o logger/logger.o
+	module.o cache/cache.o logger/logger.o
 
 all: $(TARGET_CACHES) $(TARGET_LOGGERS) mojito
 
