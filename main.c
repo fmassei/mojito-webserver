@@ -52,25 +52,6 @@ void sig_term(int signal)
     exit(0);
 }
 
-/* regitser known filters, trying to go on on errors. An error on the idendity
- * filter is considered critical.
- * TODO add a switch at compile-time or in config options to register stuff! */
-int register_known_filters()
-{
-    extern struct filter_s *ident_filter;
-    filter_init();
-    if (filter_register("gzip", gzip_filter, gzip_filter_prelen)==NULL)
-        logmsg(LOG_WARN, "Could not register \"gzip\" filter.");
-    if (filter_register("deflate", zlib_filter, zlib_filter_prelen)==NULL)
-        logmsg(LOG_WARN, "Could not register \"deflate\" filter.");
-    if ((ident_filter = filter_register("identity", identity_filter,
-                                            identity_filter_prelen))==NULL) {
-        logmsg(LOG_WARN, "Could not register \"identity\" filter.");
-        return -1;
-    }
-    return 0;
-}
-
 int main(const int argc, char * const argv[])
 {
     int cl_sock, i;
@@ -97,7 +78,8 @@ int main(const int argc, char * const argv[])
         return EXIT_FAILURE;
     }
     if (module_get_logger(&params, &error)<0 ||
-            module_get_cache(&params, &error)<0) {
+            module_get_cache(&params, &error)<0 ||
+            module_get_filter(&params, &error)<0 ) {
         fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;
     }
@@ -112,19 +94,15 @@ int main(const int argc, char * const argv[])
         return EXIT_FAILURE;
     }
 #endif
-    if (server_start(params.listen_port, params.listen_queue)<0) {
-        logmsg(LOG_ERROR, "Error starting server");
-        return EXIT_FAILURE;
-    }
-    if (register_known_filters()!=0) {
-        logmsg(LOG_ERROR, "Filter registration failed. Dying.");
-        return EXIT_FAILURE;
-    }
 #ifndef NOCACHE
     if (cache_init()!=0) {
         logmsg(LOG_ERROR, "Could not start cache. Trying to go on.");
     }
 #endif
+    if (server_start(params.listen_port, params.listen_queue)<0) {
+        logmsg(LOG_ERROR, "Error starting server");
+        return EXIT_FAILURE;
+    }
     logmsg(LOG_INFO, "Server started");
     logflush();
     while (1) {

@@ -39,7 +39,7 @@
 #include "mime.h"
 #include "date.h"
 #include "compression.h"
-#include "filter.h"
+#include "filter_manag.h"
 #include "cgi.h"
 #include "header_w_quality.h"
 

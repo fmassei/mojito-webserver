@@ -48,7 +48,6 @@ typedef struct fparams_s {
     int uid, gid;
     int listen_port, listen_queue;
     int keepalive_timeout;
-    long min_compress_filesize;
     char *server_meta;
     char *module_basepath;
     struct module_params_s *mod_params;

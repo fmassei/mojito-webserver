@@ -17,8 +17,8 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_FILTER_H
-#define H_FILTER_H
+#ifndef H_FILTER_MANAG_H
+#define H_FILTER_MANAG_H
 
 #define _BSD_SOURCE
 
@@ -27,30 +27,13 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "filter/filter.h"
 #include "header_w_quality.h"
 #include "logger/logger.h"
 
-/* define a filter worker type - out(as buffer), in (as fd), size */
-typedef int (*filter_ft)(unsigned char *, int, ssize_t);
-/* define a pre-calculation function for output lenght. If the length can not
- * be calculated (as normally happens) a negative number should be returned */
-typedef ssize_t (*filter_len_ft)(struct stat *);
-
-/* filter struct */
-struct filter_s {
-    char*           name;
-    filter_ft       worker;
-    filter_len_ft   prelength;
-    struct filter_s *next;
-};
-
 /* filter functions */
-int filter_init();
-struct filter_s *filter_register(char *name, filter_ft worker,
-                                                        filter_len_ft prelen);
 int filter_sanitize_queue(struct qhead_s **qhead);
 int filter_is_present(struct qhead_s *qhead, char *id);
-struct filter_s *filter_findfilter(struct qhead_s *qhead);
-void filter_free();
+struct module_filter_s *filter_findfilter(struct qhead_s *qhead);
 
-#endif /* H_FILTER_H */
+#endif /* H_FILTER_MANAG_H */

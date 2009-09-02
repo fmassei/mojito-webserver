@@ -21,6 +21,8 @@
 #include <dlfcn.h>
 
 struct module_filter_s *filter_modules = NULL;
+/* a special pointer to the identity filter */
+struct module_filter_s *ident_filter = NULL;
 
 int filter_init()
 {
@@ -48,6 +50,8 @@ struct module_filter_s *filter_add_static_mod(
     struct module_filter_s *p;
     if ((p = get_module())==NULL)
         return NULL;
+    if (!strcmp(p->name, "identity"))
+        ident_filter = p;
     p->next = filter_modules;
     filter_modules = p;
     return p;
