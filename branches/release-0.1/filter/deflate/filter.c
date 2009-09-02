@@ -17,25 +17,12 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compression.h"
+#include "../filter.h"
+#include <zlib.h>
 
 #define CHUNK 16384
 
-/* dummy filter - does nothing */
-int identity_filter(unsigned char *addr, int fd, ssize_t len)
-{
-    if (write(fd, addr, len)!=len)
-        return -1;
-    return 0;
-}
-
-ssize_t identity_filter_prelen(struct stat *sb)
-{
-    return sb->st_size;
-}
-
-/* compress with zlib */
-int zlib_filter(unsigned char *addr, int fd, ssize_t len)
+static int _compress(unsigned char *addr, int fd, ssize_t len)
 {
     int ret;
     ssize_t have;
@@ -62,48 +49,28 @@ int zlib_filter(unsigned char *addr, int fd, ssize_t len)
     return Z_OK;
 }
 
-/* we couldn't know how big the output will be! */
-ssize_t zlib_filter_prelen(struct stat *sb)
+static ssize_t _prelen(struct stat *sb)
 {
     if (sb->st_size==0)
         return 0;
     return -1;
 }
 
-/* compress with zlib in gzip format */
-int gzip_filter(unsigned char *addr, int fd, ssize_t len)
+#ifdef MODULE_STATIC
+struct module_filter_s *deflate_getmodule()
+#else
+struct module_filter_s *getmodule()
+#endif
 {
-    int ret;
-    ssize_t have;
-    z_stream strm;
-    unsigned char out[CHUNK];
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    if ((ret = deflateInit2(&strm, Z_DEFAULT_COMPRESSION, 
-            Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY))!=Z_OK)
-        return ret;
-    strm.avail_in = len;
-    strm.next_in = addr;
-    do {
-        strm.avail_out = CHUNK;
-        strm.next_out = out;
-        deflate(&strm, Z_FINISH);
-        have = CHUNK - strm.avail_out;
-        if (write(fd, out, have)!=have) {
-            (void)deflateEnd(&strm);
-            return Z_ERRNO;
-        }
-    } while (strm.avail_out==0);    
-    (void)deflateEnd(&strm);
-    return Z_OK;
-}
-
-/* we couldn't know how big the output will be! */
-ssize_t gzip_filter_prelen(struct stat *sb)
-{
-    if (sb->st_size==0)
-        return 0;
-    return -1;
+    struct module_filter_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base.module_init = NULL;
+    p->base.module_fini = NULL;
+    p->base.module_set_params = NULL;
+    p->name = strdup("deflate");
+    p->compress = _compress;
+    p->prelen = _prelen;
+    return p;
 }
 

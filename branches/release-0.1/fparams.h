@@ -31,35 +31,33 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <libgen.h>
+#include "plist.h"
+
+struct module_params_s {
+    char *name;
+    struct plist_s *params;
+    struct module_params_s *next;
+};
 
 /* server parameters */
 typedef struct fparams_s {
-    char *logfile;
-    char *errfile;
     char *pidfile;
     char *http_root;
     char *default_page;
     char *tmp_dir;
-    char *cache_dir;
     int uid, gid;
     int listen_port, listen_queue;
     int keepalive_timeout;
-    long min_compress_filesize;
     char *server_meta;
-#ifdef DYNAMIC
     char *module_basepath;
-#ifdef DYNAMIC_LOGGER
-    char *module_logger;
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    char *module_cache;
-#endif /* DYNAMIC_CACHE */
-#endif /* DYNAMIC */
+    struct module_params_s *mod_params;
 } fparams_st;
 
 /* parse an INI file */
 int params_loadFromINIFile(const char *fname, fparams_st *params);
 /* free the parameters */
 void params_free(fparams_st *params);
+/* return the given parameter module (if any) */
+struct module_params_s *params_getModuleParams(fparams_st *params, char *name);
 
 #endif /* H_FPARAMS_H */

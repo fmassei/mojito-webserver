@@ -4,9 +4,6 @@ GCC = gcc
 AR = ar rcs
 RM = /bin/rm -rf
 
-SHARED_PNAME = libloggerstd.so.1
-STATIC_PNAME = libloggerstd.a
-
 PSTATUS = debug
 ifeq ($(PSTATUS), debug)
     SHARED_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g -fPIC
@@ -15,14 +12,18 @@ else
     SHARED_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -fPIC -DNDEBUG
     STATIC_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
 endif
+
+SHARED_PNAME = libfilterdeflate.so.1
+STATIC_PNAME = libfilterdeflate.a
+
 #-----------------------------------
-SHARED_OBJS = logger.oh
-STATIC_OBJS = logger.ot
+SHARED_OBJS = filter.oh
+STATIC_OBJS = filter.ot
 
 all: lib
 
 lib: $(STATIC_OBJS) $(SHARED_OBJS)
-	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc
+	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc -lz
 	$(AR) $(STATIC_PNAME) $(STATIC_OBJS)
 
 .c.oh:

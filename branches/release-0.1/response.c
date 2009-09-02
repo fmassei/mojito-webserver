@@ -32,7 +32,7 @@ static const char RESP501[] = "501 Not Implemented\r\n";
 static char res[0xff];
 static char buf[0xff];
 /* final filter(s) */
-static struct filter_s *filter;
+static struct module_filter_s *filter;
 
 static char *page;
 char *query_string;
@@ -152,7 +152,7 @@ static int check_method()
 /* send a cached file */
 static void send_cached_file(struct cache_entry_s *cache_file, int sock)
 {
-    extern struct filter_s *ident_filter;
+    extern struct module_filter_s *ident_filter;
     extern int method;
     unsigned char *addr;
     struct stat sb;
@@ -165,7 +165,7 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock)
         return;
     }
     send_head(RESP200);
-    if ((clen = ident_filter->prelength(&sb))>=0)
+    if ((clen = ident_filter->prelen(&sb))>=0)
         send_contentlength(clen);
     send_filter_encoding(cache_file->filter_id);
     send_contenttype(cache_file->content_type);
@@ -173,7 +173,7 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock)
     if (method==M_HEAD)
         return;
     addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
-    ident_filter->worker(addr, sock, clen);
+    ident_filter->compress(addr, sock, clen);
 }
 #endif
 
@@ -249,7 +249,7 @@ redo:
         return;
     }
     send_head(RESP200);
-    if ((clen = filter->prelength(&sb))>=0) {
+    if ((clen = filter->prelen(&sb))>=0) {
         send_contentlength(clen);
     } else {
         /* no length? no party. We can't keep the connection alive */
@@ -261,13 +261,13 @@ redo:
     if (method==M_HEAD)
         return;
     addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    filter->worker(addr, sock, sb.st_size);
+    filter->compress(addr, sock, sb.st_size);
     /* add in cache (only if filter != identity!) */
     if (!strcmp(filter->name, "identity"))
         return;
 #ifndef NOCACHE
     if ((cfd = cache_create_file(uri, filter->name, mime_gettype(filename)))>=0)
-        filter->worker(addr, cfd, sb.st_size);
+        filter->compress(addr, cfd, sb.st_size);
 #endif
 }
 

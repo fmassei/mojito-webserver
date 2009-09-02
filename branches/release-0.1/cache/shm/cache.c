@@ -21,7 +21,8 @@
 #include "../cache.h"
 
 static struct lh_s *page_cache;
-static fparams_st *global_params;
+static struct plist_s *params;
+static char *cache_dir;
 
 static char *buildkey(const char *URI, const char *filter_id)
 {
@@ -34,13 +35,19 @@ static char *buildkey(const char *URI, const char *filter_id)
 }
 
 /* set global parameters */
-void cache_set_global_parameters(fparams_st *params)
+static int _cache_set_parameters(struct plist_s *pars)
 {
-    global_params = params;
+    params = pars;
+    if ((cache_dir = plist_search(params, "cache_dir"))==NULL)
+        return -1;
+    if (cache_dir[strlen(cache_dir)-1]=='/')
+        cache_dir[strlen(cache_dir)-1] = '\0';
+    return 0;
 }
 
 /* search the cache for the URI and filter */
-struct cache_entry_s *cache_lookup(const char *URI, const char *filter_id)
+static struct cache_entry_s *_cache_lookup(const char *URI,
+                                                        const char *filter_id)
 {
     struct cache_entry_s *ret;
     struct entry_s *p;
@@ -93,12 +100,12 @@ static int cache_install(const char *URI, char *fname,
 }
 
 /* create a cache file and return its file description */
-int cache_create_file(const char *URI, char *filter_id, char *content_type)
+static int _cache_create_file(const char *URI, char *filter_id,
+                                                            char *content_type)
 {
     static char cache_file[2049];
     int fd;
-    snprintf(cache_file, 2049, "%s/mojito-cache.XXXXXX",
-                                                    global_params->cache_dir);
+    snprintf(cache_file, 2049, "%s/mojito-cache.XXXXXX", cache_dir);
     if ((fd = mkstemp(cache_file))==-1) {
         perror("mkstemp");
         return -1;
@@ -111,15 +118,34 @@ int cache_create_file(const char *URI, char *filter_id, char *content_type)
     return fd;
 }
 
-int cache_init()
+static int _cache_init()
 {
     if ((page_cache = lhcreate(65536))==NULL)
         return -1;
     return 0;
 }
 
-void cache_fini()
+static int _cache_fini()
 {
     lhdestroy(page_cache);
+    return 0;
+}
+
+/* define MODULE_STATIC in the Makefile! */
+#ifdef MODULE_STATIC
+struct module_cache_s *shm_getmodule()
+#else
+struct module_cache_s *getmodule()
+#endif
+{
+    struct module_cache_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base.module_init = _cache_init;
+    p->base.module_fini = _cache_fini;
+    p->base.module_set_params = _cache_set_parameters;
+    p->cache_lookup = _cache_lookup;
+    p->cache_create_file = _cache_create_file;
+    return p;
 }
 

@@ -17,24 +17,35 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_COMPRESSION_H
-#define H_COMPRESSION_H
+#include "../filter.h"
 
-#define _BSD_SOURCE
-#define _POSIX_SOURCE
+static int _compress(unsigned char *addr, int fd, ssize_t len)
+{
+    if (write(fd, addr, len)!=len)
+        return -1;
+    return 0;
+}
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <zlib.h>
-#include "filter.h"
+static ssize_t _prelen(struct stat *sb)
+{
+    return sb->st_size;
+}
 
-/* filters */
-int identity_filter(unsigned char *addr, int fd, ssize_t len);
-int identity_filter_prelen(struct stat *sb);
-int zlib_filter(unsigned char *addr, int fd, ssize_t len);
-int zlib_filter_prelen(struct stat *sb);
-int gzip_filter(unsigned char *addr, int fd, ssize_t len);
-int gzip_filter_prelen(struct stat *sb);
+#ifdef MODULE_STATIC
+struct module_filter_s *identity_getmodule()
+#else
+struct module_filter_s *getmodule()
+#endif
+{
+    struct module_filter_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base.module_init = NULL;
+    p->base.module_fini = NULL;
+    p->base.module_set_params = NULL;
+    p->name = strdup("identity");
+    p->compress = _compress;
+    p->prelen = _prelen;
+    return p;
+}
 
-#endif /* H_COMPRESSION_H */

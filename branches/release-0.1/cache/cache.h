@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "../fparams.h"
+#include "../module.h"
 #include "../logger/logger.h"
 
 /* Ok. Here it is our URI cache.
@@ -40,14 +41,23 @@ struct cache_entry_s {
     char *content_type;
 };
 
-/* init/fini */
+struct module_cache_s {
+    /* init/fini/params */
+    struct module_fnc_s base;
+    /* lookup/install */
+    struct cache_entry_s *(*cache_lookup)(const char *, const char *);
+    int (*cache_create_file)(const char *, char *, char *);
+    /* list */
+    struct module_cache_s *next;
+};
+
+struct cache_entry_s *cache_lookup(const char *URI, const char *filter_id);
+int cache_create_file(const char *URI, char *filter_id, char *content_type);
 int cache_init();
 void cache_fini();
-/* set global parameters */
-void cache_set_global_parameters(fparams_st *params);
-/* lookup */
-struct cache_entry_s *cache_lookup(const char *URI, const char *filter_id);
-/* create and install */
-int cache_create_file(const char *URI, char *filter_id, char *content_type);
+
+struct module_cache_s *cache_add_static_mod(
+                                    struct module_cache_s*(*get_module)(void));
+struct module_cache_s *cache_add_dynamic_mod(char *fname, char **error);
 
 #endif /* H_CACHE_H */

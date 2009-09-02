@@ -22,7 +22,10 @@
 static char datestr[30];
 static char *errs[] = { "error", "warning", "info", "debug" };
 
-static fparams_st *global_params;
+static char *logfile, *errfile;
+FILE *flog, *ferr;
+
+static struct plist_s *params;
 
 /* return a date formatted for logs */
 static char *outdate()
@@ -33,40 +36,77 @@ static char *outdate()
     return datestr;
 }
 
-/* get the global parameters */
-void logger_set_global_parameters(fparams_st *pars)
+/* get the module parameters */
+static int _logger_set_params(struct plist_s *pars)
 {
-    global_params = pars;
+    params = pars;
+    if ((logfile = plist_search(params, "logfile"))==NULL)
+        return -1;
+    if ((errfile = plist_search(params, "errfile"))==NULL)
+        return -1;
+    return 0;
+}
+
+/* init */
+static int _logger_init(void)
+{
+    if ((flog = fopen(logfile, "w+"))==NULL) {
+        fprintf(stderr, "Logger: Error opening file %s\n", logfile);
+        return -1;
+    }
+    if ((ferr = fopen(errfile, "w+"))==NULL) {
+        fprintf(stderr, "Logger: Error opening file %s\n", errfile);
+        fclose(flog);
+        return -1;
+    }
+    return 0;
+}
+
+/* fini */
+static int _logger_fini(void)
+{
+    int ret = 0;
+    ret |= fclose(flog);
+    ret |= fclose(ferr);
+    return !(ret==0);
 }
 
 /* format an "hit" log entry */
-void loghit(char *in_ip, char *method_str, char *uri)
+static void _loghit(char *in_ip, char *method_str, char *uri)
 {
-    printf("%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
+    fprintf(flog, "%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
 }
 
 /* log a generic message, on a specific file */
-void _f_logmsg(int prio, char *fmt, va_list argp)
+static void _f_logmsg(int prio, char *fmt, va_list argp)
 {
-    FILE *f = stderr;
-    fprintf(f, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
-    vfprintf(f, fmt, argp);
-    fprintf(f, "\n");
-}
-
-/* log a generic message */
-void logmsg(int prio, char *fmt, ...)
-{
-    va_list argp;
-    va_start(argp, fmt);
-    _f_logmsg(prio, fmt, argp);
-    va_end(argp);
+    fprintf(ferr, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
+    vfprintf(ferr, fmt, argp);
+    fprintf(ferr, "\n");
 }
 
 /* flush the logger stream */
-void logflush()
+static void _logflush()
 {
-    fflush(stdout);
-    fflush(stderr);
+    fflush(flog);
+    fflush(ferr);
+}
+
+#ifdef MODULE_STATIC
+struct module_logger_s *std_getmodule()
+#else
+struct module_logger_s *getmodule()
+#endif
+{
+    struct module_logger_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->base.module_init = _logger_init;
+    p->base.module_fini = _logger_fini;
+    p->base.module_set_params = _logger_set_params;
+    p->loghit = _loghit;
+    p->f_logmsg = _f_logmsg;
+    p->logflush = _logflush;
+    return p;
 }
 

@@ -17,37 +17,31 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_RESPONSE_H
-#define H_RESPONSE_H
+#ifndef H_FILTER_H
+#define H_FILTER_H
 
 #define _BSD_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <fcntl.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
+#include "../module.h"
 
-#include "logger/logger.h"
-#include "cache/cache.h"
-#include "fparams.h"
-#include "request.h"
-#include "mime.h"
-#include "date.h"
-#include "filter_manag.h"
-#include "cgi.h"
-#include "header_w_quality.h"
+struct module_filter_s {
+    struct module_fnc_s base;
+    char *name;
+    int (*compress)(unsigned char*, int, ssize_t);
+    ssize_t (*prelen)(struct stat *);
+    struct module_filter_s *next;
+};
 
-/* push return codes in the response */
-void push_200(int sock);
-void send_404(int sock);
-void send_500(int sock);
-void send_501(int sock);
-/* send a file */
-void send_file(int sock, const char *filename);
+int filter_init();
+int filter_fini();
 
-#endif /* H_RESPONSE_H */
+struct module_filter_s *filter_add_static_mod(
+                                    struct module_filter_s *(get_module)(void));
+struct module_filter_s *filter_add_dynamic_mod(char *fname, char **error);
+
+#endif /* H_FILTER_H */

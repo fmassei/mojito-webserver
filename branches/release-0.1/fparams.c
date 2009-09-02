@@ -42,29 +42,25 @@ static int assign_to_int(char *value, int *res)
     return errno!=0;
 }
 
+static int normalize_string(char **str)
+{
+    if (strlen(*str)<=0) return -1;
+    *str = str_trim(*str);
+    if (strlen(*str)<=0) return -1;
+    return 0;
+}
+
 /* try assign a parameter to a variable */
 static int assign_param(char *name, char *value, fparams_st *params)
 {
-    if ((strlen(name)<=0) || (strlen(value)<=0))
+    if (normalize_string(&name)<0 || normalize_string(&value)<0)
         return -1;
-    name = str_trim(name);
-    value = str_trim(value);
-    if ((strlen(name)<=0) || (strlen(value)<=0))
-        return -1;
-    if (!strcmp(name, "logfile")) {
-        if ((params->logfile = strdup(value))==NULL) return -1;
-    } else if (!strcmp(name, "errfile")) {
-        if ((params->errfile = strdup(value))==NULL) return -1;
-    } else if (!strcmp(name, "pidfile")) {
+    if (!strcmp(name, "pidfile")) {
         if ((params->pidfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "tmp_dir")) {
         if ((params->tmp_dir = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
             params->tmp_dir[strlen(value)-1] = '\0';
-    } else if (!strcmp(name, "cache_dir")) {
-        if ((params->cache_dir = strdup(value))==NULL) return -1;
-        if (value[strlen(value)-1]=='/')
-            params->cache_dir[strlen(value)-1] = '\0';
     } else if (!strcmp(name, "http_root")) {
         if ((params->http_root = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
@@ -96,29 +92,12 @@ static int assign_param(char *name, char *value, fparams_st *params)
             fprintf(stderr, "keepalive_timeout is not a number");
             return -1;
         }
-    } else if (!strcmp(name, "min_compress_filesize")) {
-        errno = 0;
-        params->min_compress_filesize = strtol(value, (char**)NULL, 10);
-        if (errno!=0) {
-            fprintf(stderr, "min_compress_filesize is not a number");
-            return -1;
-        }
     } else if (!strcmp(name, "server_meta")) {
         if ((params->server_meta = strdup(value))==NULL) return -1;
-#ifdef DYNAMIC
     } else if (!strcmp(name, "module_basepath")) {
         if ((params->module_basepath = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
             params->module_basepath[strlen(value)-1] = '\0';
-#ifdef DYNAMIC_LOGGER
-    } else if (!strcmp(name, "module_logger")) {
-        if ((params->module_logger = strdup(value))==NULL) return -1;
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    } else if (!strcmp(name, "module_cache")) {
-        if ((params->module_cache = strdup(value))==NULL) return -1;
-#endif /* DYNAMIC_CACHE */
-#endif /* DYNAMIC */
     } else {
         fprintf(stderr, "Unrecognized ini option %s\n", name);
         return -1;
@@ -131,10 +110,6 @@ static int assign_param(char *name, char *value, fparams_st *params)
 static int check_fparams(fparams_st *params)
 {
     int err = 0;
-    if (params->logfile==NULL) {
-        fprintf(stderr, "Missing config option \"logfile\"\n");
-        err = -1;
-    }
     if (params->pidfile==NULL) {
         fprintf(stderr, "Missing config option \"pidfile\"\n");
         err = -1;
@@ -143,11 +118,6 @@ static int check_fparams(fparams_st *params)
         fprintf(stderr, "Missing config option \"tmp_dir\"\n");
         fprintf(stderr, "\tSetting to default (/tmp)\n");
         params->tmp_dir = strdup("/tmp");
-    }
-    if (params->cache_dir==NULL) {
-        fprintf(stderr, "Missing config option \"cache_dir\"\n");
-        fprintf(stderr, "\tSetting to default (/tmp)\n");
-        params->cache_dir = strdup("/tmp");
     }
     if (params->http_root==NULL) {
         fprintf(stderr, "Missing config option \"http_root\"\n");
@@ -180,35 +150,16 @@ static int check_fparams(fparams_st *params)
         fprintf(stderr, "\tSetting to default (3)\n");
         params->keepalive_timeout = 3;
     }
-    if (params->min_compress_filesize==0) {
-        fprintf(stderr, "Missing config option \"min_compress_filesize\"\n");
-        fprintf(stderr, "\tSetting to default (20000)\n");
-        params->min_compress_filesize = 20000;
-    }
     if (params->server_meta==NULL) {
         fprintf(stderr, "Missing config option \"server_meta\"\n");
         fprintf(stderr, "\tSetting to default Mojito/0.1\n");
         /* strdup() here for consistency on params_free() */
         params->server_meta = strdup("Mojito/0.1");
     }
-#ifdef DYNAMIC
     if (params->module_basepath==NULL) {
         fprintf(stderr, "Missing config option \"module_basepath\"\n");
         err = -1;
     }
-#ifdef DYNAMIC_LOGGER
-    if (params->module_logger==NULL) {
-        fprintf(stderr, "Missing config option \"module_logger\"\n");
-        fprintf(stderr, "\tGoing on without a logger module!\n");
-    }
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    if (params->module_cache==NULL) {
-        fprintf(stderr, "Missing config option \"module_cache\"\n");
-        fprintf(stderr, "\tGoing on without a cache module!\n");
-    }
-#endif /* DYNAMIC_CACHE */
-#endif /* DYNAMIC */
     return err;
 }
 
@@ -216,27 +167,31 @@ static int check_fparams(fparams_st *params)
 static void zero_fparams(fparams_st *params)
 {
     if (params==NULL) return;
-    params->logfile = NULL;
-    params->errfile = NULL;
     params->pidfile = NULL;
     params->tmp_dir = NULL;
-    params->cache_dir = NULL;
     params->http_root = NULL;
     params->default_page = NULL;
     params->uid = params->gid = 0;
     params->listen_port = params->listen_queue = 0;
     params->keepalive_timeout = 0;
-    params->min_compress_filesize = 20000;
     params->server_meta = NULL;
-#ifdef DYNAMIC
     params->module_basepath = NULL;
-#ifdef DYNAMIC_LOGGER
-    params->module_logger = NULL;
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    params->module_cache = NULL;
-#endif /* DYNAMIC_CACHE */
-#endif /* DYNAMIC */
+    params->mod_params = NULL;
+}
+
+static int add_section(fparams_st *params, char *bname)
+{
+    struct module_params_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return -1;
+    if ((p->name = strdup(bname))==NULL) {
+        free(p);
+        return -1;
+    }
+    p->params = NULL;
+    p->next = params->mod_params;
+    params->mod_params = p;
+    return 0;
 }
 
 /* quick and dirty INI parser */
@@ -260,7 +215,17 @@ int params_loadFromINIFile(const char *fname, fparams_st *params)
             if (c==';') {
                 for (;((i<len)&&(*(addr+i)!='\n')); ++i) ;
                 continue;
-            } else if (c=='\n') continue;
+            } else if (c=='\n') {
+                continue;
+            } else if (c=='[') {
+                bname = addr+(++i);
+                for(;((i<len)&&(*(addr+i)!='\n')&&(*(addr+i)!=']')); ++i) ;
+                addr[i]='\0';
+                if (add_section(params, bname)<0)
+                    goto done;
+                for (;((i<len)&&(*(addr+i)!='\n')); ++i) ;
+                continue;
+            }
             bname = addr+i;
             state = PARSE_NAME;
             break;
@@ -274,8 +239,16 @@ int params_loadFromINIFile(const char *fname, fparams_st *params)
         case PARSE_VALUE:
             if (c=='\n') {
                 addr[i] = '\0';
-                if (assign_param(bname, bval, params)<0)
-                    goto done;
+                if (params->mod_params==NULL) {
+                    if (assign_param(bname, bval, params)<0)
+                        goto done;
+                } else {
+                    if (normalize_string(&bname)<0 || normalize_string(&bval)<0)
+                        goto done;
+                    if (plist_insert(&(params->mod_params->params),
+                                                            bname, bval, 0)<0)
+                        goto done;
+                }
                 state = PARSE_BLINE;
             }
             break;
@@ -294,22 +267,28 @@ done:
 /* free parameters */
 void params_free(fparams_st *params)
 {
-    free(params->logfile);
-    free(params->errfile);
-    free(params->pidfile);
-    free(params->http_root);
-    free(params->default_page);
-    free(params->tmp_dir);
-    free(params->cache_dir);
-    free(params->server_meta);
-#ifdef DYNAMIC
-    free(params->module_basepath);
-#ifdef DYNAMIC_LOGGER
-    free(params->module_logger);
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    free(params->module_cache);
-#endif /* DYNAMIC_CACHE */
-#endif /* DYNAMIC */
+    struct module_params_s *p, *q;
+    if (params->pidfile) free(params->pidfile);
+    if (params->http_root) free(params->http_root);
+    if (params->default_page) free(params->default_page);
+    if (params->tmp_dir) free(params->tmp_dir);
+    if (params->server_meta) free(params->server_meta);
+    if (params->module_basepath) free(params->module_basepath);
+    for (p=params->mod_params; p!=NULL; p=q) {
+        q = p->next;
+        if (p->name) free(p->name);
+        if (p->params) plist_destroy(&(p->params));
+        free(p);
+    }
+}
+
+/* return the given parameter module (if any) */
+struct module_params_s *params_getModuleParams(fparams_st *params, char *name)
+{
+    struct module_params_s *p;
+    for (p=params->mod_params; p!=NULL; p=p->next)
+        if (!strcmp(p->name, name))
+            return p;
+    return NULL;
 }
 

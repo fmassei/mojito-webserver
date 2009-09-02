@@ -31,91 +31,25 @@
 #include "fparams.h"
 #include "daemon.h"
 #include "response.h"
-#include "filter.h"
+#include "filter_manag.h"
+#include "module.h"
 
 extern char *uri;
 fparams_st params;
 int keeping_alive;
 
+void clean_quit()
+{
+    cache_fini();
+    logger_fini();
+}
+
 /* SIGTERM callback */
 void sig_term(int signal)
 {
     logmsg(LOG_INFO, "caught SIGTERM(%d). Stopping", signal);
+    clean_quit();
     exit(0);
-}
-
-#ifdef DYNAMIC
-
-/* define external module loader functions */
-#ifdef DYNAMIC_LOGGER
-int logger_loadmod(char *fname, char **error);
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-int cache_loadmod(char *fname, char **error);
-#endif /* DYNAMIC_CACHE */
-
-/* dynamically load requested modules */
-int dynamic_module_load(fparams_st *prm) {
-    char *buf = NULL, *error;
-    if (prm->module_basepath==NULL)
-        return -1;
-#ifdef DYNAMIC_LOGGER
-    if (prm->module_logger!=NULL) {
-        if ((buf = malloc(strlen(prm->module_basepath) +
-                            strlen("liblogger.so.1") +
-                            strlen(prm->module_logger) + 2))==NULL)
-            return -1;
-        sprintf(buf, "%s/liblogger%s.so.1", prm->module_basepath,
-                                            prm->module_logger);
-        if (logger_loadmod(buf, &error)<0) {
-            free(buf);
-            fprintf(stderr, "%s\n", error);
-            return -1;
-        }
-    }
-    logger_set_global_parameters(prm);
-    if (buf!=NULL)
-        free(buf);
-#endif /* DYNAMIC_LOGGER */
-#ifdef DYNAMIC_CACHE
-    if (prm->module_cache!=NULL) {
-        if ((buf = malloc(strlen(prm->module_basepath) +
-                            strlen("libcache.so.1") +
-                            strlen(prm->module_cache) + 2))==NULL)
-            return -1;
-        sprintf(buf, "%s/libcache%s.so.1", prm->module_basepath,
-                                            prm->module_cache);
-        if (cache_loadmod(buf, &error)<0) {
-            fprintf(stderr, "%s\n", error);
-            free(buf);
-            return -1;
-        }
-    }
-    cache_set_global_parameters(prm);
-    if (buf!=NULL)
-        free(buf);
-#endif /* DYNAMIC_CACHE */
-    return 0;
-}
-#endif
-
-/* regitser known filters, trying to go on on errors. An error on the idendity
- * filter is considered critical.
- * TODO add a switch at compile-time or in config options to register stuff! */
-int register_known_filters()
-{
-    extern struct filter_s *ident_filter;
-    filter_init();
-    if (filter_register("gzip", gzip_filter, gzip_filter_prelen)==NULL)
-        logmsg(LOG_WARN, "Could not register \"gzip\" filter.");
-    if (filter_register("deflate", zlib_filter, zlib_filter_prelen)==NULL)
-        logmsg(LOG_WARN, "Could not register \"deflate\" filter.");
-    if ((ident_filter = filter_register("identity", identity_filter,
-                                            identity_filter_prelen))==NULL) {
-        logmsg(LOG_WARN, "Could not register \"identity\" filter.");
-        return -1;
-    }
-    return 0;
 }
 
 int main(const int argc, char * const argv[])
@@ -123,6 +57,7 @@ int main(const int argc, char * const argv[])
     int cl_sock, i;
     pid_t cpid;
     int opt;
+    char *error;
     extern char *in_ip, *method_str, *uri;
 
     while ((opt = getopt(argc, argv, "v"))!=-1) {
@@ -142,30 +77,32 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-#ifdef DYNAMIC
-    if (dynamic_module_load(&params)<0) {
-        perror("Error loading dynamic modules!");
+    if (module_get_logger(&params, &error)<0 ||
+            module_get_cache(&params, &error)<0 ||
+            module_get_filter(&params, &error)<0 ) {
+        fprintf(stderr, "Error loading dynamic modules: %s\n", error);
+        return EXIT_FAILURE;
+    }
+    if (fork_to_background(&params, sig_term)<0) {
+        fprintf(stderr, "Forking to background failed.\n");
+        return EXIT_FAILURE;
+    }
+#ifndef NOLOGGER
+    /* FIXME adjust the order!! */
+    if (logger_init()!=0) {
+        fprintf(stderr, "Failed to start logger.\n");
         return EXIT_FAILURE;
     }
 #endif
-    if (fork_to_background(&params, sig_term)<0) {
-        logmsg(LOG_ERROR, "Error backgrounding");
-        return EXIT_FAILURE;
-    }
-    if (server_start(params.listen_port, params.listen_queue)<0) {
-        perror("Error starting server");
-        return EXIT_FAILURE;
-    }
-    if (register_known_filters()!=0) {
-        logmsg(LOG_ERROR, "Filter registration failed. Dying.");
-        return EXIT_FAILURE;
-    }
 #ifndef NOCACHE
     if (cache_init()!=0) {
-        logmsg(LOG_ERROR, "Could not start cache. Going on.");
-        /*return EXIT_FAILURE;*/
+        logmsg(LOG_ERROR, "Could not start cache. Trying to go on.");
     }
 #endif
+    if (server_start(params.listen_port, params.listen_queue)<0) {
+        logmsg(LOG_ERROR, "Error starting server");
+        return EXIT_FAILURE;
+    }
     logmsg(LOG_INFO, "Server started");
     logflush();
     while (1) {
@@ -201,7 +138,7 @@ client_kill:
         close(cl_sock);
         exit(0);
     }
-    cache_fini();
-    return EXIT_SUCCESS;
+    clean_quit();
+    return EXIT_FAILURE;    /* this is not the best exit point :) */
 }
 

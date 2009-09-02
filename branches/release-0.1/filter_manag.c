@@ -1,49 +1,14 @@
-#include "filter.h"
-
-/* our filters */
-struct filter_s *filters = NULL;
-/* we keep a pointer to the identity filter. There is an entry in the filter
- * list too, but we need a direct link to this one due to its importance. It's
- * mainly used when outputting cached payloads. */
-struct filter_s *ident_filter = NULL;
+#include "filter_manag.h"
 
 /* find a filter by its id */
-static struct filter_s *filter_findbyid(char *id)
+static struct module_filter_s *filter_findbyid(char *id)
 {
-    struct filter_s *f;
-    for (f=filters; f!=NULL; f=f->next)
+    extern struct module_filter_s *filter_modules;
+    struct module_filter_s *f;
+    for (f=filter_modules; f!=NULL; f=f->next)
         if (!strcmp(f->name, id))
             return f;
     return NULL;
-}
-
-/* initialize global filter struct */
-int filter_init()
-{
-    if (filters!=NULL)
-        filter_free();
-    filters = NULL;
-    return 0;
-}
-
-/* add a filter to the filters queue */
-struct filter_s *filter_register(char *name, filter_ft worker,
-                                                        filter_len_ft prelen)
-{
-    struct filter_s *q;
-    if (name==NULL)
-        return NULL;
-    if ((q = malloc(sizeof(*q)))==NULL)
-        return NULL;
-    if ((q->name = strdup(name))==NULL) {
-        free(q);
-        return NULL;
-    }
-    q->worker = worker;
-    q->prelength = prelen;
-    q->next = filters;
-    filters = q;
-    return q;
 }
 
 /* for filter queues we have a few rules:
@@ -56,8 +21,9 @@ struct filter_s *filter_register(char *name, filter_ft worker,
  *      deal with it later, but I'm not sure. */
 int filter_sanitize_queue(struct qhead_s **qhead)
 {
+    extern struct module_filter_s *filter_modules;
     struct qhead_s *p, *q;
-    struct filter_s *f;
+    struct module_filter_s *f;
     float rq;
     /* check for identity */
     for (p=*qhead; p!=NULL; p=p->next)
@@ -86,7 +52,7 @@ int filter_sanitize_queue(struct qhead_s **qhead)
          * got that is not present, do an insert with the '*' quality */
         rq = p->quality;
         qhead_delete(qhead, p);
-        for (f=filters; f!=NULL; f=f->next) {
+        for (f=filter_modules; f!=NULL; f=f->next) {
             for (q=*qhead; q!=NULL; q=q->next)
                 if (!strcmp(q->id, f->name))
                     break;
@@ -120,27 +86,16 @@ int filter_is_present(struct qhead_s *qhead, char *id)
 
 /* scroll the qhead struct trying to find a usable filter based on user
  * preferences (RFC2616-14.3). The qhead list should be ordered. */
-struct filter_s *filter_findfilter(struct qhead_s *qhead)
+struct module_filter_s *filter_findfilter(struct qhead_s *qhead)
 {
+    extern struct module_filter_s *filter_modules;
     struct qhead_s *p;
-    struct filter_s *f = NULL;
+    struct module_filter_s *f = NULL;
     for (p=qhead; p!=NULL; p=p->next)
-        for (f=filters; f!=NULL; f=f->next) {
+        for (f=filter_modules; f!=NULL; f=f->next) {
             if (!strcmp(f->name, p->id))
                 return f;
         }
     return NULL;
-}
-
-/* free all the filters memory */
-void filter_free()
-{
-    struct filter_s *q;
-    for (q=filters; q!=NULL;) {
-        filters = q->next;
-        free(q->name);
-        free(q);
-        q = filters;
-    }
 }
 
