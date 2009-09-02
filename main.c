@@ -31,7 +31,7 @@
 #include "fparams.h"
 #include "daemon.h"
 #include "response.h"
-#include "filter.h"
+#include "filter_manag.h"
 #include "module.h"
 
 extern char *uri;

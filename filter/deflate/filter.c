@@ -22,7 +22,7 @@
 
 #define CHUNK 16384
 
-int _compress(unsigned char *addr, int fd, ssize_t len)
+static int _compress(unsigned char *addr, int fd, ssize_t len)
 {
     int ret;
     ssize_t have;
@@ -49,7 +49,7 @@ int _compress(unsigned char *addr, int fd, ssize_t len)
     return Z_OK;
 }
 
-ssize_t _prelen(struct stat *sb)
+static ssize_t _prelen(struct stat *sb)
 {
     if (sb->st_size==0)
         return 0;

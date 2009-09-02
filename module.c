@@ -20,6 +20,7 @@
 #include "module.h"
 #include "cache/cache.h"
 #include "logger/logger.h"
+#include "filter/filter.h"
 
 #ifdef DYNAMIC
 /* get the library full path given the basename and the libname */
@@ -145,10 +146,11 @@ static int load_dynamic_filter(fparams_st *prm, struct module_params_s *mpars,
     return 0;
 }
 #else
-static int load_static_filter(fparams_st *prm, struct module_params_s *mpars,
-                        struct module_filter_s*(*modname)(void), char **error)
+static int load_static_filter(struct module_params_s *mpars,
+                        struct module_filter_s*(*modfnc)(void), char **error)
 {
-    if ((mod = filter_add_static_mod(mod))==NULL) {
+    struct module_filter_s *mod;
+    if ((mod = filter_add_static_mod(modfnc))==NULL) {
         *error = "Error loading static cache module";
         return -1;
     }
@@ -163,12 +165,11 @@ static int load_static_filter(fparams_st *prm, struct module_params_s *mpars,
 /* get the filter module(s) */
 int module_get_filter(fparams_st *prm, char **error)
 {
-    struct module_filter_s *mod;
     struct module_params_s *mpars;
     int err;
 #ifdef DYNAMIC_FILTER
     char *modname;
-    int i, len;
+    int i;
 #else
     extern struct module_filter_s   *identity_getmodule(void),
                                     *gzip_getmodule(void),
@@ -192,11 +193,11 @@ int module_get_filter(fparams_st *prm, char **error)
         modname += i+1;
     }
 #else
-    if ((err = load_static_filter(prm, mpars, identity_getmodule, error))<0)
+    if ((err = load_static_filter(mpars, identity_getmodule, error))<0)
         return err;
-    if ((err = load_static_filter(prm, mpars, gzip_getmodule, error))<0)
+    if ((err = load_static_filter(mpars, gzip_getmodule, error))<0)
         return err;
-    if ((err = load_static_filter(prm, mpars, deflate_getmodule, error))<0)
+    if ((err = load_static_filter(mpars, deflate_getmodule, error))<0)
         return err;
 #endif
     return 0;

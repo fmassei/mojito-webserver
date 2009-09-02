@@ -19,14 +19,14 @@
 
 #include "../filter.h"
 
-int _compress(unsigned char *addr, int fd, ssize_t len)
+static int _compress(unsigned char *addr, int fd, ssize_t len)
 {
     if (write(fd, addr, len)!=len)
         return -1;
     return 0;
 }
 
-ssize_t _prelen(struct stat *sb)
+static ssize_t _prelen(struct stat *sb)
 {
     return sb->st_size;
 }
