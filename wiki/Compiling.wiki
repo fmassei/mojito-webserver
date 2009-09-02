@@ -1,7 +1,7 @@
 #summary Compiling
 #labels Phase-Deploy,Featured
 
-= The fast and easier way =
+= The fast and easy way =
 The faster and easier way to have a working environment for Mojito is to make a specific folder, copy the needed files and run it. Expressed as a bash-script, for version 0.1-r37:
 {{{
 # create a folder
