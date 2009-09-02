@@ -29,7 +29,7 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
     char *lname;
     size_t nlen;
     nlen = strlen(params->module_basepath)+strlen(basename)+strlen(libname)+
-            strlen("lib.so.1")+1;
+            strlen("/lib.so.1")+1;
     if ((lname = malloc(nlen))==NULL)
         return NULL;
     sprintf(lname, "%s/lib%s%s.so.1", params->module_basepath,
@@ -38,6 +38,17 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
     return lname;
 }
 #endif /* DYNAMIC */
+
+static int set_module_params(struct module_fnc_s *mb, struct plist_s *params,
+                                                                char **error)
+{
+    if (mb->module_set_params!=NULL)
+        if (mb->module_set_params(params)<0) {
+            *error = "Failed passing parameters to module";
+            return -2;
+        }
+    return 0;
+}
 
 /* get the cache module */
 int module_get_cache(fparams_st *prm, char **error)
@@ -74,11 +85,7 @@ int module_get_cache(fparams_st *prm, char **error)
         return -1;
     }
 #endif
-    if (mod->base.module_set_params(mpars->params)<0) {
-        *error = "Failed passing parameters to module";
-        return -2;
-    }
-    return 0;
+    return set_module_params(&mod->base, mpars->params, error);
 }
 
 /* get the cache module */
@@ -116,11 +123,7 @@ int module_get_logger(fparams_st *prm, char **error)
         return -1;
     }
 #endif
-    if (mod->base.module_set_params(mpars->params)<0) {
-        *error = "Failed passing parameters to module";
-        return -2;
-    }
-    return 0;
+    return set_module_params(&mod->base, mpars->params, error);
 }
 
 #ifdef DYNAMIC_FILTER
@@ -139,11 +142,7 @@ static int load_dynamic_filter(fparams_st *prm, struct module_params_s *mpars,
     }
     if (buf!=NULL)
         free(buf);
-    if (mod->base.module_set_params(mpars->params)<0) {
-        *error = "Failed passing parameters to module";
-        return -2;
-    }
-    return 0;
+    return set_module_params(&mod->base, mpars->params, error);
 }
 #else
 static int load_static_filter(struct module_params_s *mpars,
@@ -154,11 +153,7 @@ static int load_static_filter(struct module_params_s *mpars,
         *error = "Error loading static cache module";
         return -1;
     }
-    if (mod->base.module_set_params(mpars->params)<0) {
-        *error = "Failed passing parameters to module";
-        return -2;
-    }
-    return 0;
+    return set_module_params(&mod->base, mpars->params, error);
 }
 #endif
 
