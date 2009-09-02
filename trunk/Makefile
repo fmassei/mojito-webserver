@@ -62,7 +62,7 @@ ifeq ($(LOGGER), lnone)
 endif
 
 ifeq ($(FILTER), lstatic)
-	FILTER_LINK = -Lfilter/identify -lfilteridentify -Lfilter/deflate -lfilterdeflate -Lfilter/gzip -lfiltergzip
+	FILTER_LINK = -Lfilter/identity -lfilteridentity -Lfilter/deflate -lfilterdeflate -Lfilter/gzip -lfiltergzip
 endif
 ifeq ($(FILTER), lshared)
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_FILTER
@@ -73,8 +73,8 @@ endif
 
 
 #--------------------------
-OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
-	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
+OBJS=daemon.o date.o fileutils.o fparams.o main.o request.o response.o \
+    socket.o mime.o cgi.o filter_manag.o header_w_quality.o \
 	module.o plist.o cache/cache.o logger/logger.o filter/filter.o
 
 all: $(TARGET_CACHES) $(TARGET_LOGGERS) $(TARGET_FILTERS) mojito
@@ -97,7 +97,7 @@ endif
 	@(cd filter && make)
 
 mojito: $(OBJS)
-	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(CACHE_LINK) $(LOGGER_LINK)
+	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(CACHE_LINK) $(LOGGER_LINK) $(FILTER_LINK)
 
 .c.o:
 	$(GCC) $(INCDIR) -c $< -o $@ $(CFLAGS) $(DYNAMIC) $(DYNAMIC_LINKAGE) $(MISSING_LINKAGE)

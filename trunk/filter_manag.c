@@ -3,7 +3,7 @@
 /* find a filter by its id */
 static struct module_filter_s *filter_findbyid(char *id)
 {
-    extern struct module_filter_s *filter_modules
+    extern struct module_filter_s *filter_modules;
     struct module_filter_s *f;
     for (f=filter_modules; f!=NULL; f=f->next)
         if (!strcmp(f->name, id))
@@ -21,7 +21,7 @@ static struct module_filter_s *filter_findbyid(char *id)
  *      deal with it later, but I'm not sure. */
 int filter_sanitize_queue(struct qhead_s **qhead)
 {
-    extern struct module_filter_s *filter_modules
+    extern struct module_filter_s *filter_modules;
     struct qhead_s *p, *q;
     struct module_filter_s *f;
     float rq;
@@ -90,7 +90,7 @@ struct module_filter_s *filter_findfilter(struct qhead_s *qhead)
 {
     extern struct module_filter_s *filter_modules;
     struct qhead_s *p;
-    struct filter_s *f = NULL;
+    struct module_filter_s *f = NULL;
     for (p=qhead; p!=NULL; p=p->next)
         for (f=filter_modules; f!=NULL; f=f->next) {
             if (!strcmp(f->name, p->id))

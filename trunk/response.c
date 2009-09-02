@@ -249,7 +249,7 @@ redo:
         return;
     }
     send_head(RESP200);
-    if ((clen = filter->prel(&sb))>=0) {
+    if ((clen = filter->prelen(&sb))>=0) {
         send_contentlength(clen);
     } else {
         /* no length? no party. We can't keep the connection alive */
