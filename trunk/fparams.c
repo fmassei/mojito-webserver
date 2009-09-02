@@ -92,13 +92,6 @@ static int assign_param(char *name, char *value, fparams_st *params)
             fprintf(stderr, "keepalive_timeout is not a number");
             return -1;
         }
-    } else if (!strcmp(name, "min_compress_filesize")) {
-        errno = 0;
-        params->min_compress_filesize = strtol(value, (char**)NULL, 10);
-        if (errno!=0) {
-            fprintf(stderr, "min_compress_filesize is not a number");
-            return -1;
-        }
     } else if (!strcmp(name, "server_meta")) {
         if ((params->server_meta = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "module_basepath")) {
@@ -157,11 +150,6 @@ static int check_fparams(fparams_st *params)
         fprintf(stderr, "\tSetting to default (3)\n");
         params->keepalive_timeout = 3;
     }
-    if (params->min_compress_filesize==0) {
-        fprintf(stderr, "Missing config option \"min_compress_filesize\"\n");
-        fprintf(stderr, "\tSetting to default (20000)\n");
-        params->min_compress_filesize = 20000;
-    }
     if (params->server_meta==NULL) {
         fprintf(stderr, "Missing config option \"server_meta\"\n");
         fprintf(stderr, "\tSetting to default Mojito/0.1\n");
@@ -186,7 +174,6 @@ static void zero_fparams(fparams_st *params)
     params->uid = params->gid = 0;
     params->listen_port = params->listen_queue = 0;
     params->keepalive_timeout = 0;
-    params->min_compress_filesize = 20000;
     params->server_meta = NULL;
     params->module_basepath = NULL;
     params->mod_params = NULL;

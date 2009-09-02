@@ -31,6 +31,7 @@
 
 struct module_filter_s {
     struct module_fnc_s base;
+    char *name;
     int (*compress)(unsigned char*, int, ssize_t);
     ssize_t (*prelen)(struct stat *);
     struct module_filter_s *next;

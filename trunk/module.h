@@ -34,5 +34,6 @@ struct module_fnc_s {
 
 int module_get_logger(fparams_st *prm, char **error);
 int module_get_cache(fparams_st *prm, char **error);
+int module_get_filter(fparams_st *prm, char **error);
 
 #endif /* H_MODULE_H */

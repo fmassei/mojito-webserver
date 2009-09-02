@@ -43,6 +43,7 @@ struct module_filter_s *getmodule()
     p->base.module_init = NULL;
     p->base.module_fini = NULL;
     p->base.module_set_params = NULL;
+    p->name = strdup("identity");
     p->compress = _compress;
     p->prelen = _prelen;
     return p;
