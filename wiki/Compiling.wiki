@@ -2,7 +2,7 @@
 #labels Phase-Deploy,Featured
 
 = Pre-requisites =
-Any linux enviroment should do. The main builds right know are done on a Gentoo box (kernel-2.6.30, gcc-4.3.2, glibc-2.9), but on all the linux boxes on which I tried to compile Mojito everything went fine.
+Any linux environment should do. The main builds right know are done on a Gentoo box (kernel-2.6.30, gcc-4.3.2, glibc-2.9), but on all the linux boxes on which I tried to compile Mojito everything went fine.
 
 You need the ability to build with zlib too.
 
@@ -15,7 +15,7 @@ Do a "`make clean all`" on the root folder.
 There is no install facility right now (aka no "`make install`"), so you need to follow the following two steps:
 
 == Installing Mojito manually ==
-You have to manually move the file named "mojito" to the desired folder. Typically you will want to copy the "config.ini" template too, and modify the parameters according to your enviroment.
+You have to manually move the file named "mojito" to the desired folder. Typically you will want to copy the "config.ini" template too, and modify the parameters according to your environment.
 
 == Installing the Mojito's modules manually ==
 If (_and only if_) you build with dynamic modules, you will want to copy the built modules too. A "`find <projectpath> -name '*.so.1'`" will tell you which files you have to move/copy. Change the "_module_basepath_" option in the "config.ini" file to point to the desired folder.
