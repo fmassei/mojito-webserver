@@ -17,6 +17,7 @@ MISSING_LINKAGE =
 # specify module-set targets
 TARGET_LOGGERS = loggers
 TARGET_CACHES = caches
+TARGET_FILTERS = filters
 
 #--------------------------
 #debug or release
@@ -24,6 +25,7 @@ PSTATUS = debug
 #lstatic, lshared or lnone
 LOGGER = lshared
 CACHE = lshared
+FILTER = lshared
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
@@ -59,13 +61,23 @@ endif
 ifeq ($(LOGGER), lnone)
 endif
 
+ifeq ($(FILTER), lstatic)
+	FILTER_LINK = -Lfilter/identify -lfilteridentify -Lfilter/deflate -lfilterdeflate -Lfilter/gzip -lfiltergzip
+endif
+ifeq ($(FILTER), lshared)
+	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_FILTER
+	DYNAMIC = -DDYNAMIC
+	LIBS := $(LIBS) -ldl
+endif
+
+
 
 #--------------------------
 OBJS=compression.o daemon.o date.o fileutils.o fparams.o main.o \
 	request.o response.o socket.o mime.o cgi.o filter.o header_w_quality.o \
-	module.o plist.o cache/cache.o logger/logger.o
+	module.o plist.o cache/cache.o logger/logger.o filter/filter.o
 
-all: $(TARGET_CACHES) $(TARGET_LOGGERS) mojito
+all: $(TARGET_CACHES) $(TARGET_LOGGERS) $(TARGET_FILTERS) mojito
 
 loggers:
 ifeq ($(LOGGER), lnone)
@@ -76,6 +88,13 @@ endif
 
 caches:
 	@(cd cache && make)
+
+filters:
+ifeq ($(FILTER), lnone)
+	@echo "value 'lnone' for filter is not supported."
+	@exit 2
+endif
+	@(cd filter && make)
 
 mojito: $(OBJS)
 	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(CACHE_LINK) $(LOGGER_LINK)
@@ -88,4 +107,5 @@ clean:
 	-$(RM) $(PNAME)
 	@(cd logger && make clean)
 	@(cd cache && make clean)
+	@(cd filter && make clean)
 
