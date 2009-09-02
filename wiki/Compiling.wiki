@@ -1,6 +1,30 @@
 #summary Compiling
 #labels Phase-Deploy,Featured
 
+= The fast and easier way =
+The faster and easier way to have a working environment for Mojito is to make a specific folder, copy the needed files and run it. Expressed as a bash-script, for version 0.1-r37:
+{{{
+# create a folder
+mkdir mojito_folder
+cd mojito_folder
+# download and compile
+wget "http://mojito-webserver.googlecode.com/files/mojito-0.1-r37.tar.bz2" -O mojito.tar.bz2 
+tar xjf mojito.tar.bz2
+cd mojito-0.1-r37
+make all
+# copy needed files up
+cp mojito ..
+cp config.ini ..
+cd ..
+# remove the sources
+rm -rf mojito-0.1-r37
+rm mojito.tar.bz2
+# ajust the config.ini file to fit your needs. The important part is to specify the http_root parameter!
+vim config.ini
+# start Mojito
+./mojito
+}}}
+
 = Pre-requisites =
 Any linux environment should do. The main builds right know are done on a Gentoo box (kernel-2.6.30, gcc-4.3.2, glibc-2.9), but on all the linux boxes on which I tried to compile Mojito everything went fine.
 
