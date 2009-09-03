@@ -29,7 +29,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include "fparams.h"
-#include "logger/logger.h"
 
 /* damonize the process */
 int fork_to_background(fparams_st *params, void(*termfunc)(int));
