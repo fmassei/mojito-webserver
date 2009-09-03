@@ -19,24 +19,21 @@
 
 #include "daemon.h"
 
-#define LOGFILE_OMODE (O_RDWR | O_APPEND | O_CREAT)
-#define LOGFILE_MODE 0640
-
 /* save the pid file */
 static int save_pid(fparams_st *params)
 {
     int lfp;
     char str[10];
     if (params->pidfile==NULL) {
-        logmsg(LOG_ERROR, "No pidfile specified");
+        fprintf(stderr, "No pidfile specified");
         return -1;
     }
     if ((lfp = open(params->pidfile, O_RDWR | O_CREAT, 0640))<0) {
-        logmsg(LOG_ERROR, "Error opening pid file: %s", strerror(errno));
+        fprintf(stderr, "Error opening pid file: %s", strerror(errno));
         return -1;
     }
     if (lockf(lfp, F_TLOCK, 0)<0) {
-        logmsg(LOG_ERROR, "Error locking pid file: %s", strerror(errno));
+        fprintf(stderr, "Error locking pid file: %s", strerror(errno));
         return -1;
     }
     sprintf(str, "%d\n", getpid());
@@ -62,26 +59,26 @@ static int reopen_stds(fparams_st *params)
 static int change_root(fparams_st *params)
 {
     if (params->http_root==NULL) {
-        logmsg(LOG_ERROR, "No http root specified");
+        fprintf(stderr, "No http root specified");
         return -1;
     }
     if (chdir(params->http_root)!=0) {
-        logmsg(LOG_ERROR, "Error chdiring into directory: %s", strerror(errno));
+        fprintf(stderr, "Error chdiring into directory: %s", strerror(errno));
         return -1;
     }
     /* XXX: chroot is disabled because of too many problems everywhere, mainly
      * on interpreted cgi (that will be chrooted too). Anyway,
      * if the user wants to chroot mojito, he will do it the standard way */
 /*    if (chroot(params->http_root)!=0) {
-        logmsg(LOG_ERROR, "Error chrooting directory: %s", strerror(errno));
+        fprintf(stderr, "Error chrooting directory: %s", strerror(errno));
         return -1;
     }*/
     if (setuid(params->uid)<0) {
-        logmsg(LOG_ERROR, "Error setting uid: %s", strerror(errno));
+        fprintf(stderr, "Error setting uid: %s", strerror(errno));
         return -1;
     }
     if (setuid(params->gid)<0) {
-        logmsg(LOG_ERROR, "Error setting gid: %s", strerror(errno));
+        fprintf(stderr, "Error setting gid: %s", strerror(errno));
         return -1;
     }
     return 0;

@@ -1,7 +1,4 @@
 ? request correctness check
-Insert something to decide when to use a filter or not
-Check if the temporary directory is writable
-Adjust log levels
 buffer overflow checks
 statistics for internal variables, like cache-hits or keep-alive connections
 sigint to reload the config
