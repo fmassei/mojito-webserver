@@ -1,0 +1,21 @@
+? request correctness check
+buffer overflow checks
+statistics for internal variables, like cache-hits or keep-alive connections
+sigint to reload the config
+Adjust logs to match the apache ones
+check what happens in a header() call in a PHP script while executing in a CGI
+    evironment
+
+check for known exploit and try to solve them:
+    1- on post requests, we wait for content-lenght post data to be received. An
+        attacker could declare a bigger content-lenght on many requests: mojito
+        will spawn a child for each request, suffering a DOS attack. A possible
+        solution is to insert a timeout (maybe an adaptive one based on header
+        speed?)
+    2- check what happens if an incomplete header is sent. This situation 
+        should be dealt right, but it's better to check with a specific 
+        program ;-)
+    3- Mojito will run cgi with post_fd put on stdin only if some post-data has
+        been sent by the client: otherwise it will not detach the parent stdin,
+        leaving the control to the cgi app. Check if this could be harmful and
+        find a solution.
