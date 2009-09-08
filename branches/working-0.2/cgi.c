@@ -113,7 +113,8 @@ int cgi_run(char *filename, int sock)
             perror("dup2");
             return -1;
         }
-        push_200(sock);
+        header_push_code(HRESP_200);
+        header_part_send(sock);
         execle(filename, basename(filename), (char*)0, nuenv);
         perror("execl");
         return -1;

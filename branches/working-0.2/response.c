@@ -19,18 +19,6 @@
 
 #include "response.h"
 
-/* protocol strings */
-static const char HTTP10[] = "HTTP/1.0 ";
-static const char HTTP11[] = "HTTP/1.1 ";
-/* some status responses */
-const char RESP200[] = "200 OK\r\n";
-static const char RESP404[] = "404 Not Found\r\n";
-static const char RESP406[] = "406 Not Acceptable\r\n";
-const char RESP500[] = "500 Internal Server Error\r\n";
-static const char RESP501[] = "501 Not Implemented\r\n";
-/* buffer for responses. Just make them fixed and static */
-static char res[0xff];
-static char buf[0xff];
 /* final filter(s) */
 static struct module_filter_s *filter;
 
@@ -53,89 +41,6 @@ static void strip_uri(const char *uri)
         memcpy(page, uri, p);
         page[p] = '\0';
     }
-}
-
-/* send the generic response header */
-void send_head(const char *head)
-{
-    extern fparams_st params;
-    extern int proto_version;
-    res[0] = '\0';
-    /* RFC2145 - conservative approach */
-    if (proto_version==P_HTTP_11)
-        strcat(res, HTTP11);
-    else strcat(res, HTTP10);
-    strcat(res, head);
-    sprintf(buf, "Date: %s\r\n", time_1123_format(time(NULL)));
-    strcat(res, buf);
-    sprintf(buf, "Server: %s\r\n", params.server_meta);
-    strcat(res, buf);
-    /*strcat(res, "Connection: close\r\n");*/
-}
-
-/* send the content-length */
-void send_contentlength(long len)
-{
-    sprintf(buf, "Content-Length: %lu\r\n", len);
-    strcat(res, buf);
-}
-
-/* send the content-type */
-void send_contenttype(char *name)
-{
-    sprintf(buf, "Content-Type: ");
-    strcat(buf, name);
-    strcat(buf, "\r\n");
-    strcat(res, buf);
-}
-
-/* send the filter content-encoding */
-void send_filter_encoding(char *name)
-{
-    /* very very ugly. But we must have an expection somewhere */
-    if (!strcmp(name, "identity"))
-        return;
-    strcat(res, "Content-Encoding: ");
-    strcat(res, name);
-    strcat(res, "\r\n");
-}
-
-/* send the prepared header */
-void send_endhead(int sock)
-{
-    strcat(res, "\r\n");
-    write(sock, res, strlen(res));
-}
-
-/* send generic status strings */
-void push_200(int sock)
-{
-    send_head(RESP200);
-    write(sock, res, strlen(res));
-}
-void send_404(int sock)
-{
-    send_head(RESP404);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_406(int sock)
-{
-    send_head(RESP406);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_500(int sock)
-{
-    send_head(RESP500);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_501(int sock)
-{
-    send_head(RESP501);
-    send_contentlength(0);
-    send_endhead(sock);
 }
 
 /* check if we can deal the request header */
@@ -161,7 +66,7 @@ void send_file(int sock, const char *uri)
     int fd;
 
     if (check_method()!=0) {
-        send_501(sock);
+        header_kill_w_code(HRESP_501, sock);
         return;
     }
     if (on_presend(sock, &req)!=0)
@@ -169,7 +74,7 @@ void send_file(int sock, const char *uri)
     /* no cache? build one */
     strip_uri(uri);
     if ((filename = malloc(strlen(params.http_root)+strlen(page)+1))==NULL) {
-        send_500(sock);
+        header_kill_w_code(HRESP_500, sock);
         return;
     }    
     sprintf(filename, "%s%s", params.http_root, page);
@@ -180,39 +85,40 @@ redo:
         if ((sb.st_mode&S_IFMT)==S_IFDIR) {
             if ((filename = realloc(filename, strlen(filename)+
                                         strlen(params.default_page)+1))==NULL) {
-                send_500(sock);
+                header_kill_w_code(HRESP_500, sock);
                 return;
             }
             sprintf(filename, "%s%s", filename, params.default_page);
             goto redo;
         }
-        send_404(sock);
+        header_kill_w_code(HRESP_404, sock);
         return;
     }
     if (access(filename, X_OK)==0) {
         cgi_run(filename, sock);
         /* if here the cgi failed. Send a 500 to the client */
-        send_500(sock);
+        header_kill_w_code(HRESP_500, sock);
+        return;
     }
     filter = filter_findfilter(req.header.accept_encoding);
     if (filter==NULL) {
-        send_406(sock);
+        header_kill_w_code(HRESP_406, sock);
         return;
     }
     if ((fd = open(filename, O_RDONLY))<=0) {
-        send_404(sock);
+        header_kill_w_code(HRESP_404, sock);
         return;
     }
-    send_head(RESP200);
+    header_push_code(HRESP_200);
     if ((clen = filter->prelen(&sb))>=0) {
-        send_contentlength(clen);
+        header_push_contentlength(clen);
     } else {
         /* no length? no party. We can't keep the connection alive */
         keeping_alive = 0;
     }
-    send_filter_encoding(filter->name);
-    send_contenttype(mime_gettype(filename));
-    send_endhead(sock);
+    header_push_contentencoding(filter->name);
+    header_push_contenttype(mime_gettype(filename));
+    header_send(sock);
     if (req.method==M_HEAD)
         return;
     addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);

@@ -138,7 +138,6 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock,
                                                         struct request_s *req)
 {
     extern struct module_filter_s *ident_filter;
-    extern char RESP200[], RESP500[];
     unsigned char *addr;
     struct stat sb;
     int clen;
@@ -146,15 +145,15 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock,
     memset(&sb, 0, sizeof(sb));
     stat(cache_file->fname, &sb);
     if ((fd = open(cache_file->fname, 0))<0) {
-        send_head(RESP500);
+        header_push_code(HRESP_500);
         return;
     }
-    send_head(RESP200);
+    header_push_code(HRESP_200);
     if ((clen = ident_filter->prelen(&sb))>=0)
-        send_contentlength(clen);
-    send_filter_encoding(cache_file->filter_id);
-    send_contenttype(cache_file->content_type);
-    send_endhead(sock);
+        header_push_contentlength(clen);
+    header_push_contentencoding(cache_file->filter_id);
+    header_push_contenttype(cache_file->content_type);
+    header_send(sock);
     if (req->method==M_HEAD)
         return;
     addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);

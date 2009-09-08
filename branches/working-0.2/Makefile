@@ -23,9 +23,9 @@ TARGET_MODS = mods
 #debug or release
 PSTATUS = debug
 #lstatic, lshared or lnone
-LOGGER = lshared
-FILTER = lshared
-MODULE = lshared
+LOGGER = lstatic
+FILTER = lstatic
+MODULE = lstatic
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
@@ -68,7 +68,7 @@ endif
 #--------------------------
 OBJS=daemon.o date.o fileutils.o fparams.o main.o request.o response.o \
     socket.o mime.o cgi.o filter_manag.o header_w_quality.o \
-	module.o plist.o logger/logger.o filter/filter.o \
+	resp_headers.o module.o plist.o logger/logger.o filter/filter.o \
 	modules/modules.o
 
 all: $(TARGET_LOGGERS) $(TARGET_FILTERS) $(TARGET_MODS) mojito
