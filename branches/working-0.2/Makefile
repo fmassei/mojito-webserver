@@ -56,7 +56,7 @@ ifeq ($(FILTER), lshared)
 endif
 
 ifeq ($(MODULE), lstatic)
-	MODULE_LINK = -Lmodule/mod_stat -lmod_stat
+	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm
 endif
 ifeq ($(MODULE), lshared)
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_MODULE

@@ -57,6 +57,7 @@
 #define P_HTTP_10   1
 #define P_HTTP_11   2
 
+/* TODO FIXME XXX move all the other fields in here! */
 struct request_s {
     char *uri;
     int method;

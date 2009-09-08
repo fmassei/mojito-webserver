@@ -159,9 +159,6 @@ void send_file(int sock, const char *uri)
     char *filename;
     long clen;
     int fd;
-#ifndef NOCACHE
-    int cfd;
-#endif
 
     if (check_method()!=0) {
         send_501(sock);

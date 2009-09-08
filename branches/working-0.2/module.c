@@ -198,7 +198,7 @@ static int load_static_module(struct module_params_s *mpars,
             *error = "Failed passing parameters to module";
             return -2;
         }
-    }
+    return 0;
 }
 #endif
 
@@ -211,7 +211,8 @@ int module_get(fparams_st *prm, char **error)
     char *modname;
     int i;
 #else
-    extern struct module_s         *mod_stat_getmodule(void);
+    extern struct module_s          *mod_stat_getmodule(void),
+                                    *mod_cacheshm_getmodule(void);
 #endif
     if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
         *error = "section [modules] not found in config.ini";
@@ -233,6 +234,8 @@ int module_get(fparams_st *prm, char **error)
     }
 #else
     if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
+        return err;
+    if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
         return err;
 #endif
     return 0;

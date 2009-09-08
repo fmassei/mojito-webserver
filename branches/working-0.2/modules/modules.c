@@ -20,6 +20,7 @@
 
 static struct module_s *modules = NULL;
 
+/* TODO FIXME XXX better check of the return values!!!! */
 int mod_set_params(struct plist_s *params)
 {
     struct module_s *p;

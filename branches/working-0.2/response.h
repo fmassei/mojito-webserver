@@ -40,6 +40,7 @@
 #include "filter_manag.h"
 #include "cgi.h"
 #include "header_w_quality.h"
+#include "modules/modules.h"
 
 /* push return codes in the response */
 void push_200(int sock);
