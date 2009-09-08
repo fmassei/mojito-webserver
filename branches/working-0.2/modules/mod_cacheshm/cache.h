@@ -16,37 +16,20 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef H_RESPONSE_H
-#define H_RESPONSE_H
+#ifndef H_CACHE_H
+#define H_CACHE_H
 
 #define _BSD_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
+/* entry struct */
+struct cache_entry_s {
+    char *URI;
+    char *fname;
+    char *filter_id;
+    char *content_type;
+};
 
-#include "logger/logger.h"
-#include "fparams.h"
-#include "request.h"
-#include "mime.h"
-#include "date.h"
-#include "filter_manag.h"
-#include "cgi.h"
-#include "header_w_quality.h"
-
-/* push return codes in the response */
-void push_200(int sock);
-void send_404(int sock);
-void send_500(int sock);
-void send_501(int sock);
-/* send a file */
-void send_file(int sock, const char *filename);
-
-#endif /* H_RESPONSE_H */
+#endif /* H_CACHE_H */

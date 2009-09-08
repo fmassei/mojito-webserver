@@ -23,10 +23,10 @@
 static const char HTTP10[] = "HTTP/1.0 ";
 static const char HTTP11[] = "HTTP/1.1 ";
 /* some status responses */
-static const char RESP200[] = "200 OK\r\n";
+const char RESP200[] = "200 OK\r\n";
 static const char RESP404[] = "404 Not Found\r\n";
 static const char RESP406[] = "406 Not Acceptable\r\n";
-static const char RESP500[] = "500 Internal Server Error\r\n";
+const char RESP500[] = "500 Internal Server Error\r\n";
 static const char RESP501[] = "501 Not Implemented\r\n";
 /* buffer for responses. Just make them fixed and static */
 static char res[0xff];
@@ -56,7 +56,7 @@ static void strip_uri(const char *uri)
 }
 
 /* send the generic response header */
-static void send_head(const char *head)
+void send_head(const char *head)
 {
     extern fparams_st params;
     extern int proto_version;
@@ -74,14 +74,14 @@ static void send_head(const char *head)
 }
 
 /* send the content-length */
-static void send_contentlength(long len)
+void send_contentlength(long len)
 {
     sprintf(buf, "Content-Length: %lu\r\n", len);
     strcat(res, buf);
 }
 
 /* send the content-type */
-static void send_contenttype(char *name)
+void send_contenttype(char *name)
 {
     sprintf(buf, "Content-Type: ");
     strcat(buf, name);
@@ -90,7 +90,7 @@ static void send_contenttype(char *name)
 }
 
 /* send the filter content-encoding */
-static void send_filter_encoding(char *name)
+void send_filter_encoding(char *name)
 {
     /* very very ugly. But we must have an expection somewhere */
     if (!strcmp(name, "identity"))
@@ -101,7 +101,7 @@ static void send_filter_encoding(char *name)
 }
 
 /* send the prepared header */
-static void send_endhead(int sock)
+void send_endhead(int sock)
 {
     strcat(res, "\r\n");
     write(sock, res, strlen(res));
@@ -141,48 +141,18 @@ void send_501(int sock)
 /* check if we can deal the request header */
 static int check_method()
 {
-    extern int method;
-    if (method!=M_GET && method!=M_POST && method!=M_HEAD) {
+    extern struct request_s req;
+    if (req.method!=M_GET && req.method!=M_POST && req.method!=M_HEAD) {
         return -1;
     }
     return 0;
 }
 
-#ifndef NOCACHE
-/* send a cached file */
-static void send_cached_file(struct cache_entry_s *cache_file, int sock)
-{
-    extern struct module_filter_s *ident_filter;
-    extern int method;
-    unsigned char *addr;
-    struct stat sb;
-    int clen;
-    int fd;
-    memset(&sb, 0, sizeof(sb));
-    stat(cache_file->fname, &sb);
-    if ((fd = open(cache_file->fname, 0))<0) {
-        send_head(RESP500);
-        return;
-    }
-    send_head(RESP200);
-    if ((clen = ident_filter->prelen(&sb))>=0)
-        send_contentlength(clen);
-    send_filter_encoding(cache_file->filter_id);
-    send_contenttype(cache_file->content_type);
-    send_endhead(sock);
-    if (method==M_HEAD)
-        return;
-    addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
-    ident_filter->compress(addr, sock, clen);
-}
-#endif
-
 /* send the response */
 void send_file(int sock, const char *uri)
 {
     extern fparams_st params;
-    extern int method;
-    extern struct qhead_s *accept_encoding;
+    extern struct request_s req;
     extern int keeping_alive;
     struct stat sb;
     unsigned char *addr;
@@ -190,8 +160,6 @@ void send_file(int sock, const char *uri)
     long clen;
     int fd;
 #ifndef NOCACHE
-    struct cache_entry_s *cache_file;
-    struct qhead_s *aep;
     int cfd;
 #endif
 
@@ -199,18 +167,8 @@ void send_file(int sock, const char *uri)
         send_501(sock);
         return;
     }
-#ifndef NOCACHE
-    /* check if we have a file in cache */
-    for (aep=accept_encoding; aep!=NULL; aep=aep->next) {
-        if (!strcmp(aep->id, "identity"))
-            continue;
-        if ((cache_file = cache_lookup(uri, aep->id))!=NULL) {
-            send_cached_file(cache_file, sock);
-            return;
-        }
-    }
-    DEBUG_LOG((LOG_DEBUG, "Normal sending"));
-#endif
+    if (on_presend(sock, &req)!=0)
+        return;
     /* no cache? build one */
     strip_uri(uri);
     if ((filename = malloc(strlen(params.http_root)+strlen(page)+1))==NULL) {
@@ -239,7 +197,7 @@ redo:
         /* if here the cgi failed. Send a 500 to the client */
         send_500(sock);
     }
-    filter = filter_findfilter(accept_encoding);
+    filter = filter_findfilter(req.header.accept_encoding);
     if (filter==NULL) {
         send_406(sock);
         return;
@@ -258,16 +216,13 @@ redo:
     send_filter_encoding(filter->name);
     send_contenttype(mime_gettype(filename));
     send_endhead(sock);
-    if (method==M_HEAD)
+    if (req.method==M_HEAD)
         return;
     addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     filter->compress(addr, sock, sb.st_size);
     /* add in cache (only if filter != identity!) */
     if (!strcmp(filter->name, "identity"))
         return;
-#ifndef NOCACHE
-    if ((cfd = cache_create_file(uri, filter->name, mime_gettype(filename)))>=0)
-        filter->compress(addr, cfd, sb.st_size);
-#endif
+    on_postsend(&req, filter, mime_gettype(filename), addr, sb.st_size);
 }
 

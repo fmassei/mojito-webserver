@@ -13,8 +13,8 @@ else
     STATIC_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
 endif
 
-SHARED_PNAME = libcacheshm.so.1
-STATIC_PNAME = libcacheshm.a
+SHARED_PNAME = libmod_cacheshm.so.1
+STATIC_PNAME = libmod_cacheshm.a
 
 #-----------------------------------
 SHARED_OBJS = linear_hashtab.oh cache.oh

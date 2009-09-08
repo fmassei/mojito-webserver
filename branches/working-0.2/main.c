@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "logger/logger.h"
-#include "cache/cache.h"
 #include "socket.h"
 #include "request.h"
 #include "fparams.h"
@@ -33,14 +32,15 @@
 #include "response.h"
 #include "filter_manag.h"
 #include "module.h"
+#include "modules/modules.h"
 
-extern char *uri;
+extern struct request_s req;
 fparams_st params;
 int keeping_alive;
 
 void clean_quit()
 {
-    cache_fini();
+    mod_fini();
     logger_fini();
 }
 
@@ -58,7 +58,7 @@ int main(const int argc, char * const argv[])
     pid_t cpid;
     int opt;
     char *error;
-    extern char *in_ip, *method_str, *uri;
+    extern char *in_ip, *method_str;
 
     while ((opt = getopt(argc, argv, "v"))!=-1) {
         switch(opt) {
@@ -78,8 +78,8 @@ int main(const int argc, char * const argv[])
         return EXIT_FAILURE;
     }
     if (module_get_logger(&params, &error)<0 ||
-            module_get_cache(&params, &error)<0 ||
-            module_get_filter(&params, &error)<0 ) {
+            module_get_filter(&params, &error)<0 ||
+            module_get(&params, &error)<0 ) {
         fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;
     }
@@ -94,11 +94,7 @@ int main(const int argc, char * const argv[])
         return EXIT_FAILURE;
     }
 #endif
-#ifndef NOCACHE
-    if (cache_init()!=0) {
-        logmsg(LOG_ERROR, "Could not start cache. Trying to go on.");
-    }
-#endif
+    mod_init();
     if (server_start(params.listen_port, params.listen_queue)<0) {
         logmsg(LOG_ERROR, "Error starting server");
         return EXIT_FAILURE;
@@ -120,12 +116,13 @@ int main(const int argc, char * const argv[])
             close(cl_sock);
             continue;
         }
+        on_accept();
 child_life:
         request_create();
         if (request_read(cl_sock)==1)
             goto client_kill;
-        send_file(cl_sock, uri);
-        loghit(in_ip, method_str, uri);
+        send_file(cl_sock, req.uri);
+        loghit(in_ip, method_str, req.uri);
         if (keeping_alive!=0) {
             DEBUG_LOG((LOG_DEBUG, "Keeping alive!"));
             logflush();

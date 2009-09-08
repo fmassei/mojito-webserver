@@ -119,8 +119,9 @@ int cgi_run(char *filename, int sock)
         return -1;
     } else {
         /* log and die - the child will take care of the rest */
-        extern char *in_ip, *method_str, *uri;
-        loghit(in_ip, method_str, uri);
+        extern char *in_ip, *method_str;
+        extern struct request_s req;
+        loghit(in_ip, method_str, req.uri);
         exit(0);
     }
     return 0; /* it shouldn't get here */

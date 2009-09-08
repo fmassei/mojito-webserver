@@ -16,37 +16,22 @@ MISSING_LINKAGE =
 
 # specify module-set targets
 TARGET_LOGGERS = loggers
-TARGET_CACHES = caches
 TARGET_FILTERS = filters
+TARGET_MODS = mods
 
 #--------------------------
 #debug or release
 PSTATUS = debug
 #lstatic, lshared or lnone
 LOGGER = lshared
-CACHE = lshared
 FILTER = lshared
+MODULE = lshared
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
 	CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g
 else
 	CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
-endif
-
-ifeq ($(CACHE), lstatic)
-	CACHE_LNK = shm
-	CACHE_LINK = -Lcache/$(CACHE_LNK) -lcache$(CACHE_LNK)
-endif
-ifeq ($(CACHE), lshared)
-	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_CACHE
-	DYNAMIC = -DDYNAMIC
-	LIBS := $(LIBS) -ldl
-endif
-ifeq ($(CACHE), lnone)
-	CACHE_LINK =
-	MISSING_LINKAGE := $(MISSING_LINKAGE) -DNOCACHE
-	TARGET_CACHES =
 endif
 
 ifeq ($(LOGGER), lstatic)
@@ -70,14 +55,23 @@ ifeq ($(FILTER), lshared)
 	LIBS := $(LIBS) -ldl
 endif
 
+ifeq ($(MODULE), lstatic)
+	MODULE_LINK = -Lmodule/mod_stat -lmod_stat
+endif
+ifeq ($(MODULE), lshared)
+	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_MODULE
+	DYNAMIC = -DDYNAMIC
+	LIBS := $(LIBS) -ldl
+endif
 
 
 #--------------------------
 OBJS=daemon.o date.o fileutils.o fparams.o main.o request.o response.o \
     socket.o mime.o cgi.o filter_manag.o header_w_quality.o \
-	module.o plist.o cache/cache.o logger/logger.o filter/filter.o
+	module.o plist.o logger/logger.o filter/filter.o \
+	modules/modules.o
 
-all: $(TARGET_CACHES) $(TARGET_LOGGERS) $(TARGET_FILTERS) mojito
+all: $(TARGET_LOGGERS) $(TARGET_FILTERS) $(TARGET_MODS) mojito
 
 loggers:
 ifeq ($(LOGGER), lnone)
@@ -86,9 +80,6 @@ ifeq ($(LOGGER), lnone)
 endif
 	@(cd logger && make)
 
-caches:
-	@(cd cache && make)
-
 filters:
 ifeq ($(FILTER), lnone)
 	@echo "value 'lnone' for filter is not supported."
@@ -96,8 +87,15 @@ ifeq ($(FILTER), lnone)
 endif
 	@(cd filter && make)
 
+mods:
+ifeq ($(MODULE), lnone)
+	@echo "value 'lnone' for module is not supported."
+	@exit 2
+endif
+	@(cd modules && make)
+
 mojito: $(OBJS)
-	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(CACHE_LINK) $(LOGGER_LINK) $(FILTER_LINK)
+	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(LOGGER_LINK) $(FILTER_LINK) $(MODULE_LINK)
 
 .c.o:
 	$(GCC) $(INCDIR) -c $< -o $@ $(CFLAGS) $(DYNAMIC) $(DYNAMIC_LINKAGE) $(MISSING_LINKAGE)
@@ -106,6 +104,6 @@ clean:
 	-$(RM) $(OBJS)
 	-$(RM) $(PNAME)
 	@(cd logger && make clean)
-	@(cd cache && make clean)
 	@(cd filter && make clean)
+	@(cd modules && make clean)
 

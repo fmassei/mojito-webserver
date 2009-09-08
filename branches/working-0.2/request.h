@@ -57,6 +57,14 @@
 #define P_HTTP_10   1
 #define P_HTTP_11   2
 
+struct request_s {
+    char *uri;
+    int method;
+    struct header_s {
+        struct qhead_s *accept_encoding;
+    } header;
+};
+
 /* create an empty request */
 void request_create();
 /* wait some data on a living connection */

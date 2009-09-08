@@ -17,8 +17,10 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "cache.h"
 #include "linear_hashtab.h"
-#include "../cache.h"
+#include "../modules.h"
+#include "../../response.h"
 
 static struct lh_s *page_cache;
 static struct plist_s *params;
@@ -35,18 +37,18 @@ static char *buildkey(const char *URI, const char *filter_id)
 }
 
 /* set global parameters */
-static int _cache_set_parameters(struct plist_s *pars)
+static int cache_set_parameters(struct plist_s *pars)
 {
     params = pars;
     if ((cache_dir = plist_search(params, "cache_dir"))==NULL)
-        return -1;
+        return MOD_CRIT;
     if (cache_dir[strlen(cache_dir)-1]=='/')
         cache_dir[strlen(cache_dir)-1] = '\0';
-    return 0;
+    return MOD_OK;
 }
 
 /* search the cache for the URI and filter */
-static struct cache_entry_s *_cache_lookup(const char *URI,
+static struct cache_entry_s *cache_lookup(const char *URI,
                                                         const char *filter_id)
 {
     struct cache_entry_s *ret;
@@ -118,34 +120,89 @@ static int _cache_create_file(const char *URI, char *filter_id,
     return fd;
 }
 
-static int _cache_init()
+static int cache_init(void)
 {
     if ((page_cache = lhcreate(65536))==NULL)
         return -1;
-    return 0;
+    return MOD_OK;
 }
 
-static int _cache_fini()
+static int cache_fini(void)
 {
     lhdestroy(page_cache);
-    return 0;
+    return MOD_OK;
+}
+
+/* send a cached file */
+static void send_cached_file(struct cache_entry_s *cache_file, int sock,
+                                                        struct request_s *req)
+{
+    extern struct module_filter_s *ident_filter;
+    extern char RESP200[], RESP500[];
+    unsigned char *addr;
+    struct stat sb;
+    int clen;
+    int fd;
+    memset(&sb, 0, sizeof(sb));
+    stat(cache_file->fname, &sb);
+    if ((fd = open(cache_file->fname, 0))<0) {
+        send_head(RESP500);
+        return;
+    }
+    send_head(RESP200);
+    if ((clen = ident_filter->prelen(&sb))>=0)
+        send_contentlength(clen);
+    send_filter_encoding(cache_file->filter_id);
+    send_contenttype(cache_file->content_type);
+    send_endhead(sock);
+    if (req->method==M_HEAD)
+        return;
+    addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
+    ident_filter->compress(addr, sock, clen);
+}
+
+static int _on_presend(int sock, struct request_s *req)
+{
+    struct cache_entry_s *cache_file;
+    struct qhead_s *aep;
+    for (aep = req->header.accept_encoding; aep!=NULL; aep=aep->next) {
+        if (!strcmp(aep->id, "identity"))
+            continue;
+        if ((cache_file = cache_lookup(req->uri, aep->id))!=NULL) {
+            send_cached_file(cache_file, sock, req);
+            return MOD_ALLDONE;
+        }
+    }
+    return MOD_OK;
+}
+
+static int _on_postsend(struct request_s *req, struct module_filter_s *filter,
+                                            char *mime, void *addr, size_t size)
+{
+    int cfd;
+    if ((cfd = _cache_create_file(req->uri, filter->name, mime))<0)
+        return MOD_CRIT;
+    filter->compress(addr, cfd, size);
+    return MOD_OK;
 }
 
 /* define MODULE_STATIC in the Makefile! */
 #ifdef MODULE_STATIC
-struct module_cache_s *shm_getmodule()
+struct module_s *mod_cacheshm_getmodule()
 #else
-struct module_cache_s *getmodule()
+struct module_s *getmodule()
 #endif
 {
-    struct module_cache_s *p;
+    struct module_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
         return NULL;
-    p->base.module_init = _cache_init;
-    p->base.module_fini = _cache_fini;
-    p->base.module_set_params = _cache_set_parameters;
-    p->cache_lookup = _cache_lookup;
-    p->cache_create_file = _cache_create_file;
+    p->init = cache_init;
+    p->fini = cache_fini;
+    p->set_params = cache_set_parameters;
+    p->on_accept = NULL;
+    p->on_presend = _on_presend;
+    p->on_postsend = _on_postsend;
+    p->next = NULL;
     return p;
 }
 

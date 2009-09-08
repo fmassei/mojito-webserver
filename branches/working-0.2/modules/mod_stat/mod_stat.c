@@ -17,36 +17,32 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_RESPONSE_H
-#define H_RESPONSE_H
-
-#define _BSD_SOURCE
-
+#include "../modules.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
+static int _on_accept(void)
+{
+    DEBUG_LOG((LOG_DEBUG, "Accepted."));
+    return 0;
+}
 
-#include "logger/logger.h"
-#include "fparams.h"
-#include "request.h"
-#include "mime.h"
-#include "date.h"
-#include "filter_manag.h"
-#include "cgi.h"
-#include "header_w_quality.h"
+#ifdef MODULE_STATIC
+struct module_s *mod_stat_getmodule()
+#else
+struct module_s *getmodule()
+#endif
+{
+    struct module_s *p;
+    if ((p = malloc(sizeof(*p)))==NULL)
+        return NULL;
+    p->init = NULL;
+    p->fini = NULL;
+    p->set_params = NULL;
+    p->on_accept = _on_accept;
+    p->on_presend = NULL;
+    p->on_postsend = NULL;
+    p->next = NULL;
+    return p;
+}
 
-/* push return codes in the response */
-void push_200(int sock);
-void send_404(int sock);
-void send_500(int sock);
-void send_501(int sock);
-/* send a file */
-void send_file(int sock, const char *filename);
-
-#endif /* H_RESPONSE_H */

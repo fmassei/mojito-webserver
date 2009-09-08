@@ -21,13 +21,11 @@
 
 char *method_strs[] = { "", "GET" /* M_GET */, "HEAD", "POST" };
 
-char *uri;
+struct request_s req;
 char *in_ip;
 char *method_str;
-struct qhead_s *accept_encoding = NULL;
 char *post_data = NULL;
 int post_fd = 0;
-int method = 0;
 char *content_type = NULL;
 long content_length = 0;
 int proto_version = P_HTTP_UNK;
@@ -39,9 +37,10 @@ static char *buf, *cur_head;
 /* create an empty request */
 void request_create()
 {
-    uri = NULL;
-    method = 0;
+    req.uri = NULL;
+    req.method = 0;
     status = HEAD;
+    req.header.accept_encoding = NULL;
     buf = cur_head = NULL;
 }
 
@@ -64,14 +63,14 @@ static int parse_first_line(char *line)
     extern int keeping_alive;
     char *st, *st2;
     if (!memcmp(line, "GET ", 4))
-        method = M_GET;
+        req.method = M_GET;
     else if (!memcmp(line, "HEAD ", 5))
-        method = M_HEAD;
+        req.method = M_HEAD;
     else if (!memcmp(line, "POST ", 5))
-        method = M_POST;
+        req.method = M_POST;
     else 
         return -1;
-    method_str = method_strs[method];
+    method_str = method_strs[req.method];
     /* go to next arg. Here and below we skip more than one whitespace if
      * present between arguments. This is not RFC2616 conforming, but adds
      * some robustness to the client/server communication. */
@@ -80,9 +79,9 @@ static int parse_first_line(char *line)
     while(*(++st)==' ' && *st!='\0');
     /* find end or space */
     for (st2=st; *st2!='\0' && *st2!=' '; ++st2);
-    uri = malloc(st2-st+1);
-    memcpy(uri, st, st2-st);
-    uri[st2-st] = '\0';
+    req.uri = malloc(st2-st+1);
+    memcpy(req.uri, st, st2-st);
+    req.uri[st2-st] = '\0';
     /* find protocol version */
     st = st2;
     while(*(++st)==' ' && *st!='\0');
@@ -122,9 +121,10 @@ static int parse_header_line(char *line)
             return 0;
         }
         str_content_length = value;
-    } else if (!memcmp(line, "ACCEPT_ENCODING", 15) && !accept_encoding) {
+    } else if (!memcmp(line, "ACCEPT_ENCODING", 15) &&
+            !req.header.accept_encoding) {
         DEBUG_LOG((LOG_DEBUG, "parsing accepted encoding: %s", value));
-        accept_encoding = qhead_parse(value);
+        req.header.accept_encoding = qhead_parse(value);
     } else if (!memcmp(line, "CONTENT_TYPE", 12) && !content_type) {
         content_type = value;
     } else if (!memcmp(line, "CONNECTION", 10)) {
@@ -141,7 +141,7 @@ static int parse_header_line(char *line)
 /* parse an option */
 static int parse_option(char *line)
 {
-    if (method==0)
+    if (req.method==0)
         return parse_first_line(line);
     else
         return parse_header_line(line);
@@ -232,8 +232,8 @@ int request_read(int sock)
                 cur_head = buf+pos;
             } else if (status==BODY) {
                 /* sanitize accept_encoding. */
-                filter_sanitize_queue(&accept_encoding);
-                if (content_length<=0 || method!=M_POST)
+                filter_sanitize_queue(&req.header.accept_encoding);
+                if (content_length<=0 || req.method!=M_POST)
                     return 0;
                 /* I was tempted to drop the headers freeing some memory. I
                  * don't do this here because maybe we'll need them in a
