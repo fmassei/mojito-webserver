@@ -153,36 +153,36 @@ int on_presend(int sock, struct request_s *req)
 
 int on_prehead(struct stat *sb)
 {
+    extern struct module_s *ch_filter;
     MOD_LOOP_HEAD
-        ret = (p->on_prehead!=NULL) ? p->on_prehead(sb) : MOD_NOHOOK;
+        if ((p->category==MODCAT_FILTER) && (p!=ch_filter)) {
+            ret = MOD_NOHOOK;
+        } else {
+            ret = (p->on_prehead!=NULL) ? p->on_prehead(sb) : MOD_NOHOOK;
+        }
     MOD_LOOP_NORMFLOW
     return 0;
 }
 
 int on_send(void *addr, int sock, struct stat *sb)
 {
+    extern struct module_s *ch_filter;
     MOD_LOOP_HEAD
-        ret = (p->on_send!=NULL) ? p->on_send(addr, sock, sb) : MOD_NOHOOK;
+        if ((p->category==MODCAT_FILTER) && (p!=ch_filter)) {
+            ret = MOD_NOHOOK;
+        } else {
+            ret = (p->on_send!=NULL) ? p->on_send(addr, sock, sb) : MOD_NOHOOK;
+        }
     MOD_LOOP_NORMFLOW
     return 0;
 }
 
-int on_postsend(struct request_s *req, char *mime, void *addr, size_t size)
+int on_postsend(struct request_s *req, char *mime, void *addr, struct stat *sb)
 {
     MOD_LOOP_HEAD
-        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, mime, addr, size) : MOD_NOHOOK;
+        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, mime, addr, sb) : MOD_NOHOOK;
     MOD_LOOP_NORMFLOW
     return 0;
-}
-
-int mod_run_count_in_cat(int cat)
-{
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->category == cat && p->will_run==1)
-            ++ret;
-    return ret;
 }
 
 struct module_s *module_add_static(struct module_s *(*get_module)(void))

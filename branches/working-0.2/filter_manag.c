@@ -77,7 +77,7 @@ int filter_sanitize_queue(struct qhead_s **qhead)
 
 /* scroll the qhead struct trying to find a usable filter based on user
  * preferences (RFC2616-14.3). The qhead list should be ordered. */
-struct module_filter_s *filter_findfilter(struct qhead_s *qhead)
+struct module_s *filter_findfilter(struct qhead_s *qhead)
 {
     extern struct module_filter_s *filters;
     struct qhead_s *p;
@@ -85,7 +85,7 @@ struct module_filter_s *filter_findfilter(struct qhead_s *qhead)
     for (p=qhead; p!=NULL; p=p->next)
         for (f=filters; f!=NULL; f=f->next) {
             if (!strcmp(f->mod->name, p->id))
-                return f;
+                return f->mod;
         }
     return NULL;
 }

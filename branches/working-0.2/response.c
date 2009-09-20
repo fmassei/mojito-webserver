@@ -19,13 +19,10 @@
 
 #include "response.h"
 
-/* final filter(s) */
-static struct module_filter_s *filter;
-
 static char *page;
 char *query_string;
 /* FIXME change that thing */
-char *ch_filter;
+struct module_s *ch_filter;
 
 /* extract url and query string from the uri */
 static void strip_uri(const char *uri)
@@ -102,7 +99,7 @@ redo:
         header_kill_w_code(HRESP_500, sock);
         return;
     }
-    if (mod_run_count_in_cat(MODCAT_FILTER)==0) {
+    if ((ch_filter = filter_findfilter(req.header.accept_encoding))==NULL) {
         header_kill_w_code(HRESP_406, sock);
         return;
     }
@@ -125,9 +122,9 @@ redo:
     if (on_send(addr, sock, &sb)!=0)
         return;
     /* add in cache (only if filter != identity!) */
-    if (!strcmp(ch_filter, "identity"))
+    if (!strcmp(ch_filter->name, "identity"))
         return;
-    if (on_postsend(&req, mime_gettype(filename), addr, sb.st_size)!=0)
+    if (on_postsend(&req, mime_gettype(filename), addr, &sb)!=0)
         return;
 }
 

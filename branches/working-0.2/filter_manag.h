@@ -34,6 +34,6 @@
 
 /* filter functions */
 int filter_sanitize_queue(struct qhead_s **qhead);
-struct module_filter_s *filter_findfilter(struct qhead_s *qhead);
+struct module_s *filter_findfilter(struct qhead_s *qhead);
 
 #endif /* H_FILTER_MANAG_H */

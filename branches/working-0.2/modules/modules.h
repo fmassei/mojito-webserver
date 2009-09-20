@@ -59,7 +59,7 @@ struct module_s {
     int (*on_presend)(int, struct request_s *);
     int (*on_prehead)(struct stat *);
     int (*on_send)(void *, int, struct stat *);
-    int (*on_postsend)(struct request_s *, char *, void *, size_t);
+    int (*on_postsend)(struct request_s *, char *, void *, struct stat *);
     int will_run;
     int category;
     struct module_s *next, *prev;
@@ -79,9 +79,7 @@ int on_accept(void);
 int on_presend(int sock, struct request_s *req);
 int on_prehead(struct stat *sb);
 int on_send(void *addr, int sock, struct stat *sb);
-int on_postsend(struct request_s *, char *mime, void *addr, size_t size);
-/* finding functions */
-int mod_run_count_in_cat(int cat);
+int on_postsend(struct request_s *, char *mime, void *addr, struct stat *sb);
 /* loaders */
 struct module_s *module_add_static(struct module_s *(*get_module)(void));
 #ifdef DYNAMIC

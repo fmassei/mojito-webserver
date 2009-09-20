@@ -50,13 +50,11 @@ static int _on_prehead(struct stat *sb)
     if ((len = _prelen(sb))>=0)
         header_push_contentlength(len);
     header_push_contentencoding("identity");
-    return MOD_OK;
+    return MOD_PROCDONE;
 }
 
 static int _on_send(void *addr, int sock, struct stat *sb)
 {
-    extern char *ch_filter;
-    ch_filter = "identity";
     if (_compress(addr, sock, sb->st_size)!=0)
         return MOD_CRIT;
     return MOD_PROCDONE;

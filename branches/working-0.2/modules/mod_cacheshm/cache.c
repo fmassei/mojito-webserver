@@ -141,6 +141,7 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock,
     struct stat sb;
     int clen;
     int fd;
+    DEBUG_LOG((LOG_DEBUG, "Sending cached."));
     memset(&sb, 0, sizeof(sb));
     stat(cache_file->fname, &sb);
     if ((fd = open(cache_file->fname, 0))<0) {
@@ -174,17 +175,14 @@ static int _on_presend(int sock, struct request_s *req)
 }
 
 static int _on_postsend(struct request_s *req,
-                                            char *mime, void *addr, size_t size)
+                                        char *mime, void *addr, struct stat *sb)
 {
-    extern char *ch_filter;
+    extern struct module_s *ch_filter;
     int cfd;
-    struct stat sb;
     /* FIXME adjust this ch_filter */
-    if ((cfd = _cache_create_file(req->uri, ch_filter, mime))<0)
+    if ((cfd = _cache_create_file(req->uri, ch_filter->name, mime))<0)
         return MOD_CRIT;
-    if (fstat(cfd, &sb)<0)
-        return MOD_CRIT;
-    if (on_send(addr, cfd, &sb)!=0)
+    if (on_send(addr, cfd, sb)!=0)
         return MOD_CRIT;
     return MOD_OK;
 }
