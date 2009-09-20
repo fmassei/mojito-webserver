@@ -24,6 +24,8 @@ static struct module_filter_s *filter;
 
 static char *page;
 char *query_string;
+/* FIXME change that thing */
+char *ch_filter;
 
 /* extract url and query string from the uri */
 static void strip_uri(const char *uri)
@@ -58,20 +60,20 @@ void send_file(int sock, const char *uri)
 {
     extern fparams_st params;
     extern struct request_s req;
-    extern int keeping_alive;
+    extern int keeping_alive, content_length_sent;
     struct stat sb;
     unsigned char *addr;
     char *filename;
-    long clen;
     int fd;
 
     if (check_method()!=0) {
         header_kill_w_code(HRESP_501, sock);
         return;
     }
+    if (can_run(&req)!=0)
+        return;
     if (on_presend(sock, &req)!=0)
         return;
-    /* no cache? build one */
     strip_uri(uri);
     if ((filename = malloc(strlen(params.http_root)+strlen(page)+1))==NULL) {
         header_kill_w_code(HRESP_500, sock);
@@ -100,8 +102,7 @@ redo:
         header_kill_w_code(HRESP_500, sock);
         return;
     }
-    filter = filter_findfilter(req.header.accept_encoding);
-    if (filter==NULL) {
+    if (mod_run_count_in_cat(MODCAT_FILTER)==0) {
         header_kill_w_code(HRESP_406, sock);
         return;
     }
@@ -110,22 +111,23 @@ redo:
         return;
     }
     header_push_code(HRESP_200);
-    if ((clen = filter->prelen(&sb))>=0) {
-        header_push_contentlength(clen);
-    } else {
-        /* no length? no party. We can't keep the connection alive */
-        keeping_alive = 0;
-    }
-    header_push_contentencoding(filter->name);
     header_push_contenttype(mime_gettype(filename));
+    if (on_prehead(&sb)!=0)
+        return;
+    /* no length? no party. We can't keep the connection alive 
+     * FIXME this is very ugly. Move this check somewhere else */
+    if (keeping_alive==1 && content_length_sent==0)
+        keeping_alive = 0;
     header_send(sock);
     if (req.method==M_HEAD)
         return;
     addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    filter->compress(addr, sock, sb.st_size);
-    /* add in cache (only if filter != identity!) */
-    if (!strcmp(filter->name, "identity"))
+    if (on_send(addr, sock, &sb)!=0)
         return;
-    on_postsend(&req, filter, mime_gettype(filename), addr, sb.st_size);
+    /* add in cache (only if filter != identity!) */
+    if (!strcmp(ch_filter, "identity"))
+        return;
+    if (on_postsend(&req, mime_gettype(filename), addr, sb.st_size)!=0)
+        return;
 }
 

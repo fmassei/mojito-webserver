@@ -35,7 +35,8 @@
 #include "fileutils.h"
 #include "fparams.h"
 #include "header_w_quality.h"
-#include "filter_manag.h"
+#include "logger/logger.h"
+/*#include "filter_manag.h"*/
 
 /* FIXME change to system defined size */
 #define SOCKBUFSIZE 255

@@ -137,7 +137,6 @@ static int cache_fini(void)
 static void send_cached_file(struct cache_entry_s *cache_file, int sock,
                                                         struct request_s *req)
 {
-    extern struct module_filter_s *ident_filter;
     unsigned char *addr;
     struct stat sb;
     int clen;
@@ -149,15 +148,14 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock,
         return;
     }
     header_push_code(HRESP_200);
-    if ((clen = ident_filter->prelen(&sb))>=0)
-        header_push_contentlength(clen);
+    header_push_contentlength(sb.st_size);
     header_push_contentencoding(cache_file->filter_id);
     header_push_contenttype(cache_file->content_type);
     header_send(sock);
     if (req->method==M_HEAD)
         return;
     addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
-    ident_filter->compress(addr, sock, clen);
+    write(sock, addr, clen);
 }
 
 static int _on_presend(int sock, struct request_s *req)
@@ -175,13 +173,19 @@ static int _on_presend(int sock, struct request_s *req)
     return MOD_OK;
 }
 
-static int _on_postsend(struct request_s *req, struct module_filter_s *filter,
+static int _on_postsend(struct request_s *req,
                                             char *mime, void *addr, size_t size)
 {
+    extern char *ch_filter;
     int cfd;
-    if ((cfd = _cache_create_file(req->uri, filter->name, mime))<0)
+    struct stat sb;
+    /* FIXME adjust this ch_filter */
+    if ((cfd = _cache_create_file(req->uri, ch_filter, mime))<0)
         return MOD_CRIT;
-    filter->compress(addr, cfd, size);
+    if (fstat(cfd, &sb)<0)
+        return MOD_CRIT;
+    if (on_send(addr, cfd, &sb)!=0)
+        return MOD_CRIT;
     return MOD_OK;
 }
 
@@ -195,13 +199,19 @@ struct module_s *getmodule()
     struct module_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
         return NULL;
+    p->name = "cacheshm";
+    p->set_params = cache_set_parameters;
     p->init = cache_init;
     p->fini = cache_fini;
-    p->set_params = cache_set_parameters;
+    p->can_run = NULL;
     p->on_accept = NULL;
     p->on_presend = _on_presend;
+    p->on_prehead = NULL;
+    p->on_send = NULL;
     p->on_postsend = _on_postsend;
-    p->next = NULL;
+    p->will_run = 1;
+    p->category = MODCAT_CACHE;
+    p->next = p->prev = NULL;
     return p;
 }
 

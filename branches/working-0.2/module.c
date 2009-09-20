@@ -19,7 +19,7 @@
 
 #include "module.h"
 #include "logger/logger.h"
-#include "filter/filter.h"
+/*#include "filter/filter.h"*/
 #include "modules/modules.h"
 
 #ifdef DYNAMIC
@@ -88,78 +88,6 @@ int module_get_logger(fparams_st *prm, char **error)
     return set_module_params(&mod->base, mpars->params, error);
 }
 
-#ifdef DYNAMIC_FILTER
-static int load_dynamic_filter(fparams_st *prm, struct module_params_s *mpars,
-                                                    char *modname, char **error)
-{
-    struct module_filter_s *mod;
-    char *buf;
-    if ((buf = getlibname(prm, "filter", modname))==NULL) {
-        *error = "Couldn't get libname for filter";
-        return -1;
-    }
-    if ((mod = filter_add_dynamic_mod(buf, error))==NULL) {
-        free(buf);
-        return -1;
-    }
-    if (buf!=NULL)
-        free(buf);
-    return set_module_params(&mod->base, mpars->params, error);
-}
-#else
-static int load_static_filter(struct module_params_s *mpars,
-                        struct module_filter_s*(*modfnc)(void), char **error)
-{
-    struct module_filter_s *mod;
-    if ((mod = filter_add_static_mod(modfnc))==NULL) {
-        *error = "Error loading static filter module";
-        return -1;
-    }
-    return set_module_params(&mod->base, mpars->params, error);
-}
-#endif
-
-/* get the filter module(s) */
-int module_get_filter(fparams_st *prm, char **error)
-{
-    struct module_params_s *mpars;
-    int err;
-#ifdef DYNAMIC_FILTER
-    char *modname;
-    int i;
-#else
-    extern struct module_filter_s   *identity_getmodule(void),
-                                    *gzip_getmodule(void),
-                                    *deflate_getmodule(void);
-#endif
-    if ((mpars = params_getModuleParams(prm, "filter"))==NULL) {
-        *error = "section [filter] not found in config.ini";
-        return -1;
-    }
-#ifdef DYNAMIC_FILTER
-    if ((modname = plist_search(mpars->params, "module"))==NULL) {
-        *error = "value for \"module\" not found in section [filter]";
-        return -1;
-    }
-    while (*modname!='\0') {
-        while(*modname==' ' ) modname++;
-        for(i=0; *(modname+i)>='a' && *(modname+i)<='z'; ++i) ;
-        *(modname+i) = '\0';
-        if ((err = load_dynamic_filter(prm, mpars, modname, error))<0)
-            return err;
-        modname += i+1;
-    }
-#else
-    if ((err = load_static_filter(mpars, identity_getmodule, error))<0)
-        return err;
-    if ((err = load_static_filter(mpars, gzip_getmodule, error))<0)
-        return err;
-    if ((err = load_static_filter(mpars, deflate_getmodule, error))<0)
-        return err;
-#endif
-    return 0;
-}
-
 #ifdef DYNAMIC_MODULE
 static int load_dynamic_module(fparams_st *prm, struct module_params_s *mpars,
                                                     char *modname, char **error)
@@ -212,7 +140,10 @@ int module_get(fparams_st *prm, char **error)
     int i;
 #else
     extern struct module_s          *mod_stat_getmodule(void),
-                                    *mod_cacheshm_getmodule(void);
+                                    *mod_cacheshm_getmodule(void),
+                                    *mod_identity_getmodule(void),
+                                    *mod_gzip_getmodule(void),
+                                    *mod_deflate_getmodule(void);
 #endif
     if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
         *error = "section [modules] not found in config.ini";
@@ -236,6 +167,12 @@ int module_get(fparams_st *prm, char **error)
     if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
         return err;
     if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
+        return err;
+    if ((err = load_static_module(mpars, mod_gzip_getmodule, error))<0)
+        return err;
+    if ((err = load_static_module(mpars, mod_deflate_getmodule, error))<0)
+        return err;
+    if ((err = load_static_module(mpars, mod_identity_getmodule, error))<0)
         return err;
 #endif
     return 0;

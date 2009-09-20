@@ -27,13 +27,13 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "filter/filter.h"
+/* #include "filter/filter.h" */
 #include "header_w_quality.h"
 #include "logger/logger.h"
+#include "modules/modules.h"
 
 /* filter functions */
 int filter_sanitize_queue(struct qhead_s **qhead);
-int filter_is_present(struct qhead_s *qhead, char *id);
 struct module_filter_s *filter_findfilter(struct qhead_s *qhead);
 
 #endif /* H_FILTER_MANAG_H */

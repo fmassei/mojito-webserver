@@ -4,6 +4,9 @@ GCC = gcc
 AR = ar rcs
 RM = /bin/rm -rf
 
+SHARED_PNAME = libmod_gzip.so.1
+STATIC_PNAME = libmod_gzip.a
+
 PSTATUS = debug
 ifeq ($(PSTATUS), debug)
     SHARED_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g -fPIC
@@ -12,13 +15,9 @@ else
     SHARED_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -fPIC -DNDEBUG
     STATIC_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
 endif
-
-SHARED_PNAME = libfiltergzip.so.1
-STATIC_PNAME = libfiltergzip.a
-
 #-----------------------------------
-SHARED_OBJS = filter.oh
-STATIC_OBJS = filter.ot
+SHARED_OBJS = mod_gzip.oh
+STATIC_OBJS = mod_gzip.ot
 
 all: lib
 

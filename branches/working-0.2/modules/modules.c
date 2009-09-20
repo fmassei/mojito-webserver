@@ -19,72 +19,169 @@
 #include "modules.h"
 
 static struct module_s *modules = NULL;
+struct module_filter_s *filters = NULL;
 
-/* TODO FIXME XXX better check of the return values!!!! */
+/* delete a module from the queue.
+ * NOTE1: the modules will NOT be unloaded!
+ * NOTE2: don't change pointer of *todrop, as it will be impossible to manage
+ *      module-drops in a cycle! */
+static void dropmod(struct module_s **head, struct module_s *todrop)
+{
+    if (todrop==*head) {
+        *head = todrop->next;
+        if (*head!=NULL)
+            (*head)->prev = todrop->prev;
+    } else {
+        if (todrop->prev!=NULL)
+            todrop->prev->next = todrop->next;
+        if (todrop->next!=NULL)
+            todrop->next->prev = todrop->prev;
+    }
+}
+
+/* FIXME horrible style, but I didn't find a better way... */
+/* TODO FIXME XXX try not to unload modules just free()ing them! */
+#define MOD_LOOP_HEAD \
+    struct module_s *p, *q; \
+    int ret; \
+    p = modules; \
+    while (p!=NULL) {
+#define MOD_LOOP_SKIP_STOPPED \
+        if (p->will_run==0) \
+            continue;
+#define MOD_LOOP_SWITCH \
+        switch(ret) { \
+        case MOD_NOHOOK: \
+            break; \
+        case MOD_CORE_CRIT: \
+            return -1;
+#define MOD_LOOP_CASE_CRIT \
+        case MOD_CRIT: \
+            dropmod(&modules, p); \
+            if (p->prev==NULL) { \
+                free(p); \
+                p = modules; \
+                continue; \
+            } else { \
+                q = p->next; \
+                free(p); \
+                p = q; \
+                continue; \
+            }
+#define MOD_LOOP_CASE_ERR \
+        case MOD_ERR: \
+            p->will_run = 0; \
+            break;
+#define MOD_LOOP_CASE_PROCDONE \
+        case MOD_PROCDONE: \
+            return 0;
+#define MOD_LOOP_CASE_ALLDONE \
+        case MOD_ALLDONE: \
+            return 1;
+#define MOD_LOOP_END \
+        default: \
+            break; \
+        } \
+        p = p->next; \
+    }
+
+#define MOD_LOOP_NORMFLOW \
+    MOD_LOOP_SWITCH \
+    MOD_LOOP_SKIP_STOPPED \
+    MOD_LOOP_CASE_CRIT \
+    MOD_LOOP_CASE_ERR \
+    MOD_LOOP_CASE_PROCDONE \
+    MOD_LOOP_CASE_ALLDONE \
+    MOD_LOOP_END
+ 
 int mod_set_params(struct plist_s *params)
 {
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->set_params!=NULL)
-            if (p->set_params(params)!=0)
-                ret--;
-    return ret;
+    MOD_LOOP_HEAD
+        ret = (p->set_params!=NULL) ? p->set_params(params) : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
 }
 
 int mod_init(void)
 {
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->init!=NULL)
-            if (p->init()!=0)
-                ret--;
-    return ret;
+    MOD_LOOP_HEAD
+        ret = (p->init!=NULL) ? p->init() : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
 }
 
 int mod_fini(void)
 {
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->fini!=NULL)
-            if (p->fini()!=0)
-                ret--;
-    return ret;
+    MOD_LOOP_HEAD
+        ret = (p->fini!=NULL) ? p->fini() : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
+}
+
+int can_run(struct request_s *req)
+{
+    MOD_LOOP_HEAD
+        ret = (p->can_run!=NULL) ? p->can_run(req) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
 }
 
 int on_accept(void)
 {
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->on_accept!=NULL)
-            if (p->on_accept()!=0)
-                ret--;
-    return ret;
+    MOD_LOOP_HEAD
+        ret = (p->on_accept!=NULL) ? p->on_accept() : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
 }
 
 int on_presend(int sock, struct request_s *req)
 {
-    struct module_s *p;
-    int ret = 0;
-    for (p=modules; p!=NULL; p=p->next)
-        if (p->on_presend!=NULL)
-            if (p->on_presend(sock, req)!=0)
-                ret--;
-    return ret;
+    MOD_LOOP_HEAD
+        ret = (p->on_presend!=NULL) ? p->on_presend(sock, req) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
 }
 
-int on_postsend(struct request_s *req, struct module_filter_s *filter,
-                                            char *mime, void *addr, size_t size)
+int on_prehead(struct stat *sb)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_prehead!=NULL) ? p->on_prehead(sb) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_send(void *addr, int sock, struct stat *sb)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_send!=NULL) ? p->on_send(addr, sock, sb) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_postsend(struct request_s *req, char *mime, void *addr, size_t size)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, mime, addr, size) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int mod_run_count_in_cat(int cat)
 {
     struct module_s *p;
     int ret = 0;
     for (p=modules; p!=NULL; p=p->next)
-        if (p->on_postsend!=NULL)
-            if (p->on_postsend(req, filter, mime, addr, size)!=0)
-                ret--;
+        if (p->category == cat && p->will_run==1)
+            ++ret;
     return ret;
 }
 
@@ -94,7 +191,19 @@ struct module_s *module_add_static(struct module_s *(*get_module)(void))
     if ((p = get_module())==NULL)
         return NULL;
     p->next = modules;
+    if (modules!=NULL)
+        modules->prev = p;
+    p->prev = NULL;
     modules = p;
+    if (p->category==MODCAT_FILTER) {
+        struct module_filter_s *q;
+        if ((q = malloc(sizeof(*q)))==NULL) {
+            /* TODO check me */
+        }
+        q->mod = p;
+        q->next = filters;
+        filters = q;
+    }
     return p;
 }
 

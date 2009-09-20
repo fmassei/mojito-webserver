@@ -25,32 +25,63 @@
 #endif
 #include "../logger/logger.h"
 #include "../request.h"
+#include "../resp_headers.h"
 #include "../plist.h"
 
-#define MOD_CRIT        -1
-#define MOD_OK          0
-#define MOD_ALLDONE     1
+/* module functions return codes */
+#define MOD_NOHOOK      -4      /* no registered hook for this module */
+#define MOD_CORE_CRIT   -3      /* drop everything *don't use if possible* this
+                                * must be used when the module mess with the
+                                * core so much that, first it surrenders, then
+                                * it informs the core that it has to die too. */
+#define MOD_CRIT        -2      /* module critical state: the module will be
+                                * unloaded */
+#define MOD_ERR         -1      /* error */
+#define MOD_OK          0       /* ok */
+#define MOD_PROCDONE    1       /* don't run further modules for this hook */
+#define MOD_ALLDONE     2       /* break the request *don't use if possible* 
+                                * this will inform the core that all the further
+                                * steps will be accomplished by the module, and
+                                * so the core won't call them. */
+
+/* module categories */
+#define MODCAT_UNSPEC   0
+#define MODCAT_FILTER   1
+#define MODCAT_CACHE    2
 
 struct module_s {
+    char *name;
     int (*set_params)(struct plist_s *);
     int (*init)(void);
     int (*fini)(void);
+    int (*can_run)(struct request_s *);
     int (*on_accept)(void);
-    int (*on_presend)(int sock, struct request_s *);
-    int (*on_postsend)(struct request_s *, struct module_filter_s *,
-                                                        char *, void *, size_t);
-    struct module_s *next;
+    int (*on_presend)(int, struct request_s *);
+    int (*on_prehead)(struct stat *);
+    int (*on_send)(void *, int, struct stat *);
+    int (*on_postsend)(struct request_s *, char *, void *, size_t);
+    int will_run;
+    int category;
+    struct module_s *next, *prev;
+};
+
+struct module_filter_s {
+    struct module_s *mod;
+    struct module_filter_s *next;
 };
 
 /* wrappers */
-int mod_set_params(struct plist_s *);
+int mod_set_params(struct plist_s *params);
 int mod_init(void);
 int mod_fini(void);
+int can_run(struct request_s *req);
 int on_accept(void);
-int on_presend(int sock, struct request_s *);
-int on_postsend(struct request_s *, struct module_filter_s *,
-                                                        char *, void *, size_t);
-
+int on_presend(int sock, struct request_s *req);
+int on_prehead(struct stat *sb);
+int on_send(void *addr, int sock, struct stat *sb);
+int on_postsend(struct request_s *, char *mime, void *addr, size_t size);
+/* finding functions */
+int mod_run_count_in_cat(int cat);
 /* loaders */
 struct module_s *module_add_static(struct module_s *(*get_module)(void));
 #ifdef DYNAMIC

@@ -18,6 +18,9 @@
 */
 #include "resp_headers.h"
 
+/* TODO FIXME super ugly */
+int content_length_sent = 0;
+
 /* protocol strings */
 static const char HTTP10[] = "HTTP/1.0 ";
 static const char HTTP11[] = "HTTP/1.1 ";
@@ -62,6 +65,7 @@ void header_push_code(int code)
 void header_push_contentlength(long len)
 {
     header_send_hl("Content-Length", len);
+    content_length_sent = 1;
 }
 
 void header_push_contenttype(char *name)

@@ -21,14 +21,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int _on_accept(void)
+static int _compress(unsigned char *addr, int fd, ssize_t len)
 {
-    DEBUG_LOG((LOG_DEBUG, "Accepted."));
+    if (write(fd, addr, len)!=len)
+        return -1;
     return 0;
 }
 
+static ssize_t _prelen(struct stat *sb)
+{
+    if (sb->st_size==0)
+        return 0;
+    return -1;
+}
+
+static int _can_run(struct request_s *req)
+{
+    struct qhead_s *p;
+    for (p=req->header.accept_encoding; p!=NULL; p=p->next)
+        if (!strcmp("identity", p->id))
+            return MOD_OK;
+    return MOD_ERR;
+}
+
+static int _on_prehead(struct stat *sb)
+{
+    ssize_t len;
+    if ((len = _prelen(sb))>=0)
+        header_push_contentlength(len);
+    header_push_contentencoding("identity");
+    return MOD_OK;
+}
+
+static int _on_send(void *addr, int sock, struct stat *sb)
+{
+    extern char *ch_filter;
+    ch_filter = "identity";
+    if (_compress(addr, sock, sb->st_size)!=0)
+        return MOD_CRIT;
+    return MOD_PROCDONE;
+}
+
 #ifdef MODULE_STATIC
-struct module_s *mod_stat_getmodule()
+struct module_s *mod_identity_getmodule()
 #else
 struct module_s *getmodule()
 #endif
@@ -36,18 +71,19 @@ struct module_s *getmodule()
     struct module_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
         return NULL;
-    p->name = "stat";
+    p->name = "identity";
     p->set_params = NULL;
     p->init = NULL;
     p->fini = NULL;
-    p->on_accept = _on_accept;
+    p->can_run = _can_run;
+    p->on_accept = NULL;
     p->on_presend = NULL;
-    p->on_prehead = NULL;
-    p->on_send = NULL;
+    p->on_prehead = _on_prehead;
+    p->on_send = _on_send;
     p->on_postsend = NULL;
     p->next = p->prev = NULL;
     p->will_run = 1;
-    p->category = MODCAT_UNSPEC;
+    p->category = MODCAT_FILTER;
     return p;
 }
 

@@ -78,7 +78,6 @@ int main(const int argc, char * const argv[])
         return EXIT_FAILURE;
     }
     if (module_get_logger(&params, &error)<0 ||
-            module_get_filter(&params, &error)<0 ||
             module_get(&params, &error)<0 ) {
         fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;

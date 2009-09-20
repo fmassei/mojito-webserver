@@ -4,6 +4,9 @@ GCC = gcc
 AR = ar rcs
 RM = /bin/rm -rf
 
+SHARED_PNAME = libmod_identity.so.1
+STATIC_PNAME = libmod_identity.a
+
 PSTATUS = debug
 ifeq ($(PSTATUS), debug)
     SHARED_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g -fPIC
@@ -12,18 +15,14 @@ else
     SHARED_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -fPIC -DNDEBUG
     STATIC_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
 endif
-
-SHARED_PNAME = libfilteridentity.so.1
-STATIC_PNAME = libfilteridentity.a
-
 #-----------------------------------
-SHARED_OBJS = filter.oh
-STATIC_OBJS = filter.ot
+SHARED_OBJS = mod_identity.oh
+STATIC_OBJS = mod_identity.ot
 
 all: lib
 
 lib: $(STATIC_OBJS) $(SHARED_OBJS)
-	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc
+	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc -lz
 	$(AR) $(STATIC_PNAME) $(STATIC_OBJS)
 
 .c.oh:
