@@ -76,11 +76,13 @@ int logger_set_params(fparams_st *params)
 /* init */
 int logger_init(void)
 {
-    if ((flog = fopen(logfile, "w+"))==NULL) {
+/*    if ((flog = fopen(logfile, "w+"))==NULL) {*/
+    if ((flog = freopen(logfile, "w+", stdout))==NULL) {
         fprintf(stderr, "Logger: Error opening file %s\n", logfile);
         return -1;
     }
-    if ((ferr = fopen(errfile, "w+"))==NULL) {
+/*    if ((ferr = fopen(errfile, "w+"))==NULL) { */
+    if ((ferr = freopen(errfile, "w+", stderr))==NULL) {
         fprintf(stderr, "Logger: Error opening file %s\n", errfile);
         fclose(flog);
         return -1;

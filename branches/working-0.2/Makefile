@@ -21,7 +21,7 @@ TARGET_MODS = mods
 #debug or release
 PSTATUS = debug
 #lstatic, lshared or lnone
-MODULE = lstatic
+MODULE = lshared
 
 #--------------------------
 ifeq ($(PSTATUS), debug)
