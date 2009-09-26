@@ -27,7 +27,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "response.h"
-#include "logger/logger.h"
+#include "logger.h"
 
 /* run a cgi instance */
 int cgi_run(char *filename, int sock);

@@ -65,6 +65,10 @@ static int assign_param(char *name, char *value, fparams_st *params)
         if ((params->http_root = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
             params->http_root[strlen(value)-1] = '\0';
+    } else if (!strcmp(name, "logfile")) {
+        if ((params->logfile = strdup(value))==NULL) return -1;
+    } else if (!strcmp(name, "errfile")) {
+        if ((params->errfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "default_page")) {
         if ((params->default_page = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "uid")) {
@@ -123,6 +127,14 @@ static int check_fparams(fparams_st *params)
         fprintf(stderr, "Missing config option \"http_root\"\n");
         err = -1;
     }
+    if (params->logfile==NULL) {
+        fprintf(stderr, "Missing config option \"logfile\"\n");
+        err = -1;
+    }
+    if (params->errfile==NULL) {
+        fprintf(stderr, "Missing config option \"errfile\"\n");
+        err = -1;
+    }
     if (params->default_page==NULL) {
         fprintf(stderr, "Missing config option \"default_page\"\n");
         err = -1;
@@ -170,6 +182,8 @@ static void zero_fparams(fparams_st *params)
     params->pidfile = NULL;
     params->tmp_dir = NULL;
     params->http_root = NULL;
+    params->logfile = NULL;
+    params->errfile = NULL;
     params->default_page = NULL;
     params->uid = params->gid = 0;
     params->listen_port = params->listen_queue = 0;
@@ -270,6 +284,8 @@ void params_free(fparams_st *params)
     struct module_params_s *p, *q;
     if (params->pidfile) free(params->pidfile);
     if (params->http_root) free(params->http_root);
+    if (params->logfile) free(params->logfile);
+    if (params->errfile) free(params->errfile);
     if (params->default_page) free(params->default_page);
     if (params->tmp_dir) free(params->tmp_dir);
     if (params->server_meta) free(params->server_meta);

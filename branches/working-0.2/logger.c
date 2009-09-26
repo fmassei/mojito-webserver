@@ -17,15 +17,28 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../logger.h"
+#include "logger.h"
 
 static char datestr[30];
-static char *errs[] = { "error", "warning", "info", "debug" };
 
 static char *logfile, *errfile;
 FILE *flog, *ferr;
 
-static struct plist_s *params;
+/* get the string representing the passed prio */
+static char *get_logprio_desc(int prio)
+{
+    switch(prio) {
+    case LOG_EMERG: return "emerg";
+    case LOG_ALERT: return "alert";
+    case LOG_CRIT: return "crit";
+    case LOG_ERR: return "err";
+    case LOG_WARNING: return "warning";
+    case LOG_NOTICE: return "notice";
+    case LOG_INFO: return "info";
+    case LOG_DEBUG: return "debug";
+    default: return "";
+    }
+}
 
 /* return a date formatted for logs */
 static char *outdate()
@@ -36,19 +49,32 @@ static char *outdate()
     return datestr;
 }
 
-/* get the module parameters */
-static int _logger_set_params(struct plist_s *pars)
+/* log a generic message, on a specific file */
+static void _f_logmsg(int prio, char *fmt, va_list argp)
 {
-    params = pars;
-    if ((logfile = plist_search(params, "logfile"))==NULL)
-        return -1;
-    if ((errfile = plist_search(params, "errfile"))==NULL)
-        return -1;
+    fprintf(ferr, "[%s] [%s %d] ", outdate(), get_logprio_desc(prio), getpid());
+    vfprintf(ferr, fmt, argp);
+    fprintf(ferr, "\n");
+}
+
+void logmsg(int prio, char *fmt, ...)
+{
+    va_list argp;
+    va_start(argp, fmt);
+    _f_logmsg(prio, fmt, argp);
+    va_end(argp);
+}
+
+/* get the module parameters */
+int logger_set_params(fparams_st *params)
+{
+    logfile = params->logfile;
+    errfile = params->errfile;
     return 0;
 }
 
 /* init */
-static int _logger_init(void)
+int logger_init(void)
 {
     if ((flog = fopen(logfile, "w+"))==NULL) {
         fprintf(stderr, "Logger: Error opening file %s\n", logfile);
@@ -63,7 +89,7 @@ static int _logger_init(void)
 }
 
 /* fini */
-static int _logger_fini(void)
+int logger_fini(void)
 {
     int ret = 0;
     ret |= fclose(flog);
@@ -72,41 +98,15 @@ static int _logger_fini(void)
 }
 
 /* format an "hit" log entry */
-static void _loghit(char *in_ip, char *method_str, char *uri)
+void loghit(char *in_ip, char *method_str, char *uri)
 {
     fprintf(flog, "%s - - [%s] \"%s %s\"\n", in_ip, outdate(), method_str, uri);
 }
 
-/* log a generic message, on a specific file */
-static void _f_logmsg(int prio, char *fmt, va_list argp)
-{
-    fprintf(ferr, "[%s] [%s %d] ", outdate(), errs[prio], getpid());
-    vfprintf(ferr, fmt, argp);
-    fprintf(ferr, "\n");
-}
-
 /* flush the logger stream */
-static void _logflush()
+void logflush()
 {
     fflush(flog);
     fflush(ferr);
-}
-
-#ifdef MODULE_STATIC
-struct module_logger_s *std_getmodule()
-#else
-struct module_logger_s *getmodule()
-#endif
-{
-    struct module_logger_s *p;
-    if ((p = malloc(sizeof(*p)))==NULL)
-        return NULL;
-    p->base.module_init = _logger_init;
-    p->base.module_fini = _logger_fini;
-    p->base.module_set_params = _logger_set_params;
-    p->loghit = _loghit;
-    p->f_logmsg = _f_logmsg;
-    p->logflush = _logflush;
-    return p;
 }
 

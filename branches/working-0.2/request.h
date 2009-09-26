@@ -35,7 +35,7 @@
 #include "fileutils.h"
 #include "fparams.h"
 #include "header_w_quality.h"
-#include "logger/logger.h"
+#include "logger.h"
 /*#include "filter_manag.h"*/
 
 /* FIXME change to system defined size */

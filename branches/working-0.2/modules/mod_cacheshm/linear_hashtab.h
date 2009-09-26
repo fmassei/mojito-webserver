@@ -31,7 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../../logger/logger.h"
+#include "../../logger.h"
 
 /* This module is an hack. It implements one of my favourite type of
  * algorithms: the linear cached versions of the simple ones ;-) This one is a

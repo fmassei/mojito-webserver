@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "fparams.h"
 #include "request.h"
 #include "mime.h"
@@ -40,7 +40,6 @@
 #include "filter_manag.h"
 #include "cgi.h"
 #include "header_w_quality.h"
-#include "resp_headers.h"
 #include "resp_headers.h"
 #include "modules/modules.h"
 

@@ -23,7 +23,7 @@
 #ifdef DYNAMIC
 #include <dlfcn.h>
 #endif
-#include "../logger/logger.h"
+#include "../logger.h"
 #include "../request.h"
 #include "../resp_headers.h"
 #include "../plist.h"

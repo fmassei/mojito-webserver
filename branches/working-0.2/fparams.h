@@ -50,6 +50,7 @@ typedef struct fparams_s {
     int keepalive_timeout;
     char *server_meta;
     char *module_basepath;
+    char *logfile, *errfile;
     struct module_params_s *mod_params;
 } fparams_st;
 

@@ -18,7 +18,7 @@
 */
 
 #include "module.h"
-#include "logger/logger.h"
+#include "logger.h"
 /*#include "filter/filter.h"*/
 #include "modules/modules.h"
 
@@ -48,44 +48,6 @@ static int set_module_params(struct module_fnc_s *mb, struct plist_s *params,
             return -2;
         }
     return 0;
-}
-
-/* get the logger module */
-int module_get_logger(fparams_st *prm, char **error)
-{
-    struct module_logger_s *mod;
-    struct module_params_s *mpars;
-#ifdef DYNAMIC_LOGGER
-    char *buf, *modname;
-#else
-    extern struct module_logger_s *std_getmodule(void);
-#endif
-    if ((mpars = params_getModuleParams(prm, "logger"))==NULL) {
-        *error = "section [logger] not found in config.ini";
-        return -1;
-    }
-#ifdef DYNAMIC_LOGGER
-    if ((modname = plist_search(mpars->params, "module"))==NULL) {
-        *error = "value for \"module\" not found in section [logger]";
-        return -1;
-    }
-    if ((buf = getlibname(prm, "logger", modname))==NULL) {
-        *error = "Couldn't get libname for logger";
-        return -1;
-    }
-    if ((mod = logger_add_dynamic_mod(buf, error))==NULL) {
-        free(buf);
-        return -1;
-    }
-    if (buf!=NULL)
-        free(buf);
-#else
-    if ((mod = logger_add_static_mod(std_getmodule))==NULL) {
-        *error = "Error loading static logger module";
-        return -1;
-    }
-#endif
-    return set_module_params(&mod->base, mpars->params, error);
 }
 
 #ifdef DYNAMIC_MODULE

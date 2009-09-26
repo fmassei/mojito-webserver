@@ -24,11 +24,11 @@
 #include <signal.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "logger/logger.h"
 #include "socket.h"
 #include "request.h"
 #include "fparams.h"
 #include "daemon.h"
+#include "logger.h"
 #include "response.h"
 #include "filter_manag.h"
 #include "module.h"
@@ -77,8 +77,7 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-    if (module_get_logger(&params, &error)<0 ||
-            module_get(&params, &error)<0 ) {
+    if (module_get(&params, &error)<0) {
         fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;
     }
@@ -88,14 +87,14 @@ int main(const int argc, char * const argv[])
     }
 #ifndef NOLOGGER
     /* FIXME adjust the order!! */
-    if (logger_init()!=0) {
+    if (logger_set_params(&params)<0 || logger_init()!=0) {
         fprintf(stderr, "Failed to start logger.\n");
         return EXIT_FAILURE;
     }
 #endif
     mod_init();
     if (server_start(params.listen_port, params.listen_queue)<0) {
-        logmsg(LOG_ERROR, "Error starting server");
+        logmsg(LOG_ERR, "Error starting server");
         return EXIT_FAILURE;
     }
     logmsg(LOG_INFO, "Server started");

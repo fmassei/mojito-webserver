@@ -26,13 +26,9 @@
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../fparams.h"
-#include "../module.h"
-
-#define LOG_ERROR   0
-#define LOG_WARN    1
-#define LOG_INFO    2
-#define LOG_DEBUG   3
+#include <syslog.h>
+#include "fparams.h"
+#include "module.h"
 
 /* debug messages are always a pain. As we're stick to C89 we have no
  * variable-length argument lists for macros. We use our ol' double-parenthesis
@@ -43,27 +39,11 @@
 #define DEBUG_LOG(args)
 #endif
 
-struct module_logger_s {
-    /* init/fini/params */
-    struct module_fnc_s base;
-    /* log a message */
-    void (*f_logmsg)(int, char *, va_list);
-    /* flush the logger stream */
-    void (*logflush)(void);
-    /* log when a page was hit */
-    void (*loghit)(char *, char *, char *);
-    /* list */
-    struct module_logger_s *next;
-};
-
 void logmsg(int prio, char *fmt, ...);
 void logflush();
 void loghit(char *in_ip, char *method_str, char *uri);
+int logger_set_params(fparams_st *pars);
 int logger_init();
 int logger_fini();
-
-struct module_logger_s *logger_add_static_mod(
-                                    struct module_logger_s*(*get_module)(void));
-struct module_logger_s *logger_add_dynamic_mod(char *fname, char **error);
 
 #endif /* H_LOGGER_H */

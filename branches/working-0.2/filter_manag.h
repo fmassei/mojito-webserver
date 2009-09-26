@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 /* #include "filter/filter.h" */
 #include "header_w_quality.h"
-#include "logger/logger.h"
+#include "logger.h"
 #include "modules/modules.h"
 
 /* filter functions */

@@ -43,7 +43,7 @@ struct lh_s *lhcreate(unsigned int size)
     lh->size = size;
     lh->step = (unsigned int)(size / HASHSIZE);
     if (lh->step < MINSTEP) {
-        logmsg(LOG_ERROR, "cache size too small!");
+        logmsg(LOG_ERR, "cache size too small!");
         goto error;
     }
     if ((fd = shm_open(SHMNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR))<0)
