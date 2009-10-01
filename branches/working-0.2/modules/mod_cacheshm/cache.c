@@ -155,6 +155,7 @@ static void send_cached_file(struct cache_entry_s *cache_file, int sock,
     header_send(sock);
     if (req->method==M_HEAD)
         return;
+    clen = sb.st_size;
     addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
     write(sock, addr, clen);
 }
