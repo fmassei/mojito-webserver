@@ -20,7 +20,7 @@ STATIC_OBJS = linear_hashtab.ot cache.ot
 all: clean lib
 
 lib: $(STATIC_OBJS) $(SHARED_OBJS)
-	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc
+	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc -lrt
 	$(AR) $(STATIC_PNAME) $(STATIC_OBJS)
 
 .c.oh:

@@ -5,9 +5,9 @@ AR	=	ar rcs
 RM  =   /bin/rm -f
 
 # debug or release
-PSTATUS = release
+PSTATUS = debug
 # lstatic or lshared
-MODULE = lstatic
+MODULE = lshared
 
 # default cflags
 ifeq ($(PSTATUS), debug)

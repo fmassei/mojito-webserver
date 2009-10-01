@@ -19,7 +19,7 @@ STATIC_OBJS = mod_identity.ot
 all: lib
 
 lib: $(STATIC_OBJS) $(SHARED_OBJS)
-	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc -lz
+	$(GCC) -shared -Wl,-soname,$(SHARED_PNAME) -o $(SHARED_PNAME) $(SHARED_OBJS) -lc
 	$(AR) $(STATIC_PNAME) $(STATIC_OBJS)
 
 .c.oh:

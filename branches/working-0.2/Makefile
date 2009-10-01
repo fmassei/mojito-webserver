@@ -3,8 +3,6 @@
 include Makefile.flags
 
 INCDIR  =   -I.
-LIBS	:=   -lz -lrt
-LDFLAGS = -Wl,-E
 
 AFLAGS  =
 PNAME   =   mojito
@@ -16,12 +14,14 @@ MISSING_LINKAGE =
 TARGET_MODS = mods
 
 ifeq ($(MODULE), lstatic)
-	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity
+	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -lz -lrt
+	LDFLAGS =
 endif
 ifeq ($(MODULE), lshared)
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_MODULE
 	DYNAMIC = -DDYNAMIC
-	LIBS := $(LIBS) -ldl
+	LIBS = -ldl
+	LDFLAGS = -Wl,-E
 endif
 
 
