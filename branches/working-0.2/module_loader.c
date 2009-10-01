@@ -17,10 +17,7 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "module.h"
-#include "logger.h"
-/*#include "filter/filter.h"*/
-#include "modules/modules.h"
+#include "module_loader.h"
 
 #ifdef DYNAMIC
 /* get the library full path given the basename and the libname */
@@ -39,11 +36,11 @@ static char *getlibname(fparams_st *params, char *basename, char *libname)
 }
 #endif /* DYNAMIC */
 
-static int set_module_params(struct module_fnc_s *mb, struct plist_s *params,
+static int set_module_params(struct module_s *mb, struct plist_s *params,
                                                                 char **error)
 {
-    if (mb->module_set_params!=NULL)
-        if (mb->module_set_params(params)<0) {
+    if (mb->set_params!=NULL)
+        if (mb->set_params(params)<0) {
             *error = "Failed passing parameters to module";
             return -2;
         }

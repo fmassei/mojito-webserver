@@ -1,13 +1,10 @@
 .SUFFIXES: .ot .oh
 
-GCC = gcc
-AR = ar rcs
-RM = /bin/rm -rf
+include ../../Makefile.flags
 
 SHARED_PNAME = libmod_stat.so.1
 STATIC_PNAME = libmod_stat.a
 
-PSTATUS = debug
 ifeq ($(PSTATUS), debug)
     SHARED_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g -fPIC
     STATIC_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g

@@ -1,8 +1,6 @@
 .PHONY: debug release all
 
-GCC =   gcc
-LD  =   gcc
-RM  =   rm -f
+include Makefile.flags
 
 INCDIR  =   -I.
 LIBS	:=   -lz -lrt
@@ -17,19 +15,6 @@ MISSING_LINKAGE =
 # specify module-set targets
 TARGET_MODS = mods
 
-#--------------------------
-#debug or release
-PSTATUS = debug
-#lstatic, lshared or lnone
-MODULE = lshared
-
-#--------------------------
-ifeq ($(PSTATUS), debug)
-	CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g
-else
-	CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
-endif
-
 ifeq ($(MODULE), lstatic)
 	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity
 endif
@@ -43,7 +28,7 @@ endif
 #--------------------------
 OBJS=daemon.o date.o fileutils.o fparams.o main.o request.o response.o \
     socket.o mime.o cgi.o header_w_quality.o filter_manag.o \
-	resp_headers.o module.o plist.o logger.o \
+	resp_headers.o plist.o logger.o module_loader.o \
 	modules/modules.o
 
 all: $(TARGET_MODS) mojito

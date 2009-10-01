@@ -31,7 +31,7 @@
 #include "logger.h"
 #include "response.h"
 #include "filter_manag.h"
-#include "module.h"
+#include "module_loader.h"
 #include "modules/modules.h"
 
 extern struct request_s req;

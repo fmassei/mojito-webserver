@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <syslog.h>
 #include "fparams.h"
-#include "module.h"
 
 /* debug messages are always a pain. As we're stick to C89 we have no
  * variable-length argument lists for macros. We use our ol' double-parenthesis

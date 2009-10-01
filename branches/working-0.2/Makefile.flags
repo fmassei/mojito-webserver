@@ -1,0 +1,18 @@
+# standard defines
+GCC =   gcc
+LD  =   gcc
+AR	=	ar rcs
+RM  =   /bin/rm -f
+
+# debug or release
+PSTATUS = release
+# lstatic or lshared
+MODULE = lstatic
+
+# default cflags
+ifeq ($(PSTATUS), debug)
+	CFLAGS := -Wall -Wextra -O0 -ansi -pedantic -g
+else
+	CFLAGS := -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
+endif
+
