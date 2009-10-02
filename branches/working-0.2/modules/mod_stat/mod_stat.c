@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "../modules.h"
 #include "../../response.h"
 
@@ -40,9 +41,9 @@ static void send_statistics(int sock, struct request_s *req)
 {
     int clen;
     char *buf;
-    clen = strlen(stat_page)+15;
+    clen = strlen(stat_page)+12+1;
     if ((buf = malloc(clen))==NULL) {
-        head_push_code(HRESP_500);
+        header_push_code(HRESP_500);
         return;
     }
     sprintf(buf, stat_page, counters.init, counters.accept);
@@ -86,7 +87,7 @@ static int _can_run(void)
 static int _on_presend(int sock, struct request_s *req)
 {
     ++counters.presend;
-    if (!strcmp(req.uri, "statistics")) {
+    if (!strcmp(req->uri, "/statistics")) {
         send_statistics(sock, req);
         return MOD_ALLDONE;
     }
