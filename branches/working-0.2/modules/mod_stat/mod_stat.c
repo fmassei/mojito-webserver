@@ -66,7 +66,7 @@ static int _init(void)
 {
     size_t len;
     int fd = -1;
-    if ((fd = shm_open(SHNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR))<0)
+    if ((fd = shm_open(SHMNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR))<0)
         goto error;
     len = sizeof(*counters);
     if (ftruncate(fd, len)==-1)
