@@ -19,9 +19,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "../modules.h"
 #include "../../response.h"
+
+#define SHMNAME "/mojito_stat"
 
 typedef unsigned long stat_type_t;
 static struct stat_counters_s {
@@ -33,7 +39,7 @@ static struct stat_counters_s {
                 prehead,
                 send,
                 postsend;
-} counters;
+} *counters = NULL;
 
 static char *stat_page = "<html><body>init: %10d<br />accept: %10d<br /></body></html>";
 
@@ -46,7 +52,7 @@ static void send_statistics(int sock, struct request_s *req)
         header_push_code(HRESP_500);
         return;
     }
-    sprintf(buf, stat_page, counters.init, counters.accept);
+    sprintf(buf, stat_page, counters->init, counters->accept);
     header_push_code(HRESP_200);
     header_push_contentlength(clen);
     header_push_contenttype("text/html");
@@ -58,35 +64,52 @@ static void send_statistics(int sock, struct request_s *req)
 
 static int _init(void)
 {
-    counters.init =
-        counters.fini =
-        counters.accept =
-        counters.can_run =
-        counters.presend =
-        counters.prehead =
-        counters.send =
-        counters.postsend = 0;
-    ++counters.init;
+    size_t len;
+    int fd = -1;
+    if ((fd = shm_open(SHNAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR))<0)
+        goto error;
+    len = sizeof(*counters);
+    if (ftruncate(fd, len)==-1)
+        goto error;
+    counters = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (counters==MAP_FAILED)
+        goto error;
+    counters->init =
+        counters->fini =
+        counters->accept =
+        counters->can_run =
+        counters->presend =
+        counters->prehead =
+        counters->send =
+        counters->postsend = 0;
+    ++counters->init;
     return MOD_OK;
+error:
+    if (fd>=0)
+        shm_unlink(SHMNAME);
+    return MOD_CRIT;
 }
 static int _fini(void)
 {
-    ++counters.fini;
+    ++counters->fini;
+    if (counters!=NULL)
+        munmap(counters, sizeof(*counters));
+    shm_unlink(SHMNAME);
     return MOD_OK;
 }
 static int _on_accept(void)
 {
-    ++counters.accept;
+    ++counters->accept;
     return MOD_OK;
 }
 static int _can_run(void)
 {
-    ++counters.can_run;
+    ++counters->can_run;
     return MOD_OK;
 }
 static int _on_presend(int sock, struct request_s *req)
 {
-    ++counters.presend;
+    ++counters->presend;
     if (!strcmp(req->uri, "/statistics")) {
         send_statistics(sock, req);
         return MOD_ALLDONE;
@@ -95,17 +118,17 @@ static int _on_presend(int sock, struct request_s *req)
 }
 static int _on_prehead(struct stat *st)
 {
-    ++counters.prehead;
+    ++counters->prehead;
     return MOD_OK;
 }
 static int _on_send(void *v, int i, struct stat *st)
 {
-    ++counters.send;
+    ++counters->send;
     return MOD_OK;
 }
 static int _on_postsend(struct request_s *r, char *c, void *v, struct stat *s)
 {
-    ++counters.postsend;
+    ++counters->postsend;
     return MOD_OK;
 }
 
