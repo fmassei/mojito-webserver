@@ -33,6 +33,9 @@
 #include <libgen.h>
 #include "plist.h"
 
+/* FIXME remove from here */
+#define UNUSED(arg) arg=arg
+
 struct module_params_s {
     char *name;
     struct plist_s *params;

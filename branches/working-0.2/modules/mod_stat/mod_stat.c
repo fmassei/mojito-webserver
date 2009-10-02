@@ -19,9 +19,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "../modules.h"
@@ -41,18 +41,36 @@ static struct stat_counters_s {
                 postsend;
 } *counters = NULL;
 
-static char *stat_page = "<html><body>init: %10d<br />accept: %10d<br /></body></html>";
+static char *stat_page = "<html>"
+"<head><title>Stats</title></head><body>"
+"<h1>Mod_stat</h1>"
+"<p>init: %10d<br />"
+"fini: %10d<br />"
+"accept: %10d<br />"
+"can_run: %10d<br />"
+"presend: %10d<br />"
+"prehead: %10d<br />"
+"send: %10d<br />"
+"postsend: %10d</p>"
+"</body></html>";
 
 static void send_statistics(int sock, struct request_s *req)
 {
     int clen;
     char *buf;
-    clen = strlen(stat_page)+12+1;
+    clen = strlen(stat_page)+8*6+1;
     if ((buf = malloc(clen))==NULL) {
         header_push_code(HRESP_500);
         return;
     }
-    sprintf(buf, stat_page, counters->init, counters->accept);
+    sprintf(buf, stat_page, counters->init,
+                            counters->fini,
+                            counters->accept,
+                            counters->can_run,
+                            counters->presend,
+                            counters->prehead,
+                            counters->send,
+                            counters->postsend);
     header_push_code(HRESP_200);
     header_push_contentlength(clen);
     header_push_contenttype("text/html");
@@ -102,10 +120,11 @@ static int _on_accept(void)
     ++counters->accept;
     return MOD_OK;
 }
-static int _can_run(void)
+static int _can_run(struct request_s *req)
 {
     ++counters->can_run;
     return MOD_OK;
+    UNUSED(req);
 }
 static int _on_presend(int sock, struct request_s *req)
 {
@@ -120,16 +139,24 @@ static int _on_prehead(struct stat *st)
 {
     ++counters->prehead;
     return MOD_OK;
+    UNUSED(st);
 }
 static int _on_send(void *v, int i, struct stat *st)
 {
     ++counters->send;
     return MOD_OK;
+    UNUSED(v);
+    UNUSED(i);
+    UNUSED(st);
 }
 static int _on_postsend(struct request_s *r, char *c, void *v, struct stat *s)
 {
     ++counters->postsend;
     return MOD_OK;
+    UNUSED(r);
+    UNUSED(c);
+    UNUSED(v);
+    UNUSED(s);
 }
 
 #ifdef MODULE_STATIC
@@ -145,6 +172,7 @@ struct module_s *getmodule()
     p->set_params = NULL;
     p->init = _init;
     p->fini = _fini;
+    p->can_run = _can_run;
     p->on_accept = _on_accept;
     p->on_presend = _on_presend;
     p->on_prehead = _on_prehead;
