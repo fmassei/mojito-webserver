@@ -121,9 +121,6 @@ redo:
     addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (on_send(addr, sock, &sb)!=0)
         return;
-    /* add in cache (only if filter != identity!) */
-    if (!strcmp(ch_filter->name, "identity"))
-        return;
     if (on_postsend(&req, mime_gettype(filename), addr, &sb)!=0)
         return;
 }

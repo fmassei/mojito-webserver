@@ -180,6 +180,8 @@ static int _on_postsend(struct request_s *req,
 {
     extern struct module_s *ch_filter;
     int cfd;
+    if (!strcmp(ch_filter->name, "identify"))
+        return MOD_OK;
     /* FIXME adjust this ch_filter */
     if ((cfd = _cache_create_file(req->uri, ch_filter->name, mime))<0)
         return MOD_CRIT;
