@@ -25,6 +25,6 @@
 #include "logger.h"
 #include "modules/modules.h"
 
-int module_get(fparams_st *prm, char **error);
+int module_get(struct fparam_s *prm, char **error);
 
 #endif /* H_MODULE_H */

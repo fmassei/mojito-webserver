@@ -21,7 +21,7 @@
 
 #ifdef DYNAMIC
 /* get the library full path given the basename and the libname */
-static char *getlibname(fparams_st *params, char *basename, char *libname)
+static char *getlibname(struct fparam_s *params, char *basename, char *libname)
 {
     char *lname;
     size_t nlen;
@@ -48,8 +48,8 @@ static int set_module_params(struct module_s *mb, struct plist_s *params,
 }
 
 #ifdef DYNAMIC_MODULE
-static int load_dynamic_module(fparams_st *prm, struct module_params_s *mpars,
-                                                    char *modname, char **error)
+static int load_dynamic_module(struct fparam_s *prm,
+                    struct module_params_s *mpars, char *modname, char **error)
 {
     struct module_s *mod;
     char *buf;
@@ -90,7 +90,7 @@ static int load_static_module(struct module_params_s *mpars,
 #endif
 
 /* get the filter module(s) */
-int module_get(fparams_st *prm, char **error)
+int module_get(struct fparam_s *prm, char **error)
 {
     struct module_params_s *mpars;
     int err;

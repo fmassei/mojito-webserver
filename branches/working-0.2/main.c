@@ -35,7 +35,7 @@
 #include "modules/modules.h"
 
 extern struct request_s req;
-fparams_st params;
+struct fparam_s params;
 int keeping_alive;
 
 void clean_quit()

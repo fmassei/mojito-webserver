@@ -50,7 +50,7 @@ static void header_send_hl(char *h, long l)
 
 void header_push_code(int code)
 {
-    extern fparams_st params;
+    extern struct fparam_s params;
     extern int proto_version;
     res[0] = '\0';
     /* RFC2145 - conservative approach */

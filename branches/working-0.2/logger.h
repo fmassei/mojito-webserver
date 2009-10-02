@@ -41,7 +41,7 @@
 void logmsg(int prio, char *fmt, ...);
 void logflush();
 void loghit(char *in_ip, char *method_str, char *uri);
-int logger_set_params(fparams_st *pars);
+int logger_set_params(struct fparam_s *pars);
 int logger_init();
 int logger_fini();
 

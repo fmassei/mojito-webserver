@@ -17,15 +17,7 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include "../modules.h"
-#include "../../response.h"
+#include "mod_stat.h"
 
 #define SHMNAME "/mojito_stat"
 

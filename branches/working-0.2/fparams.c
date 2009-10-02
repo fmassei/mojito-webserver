@@ -51,7 +51,7 @@ static int normalize_string(char **str)
 }
 
 /* try assign a parameter to a variable */
-static int assign_param(char *name, char *value, fparams_st *params)
+static int assign_param(char *name, char *value, struct fparam_s *params)
 {
     if (normalize_string(&name)<0 || normalize_string(&value)<0)
         return -1;
@@ -111,7 +111,7 @@ static int assign_param(char *name, char *value, fparams_st *params)
 
 /* check if we have enough parameters, and set the default values where
  * possible */
-static int check_fparams(fparams_st *params)
+static int check_fparams(struct fparam_s *params)
 {
     int err = 0;
     if (params->pidfile==NULL) {
@@ -175,8 +175,8 @@ static int check_fparams(fparams_st *params)
     return err;
 }
 
-/* zero fparams_st struct */
-static void zero_fparams(fparams_st *params)
+/* zero struct fparam_s struct */
+static void zero_fparams(struct fparam_s *params)
 {
     if (params==NULL) return;
     params->pidfile = NULL;
@@ -193,7 +193,7 @@ static void zero_fparams(fparams_st *params)
     params->mod_params = NULL;
 }
 
-static int add_section(fparams_st *params, char *bname)
+static int add_section(struct fparam_s *params, char *bname)
 {
     struct module_params_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
@@ -209,7 +209,7 @@ static int add_section(fparams_st *params, char *bname)
 }
 
 /* quick and dirty INI parser */
-int params_loadFromINIFile(const char *fname, fparams_st *params)
+int params_loadFromINIFile(const char *fname, struct fparam_s *params)
 {
     struct stat sb;
     int fd, len, i, state;
@@ -279,7 +279,7 @@ done:
 }
 
 /* free parameters */
-void params_free(fparams_st *params)
+void params_free(struct fparam_s *params)
 {
     struct module_params_s *p, *q;
     if (params->pidfile) free(params->pidfile);
@@ -299,7 +299,8 @@ void params_free(fparams_st *params)
 }
 
 /* return the given parameter module (if any) */
-struct module_params_s *params_getModuleParams(fparams_st *params, char *name)
+struct module_params_s *params_getModuleParams(struct fparam_s *params,
+                                                                    char *name)
 {
     struct module_params_s *p;
     for (p=params->mod_params; p!=NULL; p=p->next)

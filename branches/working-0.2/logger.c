@@ -66,7 +66,7 @@ void logmsg(int prio, char *fmt, ...)
 }
 
 /* get the module parameters */
-int logger_set_params(fparams_st *params)
+int logger_set_params(struct fparam_s *params)
 {
     logfile = params->logfile;
     errfile = params->errfile;

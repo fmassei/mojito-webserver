@@ -18,6 +18,7 @@
 */
 
 #include "request.h"
+#include "filter_manag.h"
 
 char *method_strs[] = { "", "GET" /* M_GET */, "HEAD", "POST" };
 
@@ -47,7 +48,7 @@ void request_create()
 /* wait on a socket for a specific timeout */
 int request_waitonalive(int sock)
 {
-    extern struct fparams_s params;
+    extern struct fparam_s params;
     fd_set rfds;
     struct timeval tv;
     FD_ZERO(&rfds);
@@ -153,7 +154,7 @@ static int parse_option(char *line)
  * same way in our conditions. */
 static int create_post_file()
 {
-    extern fparams_st params;
+    extern struct fparam_s params;
     static char tmp_file[2049];
     int fd;
     snprintf(tmp_file, 2049, "%s/mojito-temp.XXXXXX", params.tmp_dir);

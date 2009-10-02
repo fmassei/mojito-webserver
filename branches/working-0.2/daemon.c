@@ -30,7 +30,7 @@ static void _tmp_hndl(int s)
 }
 
 /* save the pid file */
-static int save_pid(fparams_st *params)
+static int save_pid(struct fparam_s *params)
 {
     int lfp = -1;
     char str[10];
@@ -53,7 +53,7 @@ static int save_pid(fparams_st *params)
 }
 
 /* change running permissions */
-static int change_permissions(fparams_st *params)
+static int change_permissions(struct fparam_s *params)
 {
     if (setuid(params->uid)<0 || setuid(params->gid)<0) {
         syslog(LOG_ERR, "unable to set running permissions, code=%d (%s)",
@@ -95,7 +95,7 @@ static int setsignals(void(*termfunc)(int))
 }
 
 /* do all the job of forking */
-int fork_to_background(fparams_st *params, void(*termfunc)(int))
+int fork_to_background(struct fparam_s *params, void(*termfunc)(int))
 {
     pid_t sid, parent;
     if (getppid()==1)

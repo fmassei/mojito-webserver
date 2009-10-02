@@ -55,7 +55,7 @@ static int check_method()
 /* send the response */
 void send_file(int sock, const char *uri)
 {
-    extern fparams_st params;
+    extern struct fparam_s params;
     extern struct request_s req;
     extern int keeping_alive, content_length_sent;
     struct stat sb;

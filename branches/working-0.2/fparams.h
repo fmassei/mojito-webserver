@@ -33,9 +33,6 @@
 #include <libgen.h>
 #include "plist.h"
 
-/* FIXME remove from here */
-#define UNUSED(arg) arg=arg
-
 struct module_params_s {
     char *name;
     struct plist_s *params;
@@ -43,7 +40,7 @@ struct module_params_s {
 };
 
 /* server parameters */
-typedef struct fparams_s {
+struct fparam_s {
     char *pidfile;
     char *http_root;
     char *default_page;
@@ -55,13 +52,14 @@ typedef struct fparams_s {
     char *module_basepath;
     char *logfile, *errfile;
     struct module_params_s *mod_params;
-} fparams_st;
+};
 
 /* parse an INI file */
-int params_loadFromINIFile(const char *fname, fparams_st *params);
+int params_loadFromINIFile(const char *fname, struct fparam_s *params);
 /* free the parameters */
-void params_free(fparams_st *params);
+void params_free(struct fparam_s *params);
 /* return the given parameter module (if any) */
-struct module_params_s *params_getModuleParams(fparams_st *params, char *name);
+struct module_params_s *params_getModuleParams(struct fparam_s *params,
+                                                                    char *name);
 
 #endif /* H_FPARAMS_H */
