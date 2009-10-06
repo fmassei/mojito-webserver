@@ -70,8 +70,10 @@ struct request_s {
     struct header_s {
         struct qhead_s *accept_encoding;
     } header;
+
     /* the divided filename/querystring pointers */
     char *page, *qs;
+    int post_fd;
     /* the decoded filename on the filesystem (if any) */
     char *abs_filename;
     /* file stats */

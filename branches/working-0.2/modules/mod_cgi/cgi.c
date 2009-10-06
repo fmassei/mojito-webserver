@@ -66,7 +66,7 @@ static int add_env_kl(char *key, long val)
 /* prepare a standard cgi environment */
 static int prepare_env(struct request_s *req)
 {
-    if (query_string!=NULL)
+    if (req->qs!=NULL)
         if (add_env_kv("QUERY_STRING", req->qs)!=0) return -1;
     if (add_env("SERVER_SOFTWARE=mojito/0.1")!=0) return -1;
     if (add_env("GATEWAY_INTERFACE=CGI/1.1")!=0) return -1;
@@ -97,9 +97,9 @@ int cgi_run(struct request_s *req, int sock)
         if (prepare_env(req)!=0)
             return -1;
         /* put post_fd on stdin */
-        if (req.post_fd!=0) {
-            lseek(req.post_fd, 0, SEEK_SET);
-            if (dup2(req.post_fd, 0)==-1) {
+        if (req->post_fd!=0) {
+            lseek(req->post_fd, 0, SEEK_SET);
+            if (dup2(req->post_fd, 0)==-1) {
                 perror("dup2");
                 return -1;
             }
