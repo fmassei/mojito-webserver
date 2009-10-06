@@ -40,6 +40,8 @@ static char *buildkey(const char *URI, const char *filter_id)
 static int cache_set_parameters(struct plist_s *pars)
 {
     params = pars;
+    if (pars==NULL)
+        return MOD_CRIT;
     if ((cache_dir = plist_search(params, "cache_dir"))==NULL)
         return MOD_CRIT;
     if (cache_dir[strlen(cache_dir)-1]=='/')

@@ -52,6 +52,7 @@ static int load_dynamic_module(struct fparam_s *prm,
                     struct module_params_s *mpars, char *modname, char **error)
 {
     struct module_s *mod;
+    struct plist_s *lpars;
     char *buf;
     *error = modname;
     if ((buf = getlibname(prm, "", modname))==NULL) {
@@ -64,11 +65,18 @@ static int load_dynamic_module(struct fparam_s *prm,
     }
     if (buf!=NULL)
         free(buf);
-    if (mod->set_params!=NULL)
-        if (mod->set_params(mpars->params)<0) {
+    if (mod->set_params!=NULL) {
+        if (mpars==NULL) {
+            logmsg(LOG_WARNING, "No parameters found for %s", modname);
+            lpars = NULL;
+        } else {
+            lpars = mpars->params;
+        }
+        if (mod->set_params(lpars)<0) {
             *error = "Failed passing parameters to module";
             return -2;
         }
+    }
     return 0;
 }
 #else
@@ -76,15 +84,24 @@ static int load_static_module(struct module_params_s *mpars,
                         struct module_s*(*modfnc)(void), char **error)
 {
     struct module_s *mod;
+    struct plist_s *lpars;
     if ((mod = module_add_static(modfnc))==NULL) {
         *error = "Error loading static module";
         return -1;
     }
-    if (mod->set_params!=NULL)
-        if (mod->set_params(mpars->params)<0) {
+    if (mod->set_params!=NULL) {
+        if (mpars==NULL) {
+            /* FIXME: found module name */
+            logmsg(LOG_WARNING, "No parameters found for module");
+            lpars = NULL;
+        } else {
+            lpars = mpars->params;
+        }
+        if (mod->set_params(lpars)<0) {
             *error = "Failed passing parameters to module";
             return -2;
         }
+    }
     return 0;
 }
 #endif
@@ -102,7 +119,8 @@ int module_get(struct fparam_s *prm, char **error)
                                     *mod_cacheshm_getmodule(void),
                                     *mod_identity_getmodule(void),
                                     *mod_gzip_getmodule(void),
-                                    *mod_deflate_getmodule(void);
+                                    *mod_deflate_getmodule(void),
+                                    *mod_cgi_getmodule(void);
 #endif
     if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
         *error = "section [modules] not found in config.ini";
@@ -118,20 +136,29 @@ int module_get(struct fparam_s *prm, char **error)
         /* TODO fix ugly ugly ugly */
         for(i=0; (*(modname+i)>='a' && *(modname+i)<='z')||*(modname+i)=='_'; ++i) ;
         *(modname+i) = '\0';
+        mpars = params_getModuleParams(prm, modname);
         if ((err = load_dynamic_module(prm, mpars, modname, error))<0)
             return err;
         modname += i+1;
     }
 #else
+    mpars = params_getModuleParams(prm, "mod_stat");
     if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
         return err;
+    mpars = params_getModuleParams(prm, "mod_cacheshm");
     if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
         return err;
+    mpars = params_getModuleParams(prm, "mod_gzip");
     if ((err = load_static_module(mpars, mod_gzip_getmodule, error))<0)
         return err;
+    mpars = params_getModuleParams(prm, "mod_deflate");
     if ((err = load_static_module(mpars, mod_deflate_getmodule, error))<0)
         return err;
+    mpars = params_getModuleParams(prm, "mod_identity");
     if ((err = load_static_module(mpars, mod_identity_getmodule, error))<0)
+        return err;
+    mpars = params_getModuleParams(prm, "mod_gci");
+    if ((err = load_static_module(mpars, mod_gci_getmodule, error))<0)
         return err;
 #endif
     return 0;
