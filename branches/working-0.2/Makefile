@@ -14,7 +14,7 @@ MISSING_LINKAGE =
 TARGET_MODS = mods
 
 ifeq ($(MODULE), lstatic)
-	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -lz -lrt
+	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -Lmodules/mod_cgi -l mod_cgi -lz -lrt
 	LDFLAGS =
 endif
 ifeq ($(MODULE), lshared)
@@ -27,7 +27,7 @@ endif
 
 #--------------------------
 OBJS=daemon.o date.o fileutils.o fparams.o main.o request.o response.o \
-    socket.o mime.o cgi.o header_w_quality.o filter_manag.o \
+    socket.o mime.o header_w_quality.o filter_manag.o \
 	resp_headers.o plist.o logger.o module_loader.o \
 	modules/modules.o
 

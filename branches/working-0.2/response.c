@@ -42,7 +42,7 @@ static void strip_uri(struct request_s *req)
 
 static int find_file(struct request_s *req)
 {
-    extern struct fparams_s params;
+    extern struct fparam_s params;
     req->abs_filename = malloc(strlen(params.http_root)+strlen(req->page)+1);
     if (req->abs_filename==NULL) {
         return HRESP_500;
@@ -98,7 +98,7 @@ void send_file(int sock, struct request_s *req)
     if (on_presend(sock, req)!=0)
         return;
     if (find_ret!=0) {
-        header_kill_w_code(ret, sock);
+        header_kill_w_code(find_ret, sock);
         return;
     }
     if ((ch_filter = filter_findfilter(req->header.accept_encoding))==NULL) {

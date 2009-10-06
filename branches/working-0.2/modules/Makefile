@@ -4,6 +4,7 @@ all:
 	@(cd mod_gzip && make all)
 	@(cd mod_deflate && make all)
 	@(cd mod_identity && make all)
+	@(cd mod_cgi && make all)
 
 clean:
 	@(cd mod_stat && make clean)
@@ -11,3 +12,4 @@ clean:
 	@(cd mod_gzip && make clean)
 	@(cd mod_deflate && make clean)
 	@(cd mod_identity && make clean)
+	@(cd mod_cgi && make clean)

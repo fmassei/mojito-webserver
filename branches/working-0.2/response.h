@@ -38,7 +38,6 @@
 #include "mime.h"
 #include "date.h"
 #include "filter_manag.h"
-#include "cgi.h"
 #include "header_w_quality.h"
 #include "resp_headers.h"
 #include "modules/modules.h"
