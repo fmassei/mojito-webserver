@@ -36,17 +36,6 @@ static char *getlibname(struct fparam_s *params, char *basename, char *libname)
 }
 #endif /* DYNAMIC */
 
-static int set_module_params(struct module_s *mb, struct plist_s *params,
-                                                                char **error)
-{
-    if (mb->set_params!=NULL)
-        if (mb->set_params(params)<0) {
-            *error = "Failed passing parameters to module";
-            return -2;
-        }
-    return 0;
-}
-
 #ifdef DYNAMIC_MODULE
 static int load_dynamic_module(struct fparam_s *prm,
                     struct module_params_s *mpars, char *modname, char **error)
