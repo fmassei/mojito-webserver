@@ -30,6 +30,6 @@
 #include "../../logger.h"
 
 /* run a cgi instance */
-int cgi_run(char *filename, int sock);
+int cgi_run(struct request_s *req, int sock);
 
 #endif /* H_CGI_H */

@@ -24,11 +24,7 @@ char *method_strs[] = { "", "GET" /* M_GET */, "HEAD", "POST" };
 
 struct request_s req;
 char *in_ip;
-char *method_str;
 char *post_data = NULL;
-int post_fd = 0;
-char *content_type = NULL;
-long content_length = 0;
 int proto_version = P_HTTP_UNK;
 
 static char *str_content_length=NULL;
@@ -36,12 +32,16 @@ static int status;
 static char *buf, *cur_head;
 
 /* create an empty request */
-void request_create()
+void request_create(char *in_ip)
 {
+    req.in_ip = in_ip;
     req.uri = NULL;
     req.method = 0;
     status = HEAD;
     req.header.accept_encoding = NULL;
+    req.post_fd = 0;
+    req.content_type = NULL;
+    req.content_length = 0;
     buf = cur_head = NULL;
 }
 
@@ -71,7 +71,7 @@ static int parse_first_line(char *line)
         req.method = M_POST;
     else 
         return -1;
-    method_str = method_strs[req.method];
+    req.method_str = method_strs[req.method];
     /* go to next arg. Here and below we skip more than one whitespace if
      * present between arguments. This is not RFC2616 conforming, but adds
      * some robustness to the client/server communication. */
@@ -113,12 +113,13 @@ static int parse_header_line(char *line)
         ++value;
     to_upper(line);
     if (!memcmp(line, "CONTENT_LENGTH", 15) && !str_content_length) {
-        content_length = strtol(value, &endptr, 10);
+        req.content_length = strtol(value, &endptr, 10);
         /* try to convert content_length in a valid number */
         if ((errno==ERANGE
-                && (content_length==LONG_MAX || content_length==LONG_MIN))
+                && (req.content_length==LONG_MAX || 
+                    req.content_length==LONG_MIN))
                 || (errno!=0 && value==0) || (endptr==value)) {
-            content_length = 0;
+            req.content_length = 0;
             return 0;
         }
         str_content_length = value;
@@ -126,8 +127,8 @@ static int parse_header_line(char *line)
             !req.header.accept_encoding) {
         DEBUG_LOG((LOG_DEBUG, "parsing accepted encoding: %s", value));
         req.header.accept_encoding = qhead_parse(value);
-    } else if (!memcmp(line, "CONTENT_TYPE", 12) && !content_type) {
-        content_type = value;
+    } else if (!memcmp(line, "CONTENT_TYPE", 12) && !req.content_type) {
+        req.content_type = value;
     } else if (!memcmp(line, "CONNECTION", 10)) {
         if ( (proto_version==P_HTTP_10) &&
                 (!strncasecmp(value, "keep-alive", strlen(value))) )
@@ -234,32 +235,32 @@ int request_read(int sock)
             } else if (status==BODY) {
                 /* sanitize accept_encoding. */
                 filter_sanitize_queue(&req.header.accept_encoding);
-                if (content_length<=0 || req.method!=M_POST)
+                if (req.content_length<=0 || req.method!=M_POST)
                     return 0;
                 /* I was tempted to drop the headers freeing some memory. I
                  * don't do this here because maybe we'll need them in a
                  * (hopefully near) future, in a FastCGI implementation. */
                 post_data = buf+pos;
-                if (content_length > rb) {
+                if (req.content_length > rb) {
                     /* if here we have to realloc the buffer and get the
                      * missing data stored in the socket buffer */
-                    buf = realloc(buf, mr-rb+content_length);
+                    buf = realloc(buf, mr-rb+req.content_length);
                     do {
-                        len = content_length - rb;                
+                        len = req.content_length - rb;                
                         rb = read(sock, buf+pos, len);
                         len -= rb;
                         pos += rb;
                     } while(len>0);
                 }
                 /* write to file */
-                if ((post_fd = create_post_file())==-1)
+                if ((req.post_fd = create_post_file())==-1)
                     return -1;
-                write(post_fd, post_data, content_length);
+                write(req.post_fd, post_data, req.content_length);
 /*#ifndef NDEBUG
 {
     int q;
     printf("POSTDATA: ");
-    for (q=0; q<content_length; ++q)
+    for (q=0; q<req.content_length; ++q)
         printf("%c", *(post_data+q));
     printf("\n");
 }

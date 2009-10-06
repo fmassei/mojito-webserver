@@ -22,7 +22,7 @@
 static int _on_presend(int sock, struct request_s *req)
 {
     if (access(req->abs_filename, X_OK)==0) {
-        cgi_run(req->abs_filename, sock);
+        cgi_run(req, sock);
         /* this should not happen */
         return MOD_ALLDONE;
     }

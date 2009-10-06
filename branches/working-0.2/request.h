@@ -59,8 +59,14 @@
 
 /* TODO FIXME XXX move all the other fields in here! */
 struct request_s {
+    char *in_ip;
+
     char *uri;
     int method;
+    char *method_str;   /* pointer to method in string form */
+
+    char *content_type;
+    long content_length;
     struct header_s {
         struct qhead_s *accept_encoding;
     } header;

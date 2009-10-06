@@ -23,14 +23,13 @@ static int srv_sock;
 static int queuesize;
 
 /* accept an incoming request */
-int server_accept()
+int server_accept(char **in_ip)
 {
-    extern char *in_ip;
     struct sockaddr_in addr;
     int ret;
     socklen_t addrlen = sizeof(addr);
     ret = accept(srv_sock, (struct sockaddr *)&addr, &addrlen);
-    if ((in_ip = strdup(inet_ntoa(addr.sin_addr)))==NULL)
+    if ((*in_ip = strdup(inet_ntoa(addr.sin_addr)))==NULL)
         return -1;
     return ret;
 }

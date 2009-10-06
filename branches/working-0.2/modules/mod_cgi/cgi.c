@@ -64,13 +64,10 @@ static int add_env_kl(char *key, long val)
 }
 
 /* prepare a standard cgi environment */
-static int prepare_env(char *filename)
+static int prepare_env(struct request_s *req)
 {
-    extern char *query_string, *method_str;
-    extern char *content_type;
-    extern int content_length;
     if (query_string!=NULL)
-        if (add_env_kv("QUERY_STRING", query_string)!=0) return -1;
+        if (add_env_kv("QUERY_STRING", req->qs)!=0) return -1;
     if (add_env("SERVER_SOFTWARE=mojito/0.1")!=0) return -1;
     if (add_env("GATEWAY_INTERFACE=CGI/1.1")!=0) return -1;
     if (add_env("SERVER_PROTOCOL=HTTP/1.0")!=0) return -1;
@@ -78,32 +75,31 @@ static int prepare_env(char *filename)
 /*    if (add_env("PATH_INFO=/")!=0) return -1;
     if (add_env_kv("PATH_TRANSLATED", dirname(filename))!=0) return -1;
     if (add_env_kv("SCRIPT_NAME", basename(filename))!=0) return -1;*/
-    if (add_env_kv("REQUEST_METHOD", method_str)!=0) return -1;
-    if (add_env_kv("SCRIPT_FILENAME", filename)!=0) return -1;
-    if (!strcmp(method_str, "POST") && content_type!=NULL) {
-        if (add_env_kv("CONTENT_TYPE", content_type)!=0) return -1;
-        if (add_env_kl("CONTENT_LENGTH", content_length)!=0) return -1;
+    if (add_env_kv("REQUEST_METHOD", req->method_str)!=0) return -1;
+    if (add_env_kv("SCRIPT_FILENAME", req->abs_filename)!=0) return -1;
+    if (!strcmp(req->method_str, "POST") && req->content_type!=NULL) {
+        if (add_env_kv("CONTENT_TYPE", req->content_type)!=0) return -1;
+        if (add_env_kl("CONTENT_LENGTH", req->content_length)!=0) return -1;
     }
     if (add_env(NULL)!=0) return -1;
     return 0;
 }
 
 /* run a cgi instance */
-int cgi_run(char *filename, int sock)
+int cgi_run(struct request_s *req, int sock)
 {
-    extern int post_fd;
     pid_t pid;
-    logmsg(LOG_INFO, "cgi run %s", filename);
+    logmsg(LOG_INFO, "cgi run %s", req->abs_filename);
     pid = fork();
     if (pid==-1) {
         return -1;
     } else if (pid==0) {
-        if (prepare_env(filename)!=0)
+        if (prepare_env(req)!=0)
             return -1;
         /* put post_fd on stdin */
-        if (post_fd!=0) {
-            lseek(post_fd, 0, SEEK_SET);
-            if (dup2(post_fd, 0)==-1) {
+        if (req.post_fd!=0) {
+            lseek(req.post_fd, 0, SEEK_SET);
+            if (dup2(req.post_fd, 0)==-1) {
                 perror("dup2");
                 return -1;
             }
@@ -115,14 +111,12 @@ int cgi_run(char *filename, int sock)
         }
         header_push_code(HRESP_200);
         header_part_send(sock);
-        execle(filename, basename(filename), (char*)0, nuenv);
+        execle(req->abs_filename, basename(req->abs_filename), (char*)0, nuenv);
         perror("execl");
         return -1;
     } else {
         /* log and die - the child will take care of the rest */
-        extern char *in_ip, *method_str;
-        extern struct request_s req;
-        loghit(in_ip, method_str, req.uri);
+        loghit(req->in_ip, req->method_str, req->uri);
         exit(0);
     }
     return 0; /* it shouldn't get here */

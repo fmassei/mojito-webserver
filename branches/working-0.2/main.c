@@ -58,7 +58,7 @@ int main(const int argc, char * const argv[])
     pid_t cpid;
     int opt;
     char *error;
-    extern char *in_ip, *method_str;
+    char *in_ip;
 
     while ((opt = getopt(argc, argv, "v"))!=-1) {
         switch(opt) {
@@ -100,7 +100,7 @@ int main(const int argc, char * const argv[])
     logmsg(LOG_INFO, "Server started");
     logflush();
     while (1) {
-        if ((cl_sock = server_accept())<0) {
+        if ((cl_sock = server_accept(&in_ip))<0) {
             perror("Error accepting connections");
             exit(EXIT_FAILURE);
         }
@@ -116,11 +116,11 @@ int main(const int argc, char * const argv[])
         }
         on_accept();
 child_life:
-        request_create();
+        request_create(in_ip);
         if (request_read(cl_sock)==1)
             goto client_kill;
         send_file(cl_sock, &req);
-        loghit(in_ip, method_str, req.uri);
+        loghit(req.in_ip, req.method_str, req.uri);
         if (keeping_alive!=0) {
             DEBUG_LOG((LOG_DEBUG, "Keeping alive!"));
             logflush();
