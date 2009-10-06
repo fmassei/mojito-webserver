@@ -119,7 +119,7 @@ child_life:
         request_create();
         if (request_read(cl_sock)==1)
             goto client_kill;
-        send_file(cl_sock, req.uri);
+        send_file(cl_sock, &req);
         loghit(in_ip, method_str, req.uri);
         if (keeping_alive!=0) {
             DEBUG_LOG((LOG_DEBUG, "Keeping alive!"));

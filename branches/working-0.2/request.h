@@ -64,6 +64,12 @@ struct request_s {
     struct header_s {
         struct qhead_s *accept_encoding;
     } header;
+    /* the divided filename/querystring pointers */
+    char *page, *qs;
+    /* the decoded filename on the filesystem (if any) */
+    char *abs_filename;
+    /* file stats */
+    struct stat sb;
 };
 
 /* create an empty request */

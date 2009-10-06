@@ -17,33 +17,19 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_RESPONSE_H
-#define H_RESPONSE_H
+#ifndef H_CGI_H
+#define H_CGI_H
 
 #define _BSD_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-
+#include "response.h"
 #include "logger.h"
-#include "fparams.h"
-#include "request.h"
-#include "mime.h"
-#include "date.h"
-#include "filter_manag.h"
-#include "cgi.h"
-#include "header_w_quality.h"
-#include "resp_headers.h"
-#include "modules/modules.h"
 
-/* send a file */
-void send_file(int sock, struct request_s *req);
+/* run a cgi instance */
+int cgi_run(char *filename, int sock);
 
-#endif /* H_RESPONSE_H */
+#endif /* H_CGI_H */

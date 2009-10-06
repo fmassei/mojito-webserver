@@ -48,6 +48,7 @@
 #define MODCAT_UNSPEC   0
 #define MODCAT_FILTER   1
 #define MODCAT_CACHE    2
+#define MODCAT_DYNAMIC  3
 
 struct module_s {
     char *name;
