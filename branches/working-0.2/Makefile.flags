@@ -7,7 +7,7 @@ RM  =   /bin/rm -f
 # debug or release
 PSTATUS = debug
 # lstatic or lshared
-MODULE = lshared
+MODULE = lstatic
 
 # default cflags
 ifeq ($(PSTATUS), debug)

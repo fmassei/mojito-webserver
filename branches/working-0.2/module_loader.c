@@ -146,8 +146,8 @@ int module_get(struct fparam_s *prm, char **error)
     mpars = params_getModuleParams(prm, "mod_identity");
     if ((err = load_static_module(mpars, mod_identity_getmodule, error))<0)
         return err;
-    mpars = params_getModuleParams(prm, "mod_gci");
-    if ((err = load_static_module(mpars, mod_gci_getmodule, error))<0)
+    mpars = params_getModuleParams(prm, "mod_cgi");
+    if ((err = load_static_module(mpars, mod_cgi_getmodule, error))<0)
         return err;
 #endif
     return 0;

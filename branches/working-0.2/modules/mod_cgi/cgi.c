@@ -94,8 +94,9 @@ int cgi_run(struct request_s *req, int sock)
     if (pid==-1) {
         return -1;
     } else if (pid==0) {
-        if (prepare_env(req)!=0)
+        if (prepare_env(req)!=0) {
             return -1;
+        }
         /* put post_fd on stdin */
         if (req->post_fd!=0) {
             lseek(req->post_fd, 0, SEEK_SET);
