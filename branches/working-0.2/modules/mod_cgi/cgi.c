@@ -70,6 +70,7 @@ static int prepare_env(struct request_s *req)
         if (add_env_kv("QUERY_STRING", req->qs)!=0) return -1;
     if (add_env("SERVER_SOFTWARE=mojito/0.1")!=0) return -1;
     if (add_env("GATEWAY_INTERFACE=CGI/1.1")!=0) return -1;
+    /* FIXME change this to the request protocol setting */
     if (add_env("SERVER_PROTOCOL=HTTP/1.0")!=0) return -1;
     /* FIXME: somehow these are not working for PHP scripts */
 /*    if (add_env("PATH_INFO=/")!=0) return -1;

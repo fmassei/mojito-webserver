@@ -17,8 +17,8 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_MOD_CGI_H
-#define H_MOD_CGI_H
+#ifndef H_MOD_FASTCGI_H
+#define H_MOD_FASTCGI_H
 
 #define _BSD_SOURCE
 
@@ -29,6 +29,7 @@
 #include "../modules.h"
 #include "../../response.h"
 #include "../../defines.h"
-#include "cgi.h"
+#include "linear_array.h"
+#include "fcgi.h"
 
-#endif /* H_MOD_CGI_H */
+#endif /* H_MOD_FASTCGI_H */

@@ -16,19 +16,17 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef H_FASTCGI_H
+#define H_FASTCGI_H
 
-#ifndef H_MOD_CGI_H
-#define H_MOD_CGI_H
+#include "proto_fcgi.h"
 
-#define _BSD_SOURCE
+struct fcgi_app {
+    int fsock[2];
+    int reqId;
+    char fname[256];
+};
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include "../modules.h"
-#include "../../response.h"
-#include "../../defines.h"
-#include "cgi.h"
+int fcgi_run(struct request_s *req, int sock);
 
-#endif /* H_MOD_CGI_H */
+#endif /* H_FASTCGI_H */
