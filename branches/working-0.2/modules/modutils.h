@@ -16,24 +16,18 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_FASTCGI_H
-#define H_FASTCGI_H
 
-#include "proto_fcgi.h"
-#include "linear_array.h"
-#include "../modutils.h"
-#include "../../defines.h"
-#include "../../request.h"
+#ifndef H_MODUTILS_H
+#define H_MODUTILS_H
 
-/* number of pre-created socket pairs (aka max runnable fcgi apps) */
-#define POOL_SIZE    10
+#define _BSD_SOURCE
 
-struct fcgi_app {
-    int fsock[2];
-    int reqId;
-    char fname[256];
-};
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int fcgi_run(struct request_s *req, int sock);
+int add_env(char **nuenv, int nenv, char *entry);
+int add_env_kv(char **nuenv, int nenv, char *key, char *val);
+int add_env_kl(char **nuenv, int nenv, char *key, long val);
 
-#endif /* H_FASTCGI_H */
+#endif /* H_MODUTILS_H */

@@ -109,7 +109,8 @@ int module_get(struct fparam_s *prm, char **error)
                                     *mod_identity_getmodule(void),
                                     *mod_gzip_getmodule(void),
                                     *mod_deflate_getmodule(void),
-                                    *mod_cgi_getmodule(void);
+                                    *mod_cgi_getmodule(void),
+                                    *mod_fcgi_getmodule(void);
 #endif
     if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
         *error = "section [modules] not found in config.ini";
@@ -148,6 +149,9 @@ int module_get(struct fparam_s *prm, char **error)
         return err;
     mpars = params_getModuleParams(prm, "mod_cgi");
     if ((err = load_static_module(mpars, mod_cgi_getmodule, error))<0)
+        return err;
+    mpars = params_getModuleParams(prm, "mod_fcgi");
+    if ((err = load_static_module(mpars, mod_fcgi_getmodule, error))<0)
         return err;
 #endif
     return 0;

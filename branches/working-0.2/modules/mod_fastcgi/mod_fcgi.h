@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "../modules.h"
 #include "../../response.h"
 #include "../../defines.h"

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../modutils.h"
 #include "../../response.h"
 #include "../../logger.h"
 

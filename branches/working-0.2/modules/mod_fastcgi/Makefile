@@ -2,8 +2,8 @@
 
 include ../../Makefile.flags
 
-SHARED_PNAME = libmod_cgi.so.1
-STATIC_PNAME = libmod_cgi.a
+SHARED_PNAME = libmod_fcgi.so.1
+STATIC_PNAME = libmod_fcgi.a
 
 ifeq ($(PSTATUS), debug)
     SHARED_CFLAGS = -Wall -Wextra -O0 -ansi -pedantic -g -fPIC
@@ -13,8 +13,8 @@ else
     STATIC_CFLAGS = -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
 endif
 #-----------------------------------
-SHARED_OBJS = mod_cgi.oh cgi.oh ../modutils.oh
-STATIC_OBJS = mod_cgi.ot cgi.ot ../modutils.ot
+SHARED_OBJS = mod_fcgi.oh fcgi.oh linear_array.oh ../modutils.oh
+STATIC_OBJS = mod_fcgi.ot fcgi.ot linear_array.ot ../modutils.ot
 
 all: lib
 

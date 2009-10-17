@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_FASTCGI_H
-#define H_FASTCGI_H
+#ifndef H_PROTO_FASTCGI_H
+#define H_PROTO_FASTCGI_H
 
 /* Listening socket file number */
 #define FCGI_LISTENSOCK_FILENO 0
@@ -112,4 +112,4 @@ typedef struct {
     FCGI_UnknownTypeBody body;
 } FCGI_UnknownTypeRecord;
 
-#endif /* H_FASTCGI_H */
+#endif /* H_PROTO_FASTCGI_H */

@@ -19,20 +19,25 @@
 
 #include "mod_fcgi.h"
 
-/* number of pre-created socket pairs (aka max runnable fcgi apps) */
-#define POOL_SIZE    10
-
 struct la_s *la;
 
 static int _on_init(void)
 {
-    int i;
     struct fcgi_app *p;
+    int i;
     if ((la = lacreate(sizeof(struct fcgi_app*)*POOL_SIZE))==NULL) {
         return MOD_CRIT;
     }
     la->b = 1;
-    memset((char*)laget(la), 0, sizeof(struct fcgi_app*)*POOL_SIZE);
+    for (i=0; i<POOL_SIZE; ++i) {
+        p = ((struct fcgi_app *)laget(la))+i;
+        p->reqId = 0;
+        p->fname[0] = '\0';
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, p->fsock)!=0) {
+            ladestroy(la);
+            return MOD_CRIT;
+        }
+    }
     la->b = 0;
     return MOD_OK;
 }

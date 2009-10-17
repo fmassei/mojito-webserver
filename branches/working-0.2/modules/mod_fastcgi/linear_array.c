@@ -37,7 +37,7 @@ struct la_s *lacreate(unsigned int size)
     la->addr = mmap(NULL, la->size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (la->addr == MAP_FAILED)
         goto error;
-    return lh;
+    return la;
 error:
     if (la) free(la);
     if (fd>=0) shm_unlink(SHMNAME);
