@@ -104,13 +104,16 @@ int module_get(struct fparam_s *prm, char **error)
     char *modname;
     int i;
 #else
-    extern struct module_s          *mod_stat_getmodule(void),
+    extern struct module_s          
+#ifndef MOD_STRIPPED
+                                    *mod_stat_getmodule(void),
                                     *mod_cacheshm_getmodule(void),
+                                    *mod_cgi_getmodule(void),
+                                    *mod_fcgi_getmodule(void),
+#endif
                                     *mod_identity_getmodule(void),
                                     *mod_gzip_getmodule(void),
-                                    *mod_deflate_getmodule(void),
-                                    *mod_cgi_getmodule(void),
-                                    *mod_fcgi_getmodule(void);
+                                    *mod_deflate_getmodule(void);
 #endif
     if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
         *error = "section [modules] not found in config.ini";
@@ -132,12 +135,6 @@ int module_get(struct fparam_s *prm, char **error)
         modname += i+1;
     }
 #else
-    mpars = params_getModuleParams(prm, "mod_stat");
-    if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
-        return err;
-    mpars = params_getModuleParams(prm, "mod_cacheshm");
-    if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
-        return err;
     mpars = params_getModuleParams(prm, "mod_gzip");
     if ((err = load_static_module(mpars, mod_gzip_getmodule, error))<0)
         return err;
@@ -147,12 +144,20 @@ int module_get(struct fparam_s *prm, char **error)
     mpars = params_getModuleParams(prm, "mod_identity");
     if ((err = load_static_module(mpars, mod_identity_getmodule, error))<0)
         return err;
+#ifndef MOD_STRIPPED
+    mpars = params_getModuleParams(prm, "mod_stat");
+    if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
+        return err;
+    mpars = params_getModuleParams(prm, "mod_cacheshm");
+    if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
+        return err;
     mpars = params_getModuleParams(prm, "mod_cgi");
     if ((err = load_static_module(mpars, mod_cgi_getmodule, error))<0)
         return err;
     mpars = params_getModuleParams(prm, "mod_fcgi");
     if ((err = load_static_module(mpars, mod_fcgi_getmodule, error))<0)
         return err;
+#endif
 #endif
     return 0;
 }
