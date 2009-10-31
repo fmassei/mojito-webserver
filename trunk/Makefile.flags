@@ -5,14 +5,16 @@ AR	=	ar rcs
 RM  =   /bin/rm -f
 
 # debug or release
-PSTATUS = debug
-# lstatic or lshared
-MODULE = lstatic
+PSTATUS = release
+# lstatic, lshared or lstripped
+MODULE = lstripped
 
 # default cflags
 ifeq ($(PSTATUS), debug)
 	CFLAGS := -Wall -Wextra -O0 -ansi -pedantic -g
+	STRIP = @echo Debug-built
 else
 	CFLAGS := -Wall -Wextra -O3 -ansi -pedantic -DNDEBUG
+	STRIP = strip
 endif
 
