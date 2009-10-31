@@ -17,6 +17,11 @@ ifeq ($(MODULE), lstatic)
 	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -Lmodules/mod_cgi -l mod_cgi -Lmodules/mod_fastcgi -l mod_fcgi -lz -lrt
 	LDFLAGS =
 endif
+ifeq ($(MODULE), lstripped)
+	MODULE_LINK = -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -lz
+	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DMOD_STRIPPED
+	LDFLAGS =
+endif
 ifeq ($(MODULE), lshared)
 	DYNAMIC_LINKAGE := $(DYNAMIC_LINKAGE) -DDYNAMIC_MODULE
 	DYNAMIC = -DDYNAMIC
@@ -42,6 +47,7 @@ endif
 
 mojito: $(OBJS)
 	$(LD) $(OBJS) -o $(PNAME) $(LDFLAGS) $(LIBS) $(MODULE_LINK)
+	$(STRIP) $(PNAME)
 
 .c.o:
 	$(GCC) $(INCDIR) -c $< -o $@ $(CFLAGS) $(DYNAMIC) $(DYNAMIC_LINKAGE) $(MISSING_LINKAGE)
