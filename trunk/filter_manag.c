@@ -3,10 +3,10 @@
 /* find a filter by its id */
 static struct module_filter_s *filter_findbyid(char *id)
 {
-    extern struct module_filter_s *filter_modules;
+    extern struct module_filter_s *filters;
     struct module_filter_s *f;
-    for (f=filter_modules; f!=NULL; f=f->next)
-        if (!strcmp(f->name, id))
+    for (f=filters; f!=NULL; f=f->next)
+        if (!strcmp(f->mod->name, id))
             return f;
     return NULL;
 }
@@ -21,7 +21,7 @@ static struct module_filter_s *filter_findbyid(char *id)
  *      deal with it later, but I'm not sure. */
 int filter_sanitize_queue(struct qhead_s **qhead)
 {
-    extern struct module_filter_s *filter_modules;
+    extern struct module_filter_s *filters;
     struct qhead_s *p, *q;
     struct module_filter_s *f;
     float rq;
@@ -52,13 +52,13 @@ int filter_sanitize_queue(struct qhead_s **qhead)
          * got that is not present, do an insert with the '*' quality */
         rq = p->quality;
         qhead_delete(qhead, p);
-        for (f=filter_modules; f!=NULL; f=f->next) {
+        for (f=filters; f!=NULL; f=f->next) {
             for (q=*qhead; q!=NULL; q=q->next)
-                if (!strcmp(q->id, f->name))
+                if (!strcmp(q->id, f->mod->name))
                     break;
             if (q==NULL) {
                 if ( ((q = malloc(sizeof(*q)))==NULL) ||
-                        ((q->id = strdup(f->name))==NULL) )
+                        ((q->id = strdup(f->mod->name))==NULL) )
                     return -1; /* aww come on... just let it explode */
                 q->quality = rq;
                 q->extp = NULL;
@@ -75,26 +75,17 @@ int filter_sanitize_queue(struct qhead_s **qhead)
     return 0;
 }
 
-int filter_is_present(struct qhead_s *qhead, char *id)
-{
-    struct qhead_s *p;
-    for (p=qhead; p!=NULL; p=p->next)
-        if (!strcmp(p->id, id))
-            return 1;
-    return 0;
-}
-
 /* scroll the qhead struct trying to find a usable filter based on user
  * preferences (RFC2616-14.3). The qhead list should be ordered. */
-struct module_filter_s *filter_findfilter(struct qhead_s *qhead)
+struct module_s *filter_findfilter(struct qhead_s *qhead)
 {
-    extern struct module_filter_s *filter_modules;
+    extern struct module_filter_s *filters;
     struct qhead_s *p;
     struct module_filter_s *f = NULL;
     for (p=qhead; p!=NULL; p=p->next)
-        for (f=filter_modules; f!=NULL; f=f->next) {
-            if (!strcmp(f->name, p->id))
-                return f;
+        for (f=filters; f!=NULL; f=f->next) {
+            if (!strcmp(f->mod->name, p->id))
+                return f->mod;
         }
     return NULL;
 }

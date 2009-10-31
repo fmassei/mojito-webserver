@@ -35,7 +35,7 @@
 #include "fileutils.h"
 #include "fparams.h"
 #include "header_w_quality.h"
-#include "filter_manag.h"
+#include "logger.h"
 
 /* FIXME change to system defined size */
 #define SOCKBUFSIZE 255
@@ -56,6 +56,29 @@
 #define P_HTTP_UNK  0   
 #define P_HTTP_10   1
 #define P_HTTP_11   2
+
+/* TODO FIXME XXX move all the other fields in here! */
+struct request_s {
+    char *in_ip;
+
+    char *uri;
+    int method;
+    char *method_str;   /* pointer to method in string form */
+
+    char *content_type;
+    long content_length;
+    struct header_s {
+        struct qhead_s *accept_encoding;
+    } header;
+
+    /* the divided filename/querystring pointers */
+    char *page, *qs;
+    int post_fd;
+    /* the decoded filename on the filesystem (if any) */
+    char *abs_filename;
+    /* file stats */
+    struct stat sb;
+};
 
 /* create an empty request */
 void request_create();

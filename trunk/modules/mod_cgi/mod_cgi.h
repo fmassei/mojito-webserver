@@ -17,23 +17,18 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_FILTER_MANAG_H
-#define H_FILTER_MANAG_H
+#ifndef H_MOD_CGI_H
+#define H_MOD_CGI_H
 
 #define _BSD_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-/* #include "filter/filter.h" */
-#include "header_w_quality.h"
-#include "logger.h"
-#include "modules/modules.h"
+#include <unistd.h>
+#include "../modules.h"
+#include "../../response.h"
+#include "../../defines.h"
+#include "cgi.h"
 
-/* filter functions */
-int filter_sanitize_queue(struct qhead_s **qhead);
-struct module_s *filter_findfilter(struct qhead_s *qhead);
-
-#endif /* H_FILTER_MANAG_H */
+#endif /* H_MOD_CGI_H */

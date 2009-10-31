@@ -32,22 +32,17 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "logger/logger.h"
-#include "cache/cache.h"
+#include "logger.h"
 #include "fparams.h"
 #include "request.h"
 #include "mime.h"
 #include "date.h"
 #include "filter_manag.h"
-#include "cgi.h"
 #include "header_w_quality.h"
+#include "resp_headers.h"
+#include "modules/modules.h"
 
-/* push return codes in the response */
-void push_200(int sock);
-void send_404(int sock);
-void send_500(int sock);
-void send_501(int sock);
 /* send a file */
-void send_file(int sock, const char *filename);
+void send_file(int sock, struct request_s *req);
 
 #endif /* H_RESPONSE_H */
