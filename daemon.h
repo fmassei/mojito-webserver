@@ -21,16 +21,18 @@
 #define H_DAEMON_H
 
 #define _BSD_SOURCE
+#define _POSIX_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <signal.h>
+#include <syslog.h>
 #include "fparams.h"
 
 /* damonize the process */
-int fork_to_background(fparams_st *params, void(*termfunc)(int));
+int fork_to_background(struct fparam_s *params, void(*termfunc)(int));
 
 #endif /* H_DAEMON_H */

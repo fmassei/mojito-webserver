@@ -17,23 +17,32 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_FILTER_MANAG_H
-#define H_FILTER_MANAG_H
-
-#define _BSD_SOURCE
+#ifndef H_LOGGER_H
+#define H_LOGGER_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdarg.h>
+#include <time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-/* #include "filter/filter.h" */
-#include "header_w_quality.h"
-#include "logger.h"
-#include "modules/modules.h"
+#include <unistd.h>
+#include <syslog.h>
+#include "fparams.h"
 
-/* filter functions */
-int filter_sanitize_queue(struct qhead_s **qhead);
-struct module_s *filter_findfilter(struct qhead_s *qhead);
+/* debug messages are always a pain. As we're stick to C89 we have no
+ * variable-length argument lists for macros. We use our ol' double-parenthesis
+ * trick based on macro expansion. */
+#ifndef NDEBUG
+#define DEBUG_LOG(args) logmsg args
+#else
+#define DEBUG_LOG(args)
+#endif
 
-#endif /* H_FILTER_MANAG_H */
+void logmsg(int prio, char *fmt, ...);
+void logflush();
+void loghit(char *in_ip, char *method_str, char *uri);
+int logger_set_params(struct fparam_s *pars);
+int logger_init();
+int logger_fini();
+
+#endif /* H_LOGGER_H */

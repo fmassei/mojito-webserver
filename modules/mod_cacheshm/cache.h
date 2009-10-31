@@ -16,24 +16,20 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef H_FILTER_MANAG_H
-#define H_FILTER_MANAG_H
+#ifndef H_CACHE_H
+#define H_CACHE_H
 
 #define _BSD_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-/* #include "filter/filter.h" */
-#include "header_w_quality.h"
-#include "logger.h"
-#include "modules/modules.h"
 
-/* filter functions */
-int filter_sanitize_queue(struct qhead_s **qhead);
-struct module_s *filter_findfilter(struct qhead_s *qhead);
+/* entry struct */
+struct cache_entry_s {
+    char *URI;
+    char *fname;
+    char *filter_id;
+    char *content_type;
+};
 
-#endif /* H_FILTER_MANAG_H */
+#endif /* H_CACHE_H */

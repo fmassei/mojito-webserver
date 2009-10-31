@@ -33,7 +33,7 @@
 
 /* server start/stop/accept functions */
 int server_start(int port, int qsize);
-int server_accept();
+int server_accept(char **in_ip);
 int server_stop();
 
 #endif /* H_SOCKET_H */

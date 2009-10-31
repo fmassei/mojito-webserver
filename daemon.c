@@ -19,21 +19,32 @@
 
 #include "daemon.h"
 
-/* save the pid file */
-static int save_pid(fparams_st *params)
+/* temporary signal handler */
+static void _tmp_hndl(int s)
 {
-    int lfp;
+    switch(s) {
+    case SIGALRM: exit(EXIT_FAILURE); break;
+    case SIGUSR1: exit(EXIT_SUCCESS); break;
+    case SIGCHLD: exit(EXIT_FAILURE); break;
+    }
+}
+
+/* save the pid file */
+static int save_pid(struct fparam_s *params)
+{
+    int lfp = -1;
     char str[10];
-    if (params->pidfile==NULL) {
-        fprintf(stderr, "No pidfile specified");
+    if (params->pidfile==NULL || params->pidfile[0]=='\0') {
         return -1;
     }
     if ((lfp = open(params->pidfile, O_RDWR | O_CREAT, 0640))<0) {
-        fprintf(stderr, "Error opening pid file: %s", strerror(errno));
+        syslog(LOG_ERR, "unable to create pid file %s, code=%d (%s)",
+                params->pidfile, errno, strerror(errno));
         return -1;
     }
     if (lockf(lfp, F_TLOCK, 0)<0) {
-        fprintf(stderr, "Error locking pid file: %s", strerror(errno));
+        syslog(LOG_ERR, "unable to lock pid file %s, code=%d (%s)",
+                params->pidfile, errno, strerror(errno));
         return -1;
     }
     sprintf(str, "%d\n", getpid());
@@ -41,67 +52,74 @@ static int save_pid(fparams_st *params)
     return 0;
 }
 
-
-/* that function is a pain: no logging possible and too much things that can
- * go wrong. */
-static int reopen_stds(fparams_st *params)
+/* change running permissions */
+static int change_permissions(struct fparam_s *params)
 {
-    int i;
-    for (i=getdtablesize(); i>=0; --i)
-        close(i);
-    if (open("/dev/null", O_RDWR)!=0) return -1;
-    if (dup(0)!=1) return -1;
-    if (dup(0)!=2) return -1;
+    if (setuid(params->uid)<0 || setuid(params->gid)<0) {
+        syslog(LOG_ERR, "unable to set running permissions, code=%d (%s)",
+                errno, strerror(errno));
+        return -1;
+    }
     return 0;
 }
 
-/* set the webserver root folder */
-static int change_root(fparams_st *params)
+static int clean_fork()
 {
-    if (params->http_root==NULL) {
-        fprintf(stderr, "No http root specified");
+    pid_t pid;
+    signal(SIGCHLD, _tmp_hndl);
+    signal(SIGUSR1, _tmp_hndl);
+    signal(SIGALRM, _tmp_hndl);
+    pid = fork();
+    if (pid<0) {
+        syslog(LOG_ERR, "unable to fork daemon, code=%d (%s)",
+                errno, strerror(errno));
         return -1;
     }
-    if (chdir(params->http_root)!=0) {
-        fprintf(stderr, "Error chdiring into directory: %s", strerror(errno));
+    if (pid>0) {
+        alarm(2);
+        pause();
         return -1;
     }
-    /* XXX: chroot is disabled because of too many problems everywhere, mainly
-     * on interpreted cgi (that will be chrooted too). Anyway,
-     * if the user wants to chroot mojito, he will do it the standard way */
-/*    if (chroot(params->http_root)!=0) {
-        fprintf(stderr, "Error chrooting directory: %s", strerror(errno));
-        return -1;
-    }*/
-    if (setuid(params->uid)<0) {
-        fprintf(stderr, "Error setting uid: %s", strerror(errno));
-        return -1;
-    }
-    if (setuid(params->gid)<0) {
-        fprintf(stderr, "Error setting gid: %s", strerror(errno));
-        return -1;
-    }
+    return 0;
+}
+
+static int setsignals(void(*termfunc)(int))
+{
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGTERM, termfunc);
     return 0;
 }
 
 /* do all the job of forking */
-int fork_to_background(fparams_st *params, void(*termfunc)(int))
+int fork_to_background(struct fparam_s *params, void(*termfunc)(int))
 {
-    pid_t i;
-    if (getppid()==1) return 0;/* already a daemon */
-    i = fork();
-    if (i<0) return -1; /* fork error */
-    if (i>0) exit(0); /* parent exit */
-    if (setsid()==-1) return -1; /* new process group */
-    if (reopen_stds(params)!=0) return -1;
+    pid_t sid, parent;
+    if (getppid()==1)
+        return 0;
+    if (change_permissions(params)<0) return -1;
+    if (clean_fork()<0) return -1;
+    if (save_pid(params)<0) return -1;
+    parent = getppid();
+    if (setsignals(termfunc)<0) return -1;
     umask(027); /* mask to 0755 */
-    if (save_pid(params)!=0) return -1;
-    if (change_root(params)!=0) return -1;
-    signal(SIGCHLD, SIG_IGN); /* ignore child */
-    signal(SIGTSTP, SIG_IGN); /* ignore tty signals */
-    signal(SIGTTOU, SIG_IGN);
-    signal(SIGTTIN, SIG_IGN);
-    signal(SIGTERM, termfunc); /* terminating signal */
+    if ((sid = setsid())<0) {
+        syslog(LOG_ERR, "unable to create a new session, code=%d (%s)",
+                errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    if ((chdir(params->http_root))<0) {
+        syslog(LOG_ERR, "unable to change directory to %s, code=%d (%s)",
+                "/", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    freopen("/dev/null", "r", stdin);
+    freopen("/dev/null", "w", stdout);
+    freopen("/dev/null", "w", stderr);
+    kill(parent, SIGUSR1);
     return 0;
 }
 

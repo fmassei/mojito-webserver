@@ -19,255 +19,111 @@
 
 #include "response.h"
 
-/* protocol strings */
-static const char HTTP10[] = "HTTP/1.0 ";
-static const char HTTP11[] = "HTTP/1.1 ";
-/* some status responses */
-static const char RESP200[] = "200 OK\r\n";
-static const char RESP404[] = "404 Not Found\r\n";
-static const char RESP406[] = "406 Not Acceptable\r\n";
-static const char RESP500[] = "500 Internal Server Error\r\n";
-static const char RESP501[] = "501 Not Implemented\r\n";
-/* buffer for responses. Just make them fixed and static */
-static char res[0xff];
-static char buf[0xff];
-/* final filter(s) */
-static struct module_filter_s *filter;
-
-static char *page;
-char *query_string;
+/* FIXME change that thing */
+struct module_s *ch_filter;
 
 /* extract url and query string from the uri */
-static void strip_uri(const char *uri)
+static void strip_uri(struct request_s *req)
 {
     int p;
     /* divide by host and query_string */
-    if ((query_string = index(uri, '?'))==NULL) { /* no qs */
-        page = (char*)uri;
+    if ((req->qs = index(req->uri, '?'))==NULL) { /* no qs */
+        req->page = req->uri;
     } else {
         /* strip the '?' character */
-        ++query_string; 
+        ++req->qs; 
         /* copy and terminate the 'page' string */
-        p = (int)(query_string - uri - 1);
-        page = malloc(p+1);
-        memcpy(page, uri, p);
-        page[p] = '\0';
+        p = (int)(req->qs - req->uri - 1);
+        req->page = malloc(p+1);
+        memcpy(req->page, req->uri, p);
+        req->page[p] = '\0';
     }
 }
 
-/* send the generic response header */
-static void send_head(const char *head)
+static int find_file(struct request_s *req)
 {
-    extern fparams_st params;
-    extern int proto_version;
-    res[0] = '\0';
-    /* RFC2145 - conservative approach */
-    if (proto_version==P_HTTP_11)
-        strcat(res, HTTP11);
-    else strcat(res, HTTP10);
-    strcat(res, head);
-    sprintf(buf, "Date: %s\r\n", time_1123_format(time(NULL)));
-    strcat(res, buf);
-    sprintf(buf, "Server: %s\r\n", params.server_meta);
-    strcat(res, buf);
-    /*strcat(res, "Connection: close\r\n");*/
-}
-
-/* send the content-length */
-static void send_contentlength(long len)
-{
-    sprintf(buf, "Content-Length: %lu\r\n", len);
-    strcat(res, buf);
-}
-
-/* send the content-type */
-static void send_contenttype(char *name)
-{
-    sprintf(buf, "Content-Type: ");
-    strcat(buf, name);
-    strcat(buf, "\r\n");
-    strcat(res, buf);
-}
-
-/* send the filter content-encoding */
-static void send_filter_encoding(char *name)
-{
-    /* very very ugly. But we must have an expection somewhere */
-    if (!strcmp(name, "identity"))
-        return;
-    strcat(res, "Content-Encoding: ");
-    strcat(res, name);
-    strcat(res, "\r\n");
-}
-
-/* send the prepared header */
-static void send_endhead(int sock)
-{
-    strcat(res, "\r\n");
-    write(sock, res, strlen(res));
-}
-
-/* send generic status strings */
-void push_200(int sock)
-{
-    send_head(RESP200);
-    write(sock, res, strlen(res));
-}
-void send_404(int sock)
-{
-    send_head(RESP404);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_406(int sock)
-{
-    send_head(RESP406);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_500(int sock)
-{
-    send_head(RESP500);
-    send_contentlength(0);
-    send_endhead(sock);
-}
-void send_501(int sock)
-{
-    send_head(RESP501);
-    send_contentlength(0);
-    send_endhead(sock);
+    extern struct fparam_s params;
+    req->abs_filename = malloc(strlen(params.http_root)+strlen(req->page)+1);
+    if (req->abs_filename==NULL) {
+        return HRESP_500;
+    }    
+    sprintf(req->abs_filename, "%s%s", params.http_root, req->page);
+redo:
+    memset(&req->sb, 0, sizeof(req->sb));
+    stat(req->abs_filename, &req->sb);
+    if ((req->sb.st_mode&S_IFMT)!=S_IFREG) {
+        if ((req->sb.st_mode&S_IFMT)==S_IFDIR) {
+            if ((req->abs_filename = realloc(req->abs_filename,
+                                        strlen(req->abs_filename)+
+                                        strlen(params.default_page)+1))==NULL) {
+                return HRESP_500;
+            }
+            sprintf(req->abs_filename, "%s%s", req->abs_filename,
+                                                        params.default_page);
+            goto redo;
+        }
+        return HRESP_404;
+    }
+    return 0;
 }
 
 /* check if we can deal the request header */
-static int check_method()
+static int check_method(struct request_s *req)
 {
-    extern int method;
-    if (method!=M_GET && method!=M_POST && method!=M_HEAD) {
+    if (req->method!=M_GET && req->method!=M_POST && req->method!=M_HEAD) {
         return -1;
     }
     return 0;
 }
 
-#ifndef NOCACHE
-/* send a cached file */
-static void send_cached_file(struct cache_entry_s *cache_file, int sock)
-{
-    extern struct module_filter_s *ident_filter;
-    extern int method;
-    unsigned char *addr;
-    struct stat sb;
-    int clen;
-    int fd;
-    memset(&sb, 0, sizeof(sb));
-    stat(cache_file->fname, &sb);
-    if ((fd = open(cache_file->fname, 0))<0) {
-        send_head(RESP500);
-        return;
-    }
-    send_head(RESP200);
-    if ((clen = ident_filter->prelen(&sb))>=0)
-        send_contentlength(clen);
-    send_filter_encoding(cache_file->filter_id);
-    send_contenttype(cache_file->content_type);
-    send_endhead(sock);
-    if (method==M_HEAD)
-        return;
-    addr = mmap(NULL, clen, PROT_READ, MAP_PRIVATE, fd, 0);
-    ident_filter->compress(addr, sock, clen);
-}
-#endif
-
 /* send the response */
-void send_file(int sock, const char *uri)
+void send_file(int sock, struct request_s *req)
 {
-    extern fparams_st params;
-    extern int method;
-    extern struct qhead_s *accept_encoding;
-    extern int keeping_alive;
-    struct stat sb;
+    extern struct fparam_s params;
+    extern int keeping_alive, content_length_sent;
     unsigned char *addr;
-    char *filename;
-    long clen;
-    int fd;
-#ifndef NOCACHE
-    struct cache_entry_s *cache_file;
-    struct qhead_s *aep;
-    int cfd;
-#endif
+    int fd, find_ret;
 
-    if (check_method()!=0) {
-        send_501(sock);
+    if (check_method(req)!=0) {
+        header_kill_w_code(HRESP_501, sock);
         return;
     }
-#ifndef NOCACHE
-    /* check if we have a file in cache */
-    for (aep=accept_encoding; aep!=NULL; aep=aep->next) {
-        if (!strcmp(aep->id, "identity"))
-            continue;
-        if ((cache_file = cache_lookup(uri, aep->id))!=NULL) {
-            send_cached_file(cache_file, sock);
-            return;
-        }
-    }
-    DEBUG_LOG((LOG_DEBUG, "Normal sending"));
-#endif
-    /* no cache? build one */
-    strip_uri(uri);
-    if ((filename = malloc(strlen(params.http_root)+strlen(page)+1))==NULL) {
-        send_500(sock);
+    strip_uri(req);
+    find_ret = find_file(req);
+    /* find_ret can be an error, but maybe we're dealing with a "special" file.
+     * We run can_run() and on_presend() to see if there is at least one module
+     * that can process the request */
+    if (can_run(req)!=0)
         return;
-    }    
-    sprintf(filename, "%s%s", params.http_root, page);
-redo:
-    memset(&sb, 0, sizeof(sb));
-    stat(filename, &sb);
-    if ((sb.st_mode&S_IFMT)!=S_IFREG) {
-        if ((sb.st_mode&S_IFMT)==S_IFDIR) {
-            if ((filename = realloc(filename, strlen(filename)+
-                                        strlen(params.default_page)+1))==NULL) {
-                send_500(sock);
-                return;
-            }
-            sprintf(filename, "%s%s", filename, params.default_page);
-            goto redo;
-        }
-        send_404(sock);
+    if (on_presend(sock, req)!=0)
+        return;
+    if (find_ret!=0) {
+        header_kill_w_code(find_ret, sock);
         return;
     }
-    if (access(filename, X_OK)==0) {
-        cgi_run(filename, sock);
-        /* if here the cgi failed. Send a 500 to the client */
-        send_500(sock);
-    }
-    filter = filter_findfilter(accept_encoding);
-    if (filter==NULL) {
-        send_406(sock);
+    if ((ch_filter = filter_findfilter(req->header.accept_encoding))==NULL) {
+        header_kill_w_code(HRESP_406, sock);
         return;
     }
-    if ((fd = open(filename, O_RDONLY))<=0) {
-        send_404(sock);
+    if ((fd = open(req->abs_filename, O_RDONLY))<=0) {
+        header_kill_w_code(HRESP_404, sock);
         return;
     }
-    send_head(RESP200);
-    if ((clen = filter->prelen(&sb))>=0) {
-        send_contentlength(clen);
-    } else {
-        /* no length? no party. We can't keep the connection alive */
+    header_push_code(HRESP_200);
+    header_push_contenttype(mime_gettype(req->abs_filename));
+    if (on_prehead(&req->sb)!=0)
+        return;
+    /* no length? no party. We can't keep the connection alive 
+     * FIXME this is very ugly. Move this check somewhere else */
+    if (keeping_alive==1 && content_length_sent==0)
         keeping_alive = 0;
-    }
-    send_filter_encoding(filter->name);
-    send_contenttype(mime_gettype(filename));
-    send_endhead(sock);
-    if (method==M_HEAD)
+    header_send(sock);
+    if (req->method==M_HEAD)
         return;
-    addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    filter->compress(addr, sock, sb.st_size);
-    /* add in cache (only if filter != identity!) */
-    if (!strcmp(filter->name, "identity"))
+    addr = mmap(NULL, req->sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (on_send(addr, sock, &req->sb)!=0)
         return;
-#ifndef NOCACHE
-    if ((cfd = cache_create_file(uri, filter->name, mime_gettype(filename)))>=0)
-        filter->compress(addr, cfd, sb.st_size);
-#endif
+    if (on_postsend(req, mime_gettype(req->abs_filename), addr, &req->sb)!=0)
+        return;
 }
 

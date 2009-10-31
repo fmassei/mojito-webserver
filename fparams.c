@@ -51,7 +51,7 @@ static int normalize_string(char **str)
 }
 
 /* try assign a parameter to a variable */
-static int assign_param(char *name, char *value, fparams_st *params)
+static int assign_param(char *name, char *value, struct fparam_s *params)
 {
     if (normalize_string(&name)<0 || normalize_string(&value)<0)
         return -1;
@@ -65,6 +65,10 @@ static int assign_param(char *name, char *value, fparams_st *params)
         if ((params->http_root = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
             params->http_root[strlen(value)-1] = '\0';
+    } else if (!strcmp(name, "logfile")) {
+        if ((params->logfile = strdup(value))==NULL) return -1;
+    } else if (!strcmp(name, "errfile")) {
+        if ((params->errfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "default_page")) {
         if ((params->default_page = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "uid")) {
@@ -107,7 +111,7 @@ static int assign_param(char *name, char *value, fparams_st *params)
 
 /* check if we have enough parameters, and set the default values where
  * possible */
-static int check_fparams(fparams_st *params)
+static int check_fparams(struct fparam_s *params)
 {
     int err = 0;
     if (params->pidfile==NULL) {
@@ -121,6 +125,14 @@ static int check_fparams(fparams_st *params)
     }
     if (params->http_root==NULL) {
         fprintf(stderr, "Missing config option \"http_root\"\n");
+        err = -1;
+    }
+    if (params->logfile==NULL) {
+        fprintf(stderr, "Missing config option \"logfile\"\n");
+        err = -1;
+    }
+    if (params->errfile==NULL) {
+        fprintf(stderr, "Missing config option \"errfile\"\n");
         err = -1;
     }
     if (params->default_page==NULL) {
@@ -163,13 +175,15 @@ static int check_fparams(fparams_st *params)
     return err;
 }
 
-/* zero fparams_st struct */
-static void zero_fparams(fparams_st *params)
+/* zero struct fparam_s struct */
+static void zero_fparams(struct fparam_s *params)
 {
     if (params==NULL) return;
     params->pidfile = NULL;
     params->tmp_dir = NULL;
     params->http_root = NULL;
+    params->logfile = NULL;
+    params->errfile = NULL;
     params->default_page = NULL;
     params->uid = params->gid = 0;
     params->listen_port = params->listen_queue = 0;
@@ -179,7 +193,7 @@ static void zero_fparams(fparams_st *params)
     params->mod_params = NULL;
 }
 
-static int add_section(fparams_st *params, char *bname)
+static int add_section(struct fparam_s *params, char *bname)
 {
     struct module_params_s *p;
     if ((p = malloc(sizeof(*p)))==NULL)
@@ -195,7 +209,7 @@ static int add_section(fparams_st *params, char *bname)
 }
 
 /* quick and dirty INI parser */
-int params_loadFromINIFile(const char *fname, fparams_st *params)
+int params_loadFromINIFile(const char *fname, struct fparam_s *params)
 {
     struct stat sb;
     int fd, len, i, state;
@@ -265,11 +279,13 @@ done:
 }
 
 /* free parameters */
-void params_free(fparams_st *params)
+void params_free(struct fparam_s *params)
 {
     struct module_params_s *p, *q;
     if (params->pidfile) free(params->pidfile);
     if (params->http_root) free(params->http_root);
+    if (params->logfile) free(params->logfile);
+    if (params->errfile) free(params->errfile);
     if (params->default_page) free(params->default_page);
     if (params->tmp_dir) free(params->tmp_dir);
     if (params->server_meta) free(params->server_meta);
@@ -283,7 +299,8 @@ void params_free(fparams_st *params)
 }
 
 /* return the given parameter module (if any) */
-struct module_params_s *params_getModuleParams(fparams_st *params, char *name)
+struct module_params_s *params_getModuleParams(struct fparam_s *params,
+                                                                    char *name)
 {
     struct module_params_s *p;
     for (p=params->mod_params; p!=NULL; p=p->next)

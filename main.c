@@ -24,23 +24,23 @@
 #include <signal.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "logger/logger.h"
-#include "cache/cache.h"
 #include "socket.h"
 #include "request.h"
 #include "fparams.h"
 #include "daemon.h"
+#include "logger.h"
 #include "response.h"
 #include "filter_manag.h"
-#include "module.h"
+#include "module_loader.h"
+#include "modules/modules.h"
 
-extern char *uri;
-fparams_st params;
+extern struct request_s req;
+struct fparam_s params;
 int keeping_alive;
 
 void clean_quit()
 {
-    cache_fini();
+    mod_fini();
     logger_fini();
 }
 
@@ -58,7 +58,7 @@ int main(const int argc, char * const argv[])
     pid_t cpid;
     int opt;
     char *error;
-    extern char *in_ip, *method_str, *uri;
+    char *in_ip;
 
     while ((opt = getopt(argc, argv, "v"))!=-1) {
         switch(opt) {
@@ -77,9 +77,7 @@ int main(const int argc, char * const argv[])
             perror("Error loading configuration");
         return EXIT_FAILURE;
     }
-    if (module_get_logger(&params, &error)<0 ||
-            module_get_cache(&params, &error)<0 ||
-            module_get_filter(&params, &error)<0 ) {
+    if (module_get(&params, &error)<0) {
         fprintf(stderr, "Error loading dynamic modules: %s\n", error);
         return EXIT_FAILURE;
     }
@@ -89,24 +87,20 @@ int main(const int argc, char * const argv[])
     }
 #ifndef NOLOGGER
     /* FIXME adjust the order!! */
-    if (logger_init()!=0) {
+    if (logger_set_params(&params)<0 || logger_init()!=0) {
         fprintf(stderr, "Failed to start logger.\n");
         return EXIT_FAILURE;
     }
 #endif
-#ifndef NOCACHE
-    if (cache_init()!=0) {
-        logmsg(LOG_ERROR, "Could not start cache. Trying to go on.");
-    }
-#endif
+    mod_init();
     if (server_start(params.listen_port, params.listen_queue)<0) {
-        logmsg(LOG_ERROR, "Error starting server");
+        logmsg(LOG_ERR, "Error starting server");
         return EXIT_FAILURE;
     }
     logmsg(LOG_INFO, "Server started");
     logflush();
     while (1) {
-        if ((cl_sock = server_accept())<0) {
+        if ((cl_sock = server_accept(&in_ip))<0) {
             perror("Error accepting connections");
             exit(EXIT_FAILURE);
         }
@@ -120,12 +114,13 @@ int main(const int argc, char * const argv[])
             close(cl_sock);
             continue;
         }
+        on_accept();
 child_life:
-        request_create();
+        request_create(in_ip);
         if (request_read(cl_sock)==1)
             goto client_kill;
-        send_file(cl_sock, uri);
-        loghit(in_ip, method_str, uri);
+        send_file(cl_sock, &req);
+        loghit(req.in_ip, req.method_str, req.uri);
         if (keeping_alive!=0) {
             DEBUG_LOG((LOG_DEBUG, "Keeping alive!"));
             logflush();
