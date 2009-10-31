@@ -16,5 +16,5 @@ cd "$findir"
 /bin/rm todo || exit 2
 /bin/rm -rf `find . -iname '\.svn'` || exit 2
 cd ..
-tar cvjf "$findir.tar.gz" "$findir"
+tar cjf "$findir.tar.bz2" "$findir"
 exit 0
