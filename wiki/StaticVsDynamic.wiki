@@ -1,17 +1,12 @@
-#summary Static vs. Dynamic linking
+﻿#summary Static vs. Dynamic linking
 #labels Phase-Implementation,Phase-Design
 
 = Introduction =
 Static versus dynamic linking of modules is the main concept of Mojito modules.
 
-= Module-sets =
-Modules that implements the same interface are said to be of the same "module-set". For example you can have two different cache-modules or three different logger-modules.
-
-It's important to notice that *only one module of each set is used when running*.
-
-For each module-set you have two important parts: the _interface specifier_ and a special _dlloader module_.
- * The _interface specifier_ serves as an interface, and is always used be the rest of the world to know what functions will be usable. Typically it is a .h file with all the function prototypes that the module have to export to be correctly used.
- * The _dlloader module_ is used only when linking the module-set dynamically, and it deals with the runtime operations needed for loading and registering the requested module and its functions. Typically it is implemented as a (function-pointer, wrapper-function) pair for each underlying function and a master loader function that takes the name of the module to load and assigns the pointers, everything with a minimum of error checking.
+= Overview =
+From a Mojito point of view, a module is simply a struct of function pointers plus some internal data, like the module name or the module category.
+The module interface is unique for each module, giving the core the possibility to load and use dynamically each module in a standardized way.
 
 = Architecture =
 Here it is a simple schema.
@@ -21,17 +16,12 @@ http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/static_vs_dyn
 .dia file here: http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/static_vs_dynamic.dia
 
  * Linking statically you insert into the final object file only the required module of that given type.
- * Linking dynamically you insert into the final object file only the dlloader of the specified module-set, while building each other module separately.
+ * Linking dynamically you insert into the final object file only the generic dlloader, while building each other module separately.
 
 *NOTE*: For each module-set you can choose the type of linkage. So you can have a static linked logger and a bunch of caching modules to choose from at runtime.
 
-= Module-sets interfaces =
-== Logger ==
-http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/interface_logger.png
+= Module interface =
+http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/module_interface.png
 
-http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/interface_logger.dia
+http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/module_interface.dia
 
-== Cache ==
-http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/interface_cache.png
-
-http://mojito-webserver.googlecode.com/svn/wiki/design_attachments/interface_cache.dia

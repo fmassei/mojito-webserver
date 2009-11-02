@@ -1,4 +1,4 @@
-#summary Coders' guidelines
+﻿#summary Coders' guidelines
 #labels Phase-Implementation
 
 = Introduction =

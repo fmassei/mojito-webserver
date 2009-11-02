@@ -1,23 +1,23 @@
-#summary Compiling
+﻿#summary Compiling
 #labels Phase-Deploy,Featured
 
 = The fast and easy way =
-The faster and easier way to have a working environment for Mojito is to make a specific folder, copy the needed files and run it. Expressed as a bash-script, for version 0.1-r37:
+The faster and easier way to have a working environment for Mojito is to make a specific folder, copy the needed files and run it. Expressed as a bash-script, for version 0.2-r73:
 {{{
 # create a folder
 mkdir mojito_folder
 cd mojito_folder
 # download and compile
-wget "http://mojito-webserver.googlecode.com/files/mojito-0.1-r37.tar.bz2" -O mojito.tar.bz2 
+wget "http://mojito-webserver.googlecode.com/files/mojito-0.2-r73.tar.bz2" -O mojito.tar.bz2 
 tar xjf mojito.tar.bz2
-cd mojito-0.1-r37
+cd mojito-0.2-r73
 make all
 # copy needed files up
 cp mojito ..
 cp config.ini ..
 cd ..
 # remove the sources
-rm -rf mojito-0.1-r37
+rm -rf mojito-0.2-r73
 rm mojito.tar.bz2
 # ajust the config.ini file to fit your needs. The important part is to specify the http_root parameter!
 vim config.ini
@@ -48,9 +48,9 @@ If (_and only if_) you build with dynamic modules, you will want to copy the bui
 = Makefiles (compile-time options) =
 
 == Main Makefile ==
-The Makefiles are a bit tricky. The most important switches are located in the Makefile on the project root folder.
+The Makefiles are a bit tricky. The most important switches are located in the Makefile.flags on the project root folder.
  * the *PSTATUS* variable accepts two values: "debug" and "release". The first one will activate the debugging informations (-g) and deactivates the optimizations (-O0) on gcc for all the .c files, while the second one will activate optimizations (-O3) and set the NDEBUG macro.
- * the *LOGGER* and *CACHE* variables accept two values: "lstatic" and "lshared". The first one will link statically the relative module, while the second will activate the shared linkage mode. Activating one or more _lshared_ modules, the "dynamic" variables will set, and passed to the compiler too.
+ * the *MODULE* variable accept three values: "lstatic", "lstripped" and "lshared". _lstatic_ will link all the modules statically to the core. _lstripped_ will statically link only the really needed modules (some filters, no cache, no statistics, no cgi, etc.). _lshared_ will not link anything, giving the possibility to load everything dynamically.
 
 == Modules Makefiles ==
 The modules Makefiles always build *both* the static *and* the shared version of them.
