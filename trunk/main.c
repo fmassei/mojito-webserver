@@ -85,13 +85,10 @@ int main(const int argc, char * const argv[])
         fprintf(stderr, "Forking to background failed.\n");
         return EXIT_FAILURE;
     }
-#ifndef NOLOGGER
-    /* FIXME adjust the order!! */
     if (logger_set_params(&params)<0 || logger_init()!=0) {
         fprintf(stderr, "Failed to start logger.\n");
         return EXIT_FAILURE;
     }
-#endif
     mod_init();
     if (server_start(params.listen_port, params.listen_queue)<0) {
         logmsg(LOG_ERR, "Error starting server");

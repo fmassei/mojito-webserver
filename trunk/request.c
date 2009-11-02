@@ -23,7 +23,6 @@
 char *method_strs[] = { "", "GET" /* M_GET */, "HEAD", "POST" };
 
 struct request_s req;
-char *in_ip;
 char *post_data = NULL;
 int proto_version = P_HTTP_UNK;
 
