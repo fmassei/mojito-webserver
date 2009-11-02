@@ -38,7 +38,7 @@
 #include "logger.h"
 
 /* FIXME change to system defined size */
-#define SOCKBUFSIZE 255
+#define SOCKBUFSIZE 8196
 
 /* parser constants */
 #define HEAD    1

@@ -1,6 +1,5 @@
 ? request correctness check
 buffer overflow checks
-statistics for internal variables, like cache-hits or keep-alive connections
 sigint to reload the config
 Adjust logs to match the apache ones
 check what happens in a header() call in a PHP script while executing in a CGI

@@ -70,7 +70,7 @@ static int load_dynamic_module(struct fparam_s *prm,
 }
 #else
 static int load_static_module(struct module_params_s *mpars,
-                        struct module_s*(*modfnc)(void), char **error)
+                    struct module_s*(*modfnc)(void), char *name, char **error)
 {
     struct module_s *mod;
     struct plist_s *lpars;
@@ -80,8 +80,7 @@ static int load_static_module(struct module_params_s *mpars,
     }
     if (mod->set_params!=NULL) {
         if (mpars==NULL) {
-            /* FIXME: found module name */
-            logmsg(LOG_WARNING, "No parameters found for module");
+            logmsg(LOG_WARNING, "No parameters found for module %s", name);
             lpars = NULL;
         } else {
             lpars = mpars->params;
@@ -109,7 +108,7 @@ int module_get(struct fparam_s *prm, char **error)
                                     *mod_stat_getmodule(void),
                                     *mod_cacheshm_getmodule(void),
                                     *mod_cgi_getmodule(void),
-                                    *mod_fcgi_getmodule(void),
+/*                                    *mod_fcgi_getmodule(void),*/
 #endif
                                     *mod_identity_getmodule(void),
                                     *mod_gzip_getmodule(void),
@@ -136,27 +135,34 @@ int module_get(struct fparam_s *prm, char **error)
     }
 #else
     mpars = params_getModuleParams(prm, "mod_gzip");
-    if ((err = load_static_module(mpars, mod_gzip_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_gzip_getmodule,
+                                                "mod_gzip", error))<0)
         return err;
     mpars = params_getModuleParams(prm, "mod_deflate");
-    if ((err = load_static_module(mpars, mod_deflate_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_deflate_getmodule, 
+                                                "mod_deflate", error))<0)
         return err;
     mpars = params_getModuleParams(prm, "mod_identity");
-    if ((err = load_static_module(mpars, mod_identity_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_identity_getmodule, 
+                                                "mod_identity", error))<0)
         return err;
 #ifndef MOD_STRIPPED
     mpars = params_getModuleParams(prm, "mod_stat");
-    if ((err = load_static_module(mpars, mod_stat_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_stat_getmodule,
+                                                "mod_stat", error))<0)
         return err;
     mpars = params_getModuleParams(prm, "mod_cacheshm");
-    if ((err = load_static_module(mpars, mod_cacheshm_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_cacheshm_getmodule,
+                                                "mod_cacheshm", error))<0)
         return err;
     mpars = params_getModuleParams(prm, "mod_cgi");
-    if ((err = load_static_module(mpars, mod_cgi_getmodule, error))<0)
+    if ((err = load_static_module(mpars, mod_cgi_getmodule,
+                                                "mod_cgi", error))<0)
         return err;
-    mpars = params_getModuleParams(prm, "mod_fcgi");
-    if ((err = load_static_module(mpars, mod_fcgi_getmodule, error))<0)
-        return err;
+/*    mpars = params_getModuleParams(prm, "mod_fcgi");
+    if ((err = load_static_module(mpars, mod_fcgi_getmodule,
+                                                "mod_fcgi", error))<0)
+        return err;*/
 #endif
 #endif
     return 0;

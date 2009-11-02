@@ -14,7 +14,8 @@ MISSING_LINKAGE =
 TARGET_MODS = mods
 
 ifeq ($(MODULE), lstatic)
-	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -Lmodules/mod_cgi -l mod_cgi -Lmodules/mod_fastcgi -l mod_fcgi -lz -lrt
+	MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -Lmodules/mod_cgi -l mod_cgi -lz -lrt
+	#MODULE_LINK = -Lmodules/mod_stat -lmod_stat -Lmodules/mod_cacheshm -lmod_cacheshm -Lmodules/mod_gzip -lmod_gzip -Lmodules/mod_deflate -lmod_deflate -Lmodules/mod_identity -lmod_identity -Lmodules/mod_cgi -l mod_cgi -Lmodules/mod_fastcgi -l mod_fcgi -lz -lrt
 	LDFLAGS =
 endif
 ifeq ($(MODULE), lstripped)
