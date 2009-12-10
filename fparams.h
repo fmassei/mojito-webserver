@@ -42,7 +42,7 @@ struct module_params_s {
 /* server parameters */
 struct fparam_s {
     char *pidfile;
-    char *http_root;
+    char *http_root, *http_errors_root;
     char *default_page;
     char *tmp_dir;
     int uid, gid;

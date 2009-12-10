@@ -91,10 +91,45 @@ void header_send(int sock)
     write(sock, res, strlen(res));
 }
 
+static int get_error_page(int code, size_t *len, char **fname)
+{
+    extern struct fparam_s params;
+    struct stat sb;
+    int fd;
+    if (params->http_errors_root==NULL)
+        return -1;
+    if ((*fname = malloc(strlen(params->http_errors_root)+8+1))==NULL)
+        return -1;
+    sprintf(*fname, "%s%03d.html", params->http_errors_root, code);
+    memset(&sb, 0, sizeof(sb));
+    stat(*fname, &sb);
+    if ((sb&S_IFMT)!=S_IFREG) {
+        free(*fname);
+        return -1;
+    }
+    *len = sb.st_size;
+    return 0;
+}
+
 void header_kill_w_code(int code, int sock)
 {
-    header_push_code(code);
-    header_push_contentlength(0);
-    header_send(sock);
+    size_t len;
+    char *fname;
+    int fd = -1;
+    void* addr = NULL;
+    if ((get_error_page(code, &len, &fname)<0) ||
+            ((fd = open(fname, O_RDONLY))<0) ||
+            ((addr = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0))==NULL))
+        header_push_code(code);
+        header_push_contentlength(0);
+        header_send(sock);
+        if (addr) munmap(addr, len);
+        if (fd>=0) close(fd);
+    } else {
+        header_push_code(code);
+        header_push_contentlength(len);
+        header_send(sock);
+        on_send(addr, sock, len);
+    }
 }
 
