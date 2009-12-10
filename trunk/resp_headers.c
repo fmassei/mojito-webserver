@@ -95,15 +95,20 @@ static int get_error_page(int code, size_t *len, char **fname)
 {
     extern struct fparam_s params;
     struct stat sb;
-    int fd;
-    if (params->http_errors_root==NULL)
+    char codenum[4];
+    int i;
+    if (params.http_errors_root==NULL)
         return -1;
-    if ((*fname = malloc(strlen(params->http_errors_root)+8+1))==NULL)
+    if ((*fname = malloc(strlen(params.http_errors_root)+1+8+1))==NULL)
         return -1;
-    sprintf(*fname, "%s%03d.html", params->http_errors_root, code);
+    /* FIXME: check for this one below */
+    for (i=0; i<3; ++i) codenum[i] = RESP[code][i];
+    codenum[3] = '\0';
+    sprintf(*fname, "%s/%s.html", params.http_errors_root, codenum);
+    DEBUG_LOG((LOG_DEBUG, "Trying to get error page %s", *fname));
     memset(&sb, 0, sizeof(sb));
     stat(*fname, &sb);
-    if ((sb&S_IFMT)!=S_IFREG) {
+    if ((sb.st_mode&S_IFMT)!=S_IFREG) {
         free(*fname);
         return -1;
     }
@@ -119,7 +124,7 @@ void header_kill_w_code(int code, int sock)
     void* addr = NULL;
     if ((get_error_page(code, &len, &fname)<0) ||
             ((fd = open(fname, O_RDONLY))<0) ||
-            ((addr = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0))==NULL))
+            ((addr = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0))==NULL)) {
         header_push_code(code);
         header_push_contentlength(0);
         header_send(sock);
