@@ -5,7 +5,7 @@ AR	=	ar rcs
 RM  =   /bin/rm -f
 
 # debug or release
-PSTATUS = release
+PSTATUS = debug
 # lstatic, lshared or lstripped
 MODULE = lstripped
 

@@ -19,9 +19,18 @@
 #ifndef H_RESP_HEADERS_H
 #define H_RESP_HEADERS_H
 
+#define _BSD_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+
 #include "fparams.h"
 #include "request.h"
 #include "date.h"
