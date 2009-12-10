@@ -38,8 +38,9 @@
 #define HRESP_200   0
 #define HRESP_404   1
 #define HRESP_406   2
-#define HRESP_500   3
-#define HRESP_501   4
+#define HRESP_411   3
+#define HRESP_500   4
+#define HRESP_501   5
 
 void header_push_code(int code);
 

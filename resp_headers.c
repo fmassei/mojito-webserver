@@ -29,6 +29,7 @@ static const char *RESP[] = {
         "200 OK\r\n",
         "404 Not Found\r\n",
         "406 Not Acceptable\r\n",
+        "411 Length Required\r\n",
         "500 Internal Server Error\r\n",
         "501 Not Implemented\r\n"
     };
