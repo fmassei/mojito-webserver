@@ -134,7 +134,8 @@ void header_kill_w_code(int code, int sock)
         header_push_code(code);
         header_push_contentlength(len);
         header_send(sock);
-        on_send(addr, sock, len);
+        /* FIXME move to normal send flow */
+        write(sock, addr, len);
     }
 }
 
