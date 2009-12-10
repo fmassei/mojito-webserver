@@ -65,6 +65,10 @@ static int assign_param(char *name, char *value, struct fparam_s *params)
         if ((params->http_root = strdup(value))==NULL) return -1;
         if (value[strlen(value)-1]=='/')
             params->http_root[strlen(value)-1] = '\0';
+    } else if (!strcmp(name, "http_errors_root")) {
+        if ((params->http_errors_root = strdup(value))==NULL) return -1;
+        if (value[strlen(value)-1]=='/')
+            params->http_errors_root[strlen(value)-1] = '\0';
     } else if (!strcmp(name, "logfile")) {
         if ((params->logfile = strdup(value))==NULL) return -1;
     } else if (!strcmp(name, "errfile")) {
@@ -127,6 +131,10 @@ static int check_fparams(struct fparam_s *params)
         fprintf(stderr, "Missing config option \"http_root\"\n");
         err = -1;
     }
+    if (params->http_errors_root==NULL) {
+        fprintf(stderr, "Missing config option \"http_errors_root\"\n");
+        err = -1;
+    }
     if (params->logfile==NULL) {
         fprintf(stderr, "Missing config option \"logfile\"\n");
         err = -1;
@@ -182,6 +190,7 @@ static void zero_fparams(struct fparam_s *params)
     params->pidfile = NULL;
     params->tmp_dir = NULL;
     params->http_root = NULL;
+    params->http_errors_root = NULL;
     params->logfile = NULL;
     params->errfile = NULL;
     params->default_page = NULL;
@@ -284,6 +293,7 @@ void params_free(struct fparam_s *params)
     struct module_params_s *p, *q;
     if (params->pidfile) free(params->pidfile);
     if (params->http_root) free(params->http_root);
+    if (params->http_errors_root) free(params->http_errors_root);
     if (params->logfile) free(params->logfile);
     if (params->errfile) free(params->errfile);
     if (params->default_page) free(params->default_page);
