@@ -87,7 +87,7 @@ static float string2quality(char *str)
     errno = 0;
     ret = (float)strtod(str, &endptr);
     if ((errno==ERANGE) || (endptr!=NULL) || (errno!=0 && ret==0) || 
-            (ret<0.0f && ret>1.0f))
+            (ret<0.0f || ret>1.0f))
         return 1.0f;
     return ret;
 }
