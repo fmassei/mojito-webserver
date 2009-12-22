@@ -36,6 +36,7 @@ AC_CHECK_FUNCS([lockf getpid signal fork alarm pause getppid umask setsid chdir 
 AC_REPLACE_FUNCS([snprintf vsnprintf vasprintf])
 AC_REPLACE_FUNCS([basename strerror strncasecmp strdup])
 
+m4_pattern_allow([^LIBOBJS$]) 
 Xsed="sed -e s/^X//"
 LTLIBOBJS=`echo X"$LIBOBJS"|[$Xsed -e "s,\.[^.]* ,.lo ,g;s,\.[^.]*$,.lo,"]`
 AC_SUBST(LTLIBOBJS)
