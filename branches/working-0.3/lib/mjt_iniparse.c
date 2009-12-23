@@ -30,9 +30,9 @@ static void inisection_free(struct inisection_s **ptr)
 {
     if (ptr==NULL || *ptr==NULL)
         return;
-    mjt_free((*ptr)->name);
+    mjt_free2null((*ptr)->name);
     mjt_kvlist_destroy(&(*ptr)->params);
-    mjt_free(*ptr);
+    mjt_free2null(*ptr);
 }
 
 void mjt_inifree(struct inisection_s **ptr)

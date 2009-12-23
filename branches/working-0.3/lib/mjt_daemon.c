@@ -26,7 +26,11 @@ static int_t save_pid(char_t *pidfile)
         return -1;
     }
     sprintf(pidstr, "%d\n", getpid());
-    write(lfp, pidstr, strlen(pidstr));
+    if (mjt_justwrite(lfp, pidstr, strlen(pidstr))==FALSE) {
+        fprintf(stderr, "badbadbad error writing pid file %s, code=%d (%s)",
+            pidfile, errno, strerror(errno));
+        return -1;
+    }
     return 0;
 }
 
@@ -92,9 +96,13 @@ int_t fork_to_background(char_t *pidfile, uid_t uid, gid_t gid,
             rootdir, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
-    freopen("/dev/null", "r", stdin);
-    freopen("/dev/null", "w", stdout);
-    freopen("/dev/null", "w", stderr);
+    if (    freopen("/dev/null", "r", stdin)==NULL ||
+            freopen("/dev/null", "w", stdout)==NULL ||
+            freopen("/dev/null", "w", stderr)==NULL ) {
+        fprintf(stderr, "unable to re-open the standard streams, code=%d (%s)",
+            errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
     kill(parent, SIGUSR1);
     return 0;
 }

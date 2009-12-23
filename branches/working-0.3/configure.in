@@ -1,4 +1,4 @@
-AC_PREREQ(2.59)
+AC_PREREQ(2.59c)
 
 AC_INIT([mojito-webserver], [0.3], [fmassei@gmail.com])
 AC_CONFIG_AUX_DIR([config])
@@ -17,22 +17,23 @@ AC_SUBST(LIBTOOL_DEPS)
 AC_HEADER_STDC
 AC_CHECK_HEADERS([errno.h unistd.h time.h limits.h ctype.h fcntl.h])
 AC_CHECK_HEADERS([syslog.h])
-AC_CHECK_HEADERS([sys/socket.h netinet/in.h arpa/inet.h])
+AC_CHECK_HEADERS([sys/socket.h netinet/in.h arpa/inet.h sys/select.h])
 AC_CHECK_HEADERS([sys/stat.h sys/mman.h signal.h])
 AC_CHECK_HEADERS([string.h strings.h], [break])
 AC_CHECK_HEADERS([stdarg.h varargs.h], [break])
 
 AC_C_CONST
 AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
 
 MJT_VAR_SYS_ERRLIST
 
 AC_CHECK_FUNCS([strcpy bcopy], [break])
 AC_CHECK_FUNCS([strftime gmtime mktime strptime])
-AC_CHECK_FUNCS([accept socket setsockopt bind listen])
+AC_CHECK_FUNCS([accept socket setsockopt bind listen select])
 AC_CHECK_FUNCS([bzero memset], [break])
 AC_CHECK_FUNCS([mmap munmap])
-AC_CHECK_FUNCS([lockf getpid signal fork alarm pause getppid umask setsid chdir kill])
+AC_CHECK_FUNCS([lockf getpid signal fork alarm pause getppid umask setsid chdir kill mkstemp])
 AC_REPLACE_FUNCS([snprintf vsnprintf vasprintf])
 AC_REPLACE_FUNCS([basename strerror strncasecmp strdup])
 
@@ -41,5 +42,5 @@ Xsed="sed -e s/^X//"
 LTLIBOBJS=`echo X"$LIBOBJS"|[$Xsed -e "s,\.[^.]* ,.lo ,g;s,\.[^.]*$,.lo,"]`
 AC_SUBST(LTLIBOBJS)
 
-AC_CONFIG_FILES([replace/Makefile lib/Makefile net/Makefile Makefile])
+AC_CONFIG_FILES([replace/Makefile lib/Makefile net/Makefile http/Makefile Makefile])
 AC_OUTPUT

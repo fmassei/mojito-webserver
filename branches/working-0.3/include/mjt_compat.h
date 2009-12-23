@@ -25,6 +25,9 @@
 #if HAVE_ERRNO_H
 #   include <errno.h>
 #endif
+#if HAVE_LIMITS_H
+#   include <limits.h>
+#endif
 #ifndef errno
 extern int errno;
 #endif

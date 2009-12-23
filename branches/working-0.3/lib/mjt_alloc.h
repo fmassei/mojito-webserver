@@ -4,7 +4,9 @@
 #include <mjt_types.h>
 
 #define mjt_free(PTR) do { \
-    if (PTR!=NULL) { free(PTR); PTR = NULL; } } while(0)
+    if ((PTR)!=NULL) { free(PTR); } } while(0)
+#define mjt_free2null(PTR) do { \
+    mjt_free(PTR); (PTR) = NULL; } while(0)
 
 BEGIN_C_DECLS
 
