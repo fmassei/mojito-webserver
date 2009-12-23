@@ -17,35 +17,15 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_MJT_SOCKET_H
-#define H_MJT_SOCKET_H
+#ifndef H_MJT_RW_H
+#define H_MJT_RW_H
 
 #include <mjt_types.h>
 
-#if HAVE_SYS_SOCKET_H
-#   include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
-#   include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#   include <arpa/inet.h>
-#endif
-#if HAVE_SYS_SELECT_H
-#   include <sys/select.h>
-#endif
+BEGIN_C_DECLS
 
-#if !HAVE_SELECT
-#   error no select() found!
-#endif
+extern bool_t mjt_justwrite(int_t fd, const void *buf, sizet_t count);
 
-#define INVALID_SOCKET  -1
-typedef int_t socket_t;
+END_C_DECLS
 
-/* get the system preferred socket buffer size */
-int_t mjt_socket_getbuffersize();
-
-/* wait on a socket for a specific timeout */
-int_t mjt_socket_waitonalive(socket_t sock, int_t seconds);
-
-#endif /* H_MJT_SOCKET_H */
+#endif /* H_MJT_RW_H */
