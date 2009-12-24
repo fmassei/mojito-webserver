@@ -17,34 +17,28 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_MJT_INIPARSE_H
-#define H_MJT_INIPARSE_H
+#ifndef H_FPARAMS_H
+#define H_FPARAMS_H
 
 #include <mjt_types.h>
+#include <lib/mjt_alloc.h>
+#include <lib/mjt_iniparse.h>
+#include <lib/mjt_logger.h>
+#include <lib/mjt_rw.h>
 
-#if HAVE_SYS_STAT_H
-#   include <sys/stat.h>
-#endif
-#if HAVE_SYS_MMAN_H
-#   include <sys/mman.h>
-#endif
-
-#if !HAVE_MMAP || !HAVE_MUNMAP
-#   error no mmap/munmap found!
-#endif
-
-struct inisection_s {
-    char_t *name;
-    struct kvlist_s *params;
-    struct inisection_s *next;
+struct fparam_s {
+    char_t *pidfile;
+    char_t *http_root;
+    char_t *default_page;
+    char_t *tmp_dir;
+    int_t uid, gid;
+    int_t listen_port, listen_queue;
+    int_t keepalive_timeout;
+    char_t *server_meta;
+    char_t *logfile, *errfile;
 };
 
-BEGIN_C_DECLS
+struct fparam_s *params_loadFromINIFile(const char_t *fname);
+struct void params_free(struct fparam_s **params);
 
-extern char_t *mjt_inigeterror(void);
-extern struct inisection_s *mjt_iniparse(const char_t *fname);
-extern void mjt_inifree(struct inisection_s **ptr);
-
-END_C_DECLS
-
-#endif /* H_MJT_INIPARSE_H */
+#endif /* H_FPARAMS_H */

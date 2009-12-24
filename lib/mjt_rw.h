@@ -24,6 +24,7 @@
 
 BEGIN_C_DECLS
 
+extern bool_t mjt_isrwdir(const char_t *path);
 extern bool_t mjt_justwrite(int_t fd, const void *buf, sizet_t count);
 
 END_C_DECLS
