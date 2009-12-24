@@ -2,7 +2,7 @@
 
 /* FIXME: not thread safe! */
 static char_t datestr[30];
-static FILE *flog, *ferr;
+static FILE *flog = NULL, *ferr = NULL;
 
 static char_t *get_logprio_desc(int_t prio)
 {
@@ -29,9 +29,11 @@ static char_t *outdate()
 
 static void _f_logmsg(int_t prio, char_t *fmt, va_list argp)
 {
-    fprintf(ferr, "[%s] [%s %d] ", outdate(), get_logprio_desc(prio), getpid());
-    vfprintf(ferr, fmt, argp);
-    fprintf(ferr, "\n");
+    FILE *f;
+    f = (ferr==NULL) ? stderr : ferr;
+    fprintf(f, "[%s] [%s %d] ", outdate(), get_logprio_desc(prio), getpid());
+    vfprintf(f, fmt, argp);
+    fprintf(f, "\n");
 }
 
 void mjt_logmsg(int_t prio, char_t *fmt, ...)
@@ -59,14 +61,14 @@ int_t mjt_logger_init(char_t *logfile, char_t *errfile)
 int_t mjt_logger_fini(void)
 {
     int_t ret = 0;
-    ret |= fclose(flog);
-    ret |= fclose(ferr);
+    if (flog) ret |= fclose(flog);
+    if (ferr) ret |= fclose(ferr);
     return !(ret==0);
 }
 
 void mjt_logger_flush(void)
 {
-    fflush(flog);
-    fflush(ferr);
+    if (flog) fflush(flog);
+    if (ferr) fflush(ferr);
 }
 
