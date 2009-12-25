@@ -1,7 +1,7 @@
 #include "mjt_rw.h"
 
-/* check if a directory exists and it's writable */
-bool_t mjt_isrwdir(const char_t *path)
+/* check if the specified path refer to a directory */
+bool_t mjt_isdir(const char_t *path)
 {
     struct stat sb;
     bzero(&sb, sizeof(sb));
@@ -9,6 +9,11 @@ bool_t mjt_isrwdir(const char_t *path)
         return FALSE;
     if ((sb.st_mode&S_IFMT)!=S_IFDIR)
         return FALSE;
+    return TRUE;
+}
+
+/* check if the path exists and the user have all the permissions */
+bool_t mjt_isrwx(const char_t *path)
     if (access(path, R_OK|W_OK|W_OK)<0)
         return FALSE;
     return TRUE;
