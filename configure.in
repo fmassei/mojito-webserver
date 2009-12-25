@@ -29,6 +29,7 @@ AC_TYPE_SSIZE_T
 MJT_VAR_SYS_ERRLIST
 
 AC_CHECK_FUNCS([strcpy bcopy], [break])
+AC_CHECK_FUNCS([strchr index], [break])
 AC_CHECK_FUNCS([strftime gmtime mktime strptime])
 AC_CHECK_FUNCS([accept socket setsockopt bind listen select])
 AC_CHECK_FUNCS([bzero memset], [break])
@@ -42,5 +43,6 @@ Xsed="sed -e s/^X//"
 LTLIBOBJS=`echo X"$LIBOBJS"|[$Xsed -e "s,\.[^.]* ,.lo ,g;s,\.[^.]*$,.lo,"]`
 AC_SUBST(LTLIBOBJS)
 
-AC_CONFIG_FILES([replace/Makefile lib/Makefile net/Makefile http/Makefile Makefile])
+AC_CONFIG_FILES([replace/Makefile lib/Makefile net/Makefile http/Makefile \
+    mojito/Makefile Makefile])
 AC_OUTPUT

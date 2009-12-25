@@ -1,12 +1,26 @@
 #include "fparams.h"
 
+static const char_t *default_tmp_dir = "/tmp";
+static const char_t *default_pidfile = "mojito.pid";
+static const char_t *default_http_root = "/var/www";
+static const char_t *default_default_page = "index.html";
+static const int_t default_uid = 1000;
+static const int_t default_gid = 1000;
+static const int_t default_listen_port = 8080;
+static const int_t default_listen_queue = 100;
+static const int_t default_keepalive_timeout = 3;
+static const char_t *default_server_meta = PACKAGE_STRING;
+static const char_t *default_logfile = "mojito.log";
+static const char_t *default_errfile = "mojito.error.log";
+
 static void params_zero(struct fparam_s *params)
 {
     params->pidfile = params->http_root = params->tmp_dir =
         params->default_page = params->server_meta = params->logfile =
         params->errfile = NULL;
-    params->uid = params->gid = 0;
-    params->listen_port = params->listen_queue = params->keepalive_timeout = 0;
+    params->uid = params->gid = -1;
+    params->listen_port = params->listen_queue = 0;
+    params->keepalive_timeout = -1;
 }
 
 struct void params_free(struct fparam_s **params)
@@ -30,18 +44,132 @@ static int_t assign_to_int(char_t *value, int_t *res)
     return errno!=0;
 }
 
+static void log_ini_err_message(const char_t *optname, const char_t *defval)
+{
+    mjt_logger(LOG_ALERT, "INI: missing config option: \"%s\", "
+                            "defaulting to \"%s\"", optname, defval);
+}
+
+static int_t try_to_strdup(char_t **dest, char_t *src)
+{
+    if (dest==NULL || src==NULL)
+        return -1;
+    if ((*dest = strdup(src))==NULL) {
+        mjt_logger(LOG_CRIT, "INI: system error saving a parameter (%s)",
+                                                            strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+static int_t get_file_with_path(char_t **fname, const char_t *path)
+{
+    char_t *fpath;
+    bool_t has_slash;
+    /* if the path is absolute return it */
+    if ((*fname)[0] == '/')
+        return 0;
+    /* otherwise append the path */
+    if (path[strlen(path)-1]=='/') has_slash = TRUE;
+    if ((fpath = mjt_malloc(strlen(*fname)+strlen(path)+
+                                                ((has_slash==TRUE)?0:1)))==NULL)
+        return -1;
+    if (has_slash==TRUE)
+        sprintf(fpath, "%s%s", path, *fname);
+    else
+        sprintf(fpath, "%s/%s", path, *fname);
+    mjt_free2null(fname);
+    *fname = fpath;
+    return 0;
+}
+
 static int_t check_fparams(struct fparam_s *params)
 {
     int_t err = 0;
     if (params->tmp_dir==NULL) {
-        mjt_logger(LOG_ALERT, "INI: missing config option \"tmp_dir\", "
-                                "defaulting to (/tmp)\n");
-        if (mjt_isrwdir("/tmp")==FALSE) {
-            mjt_logger(LOG_CRIT, "INI: /tmp dir not accessible.\n");
-            return -1;
-        }
-        params->tmp_dir = strdup("/tmp");
+        log_ini_err_message("tmp_dir", default_tmp_dir);
+        if (try_to_strdup(&params->tmp_dir, default_tmp_dir)!=0)
+            ++err;
     }
+    if (mjt_isdir(default_tmp_dir)==FALSE || mjt_isrwx(default_tmp_dir)==FALSE){
+        mjt_logger(LOG_CRIT, "INI: '%s' dir not accessible.\n",
+                                                            default_tmp_dir);
+        ++err;
+    }
+    if (params->pidfile==NULL) {
+        log_ini_err_message("pidfile", default_pidfile);
+        if (try_to_strdup(&params->pidfile, default_pidfile)!=0)
+            ++err;
+    }
+    if (get_file_with_path(&params->pidfile, params->tmp_dir)!=0) {
+        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
+                                                                    "pidfile");
+        ++err;
+    }
+    if (params->http_root==NULL) {
+        log_ini_err_message("http_root", default_http_root);
+        if (try_to_strdup(&params->http_root, default_http_root)!=0)
+            ++err;
+    }
+    if (mjt_isdir(default_http_root)==FALSE) {
+        mjt_logger(LOG_CRIT, "INI: '%s' is not a directory!",
+                                                            default_http_root);
+        ++err;
+    }
+    if (params->default_page==NULL) {
+        log_ini_err_message("default_page", default_default_page);
+        if (try_to_strdup(&params->default_page, default_default_page)!=0)
+            ++err;
+    }
+    if (strchr(params->default_page, '/')!=NULL) {
+        mjt_logger(LOG_CRIT, "INI: invalid characters in default_page name");
+        ++err;
+    }
+    if (params->server_meta==NULL) {
+        log_ini_err_message("server_meta", default_server_meta);
+        if (try_to_strdup(&params->server_meta, default_server_meta)!=0)
+            ++err;
+    }
+    if (params->logfile==NULL) {
+        log_ini_err_message("logfile", default_logfile);
+        if (try_to_strdup(&params->logfile, default_logfile)!=0)
+            ++err;
+    }
+    if (get_file_with_path(&params->logfile, params->tmp_dir)!=0) {
+        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
+                                                                    "logfile");
+        ++err;
+    }
+    if (params->errfile==NULL) {
+        log_ini_err_message("errfile", default_errfile);
+        if (try_to_strdup(&params->errfile, default_errfile)!=0)
+            ++err;
+    }
+    if (get_file_with_path(&params->errfile, params->tmp_dir)!=0) {
+        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
+                                                                    "errfile");
+        ++err;
+    }
+    if (uid<0) {
+        log_ini_err_message("uid", default_uid);
+        params->uid = default_uid;
+    }
+    if (gid<0) {
+        log_ini_err_message("gid", default_gid);
+        params->gid = default_gid;
+    }
+    if (listen_port<=0) {
+        log_ini_err_message("listen_port", default_listen_port);
+        params->listen_port = default_listen_port;
+    }
+    if (listen_queue<=0) {
+        params->listen_queue = default_listen_queue;
+    }
+    if (keepalive_timeout<0) {
+        log_ini_err_message("keepalive_timeout", default_keepalive_timeout);
+        params->keepalive_timeout = default_keepalive_timeout;
+    }
+    return err;
 }
 
 struct fparam_s *params_loadFromINIFile(const char_t *fname)
@@ -104,6 +232,8 @@ struct fparam_s *params_loadFromINIFile(const char_t *fname)
             }
         }
     }
+    if (check_fparams(ret)!=0)
+        goto baderror;
     mjt_inifree(&ini);
     return ret;
 baderror:

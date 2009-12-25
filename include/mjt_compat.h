@@ -56,6 +56,13 @@ extern int errno;
 #if !HAVE_BZERO && HAVE_MEMSET
 #   define bzero(buf, bytes)    ((void)memset(buf, 0, bytes))
 #endif
+#if !HAVE_STRCHR
+#   if HAVE_INDEX
+#       define strchr(str, c)   index(str, c)
+#   else
+#       error no strchr or index available!
+#   endif
+#endif
 
 /* variadic stuff */
 #if HAVE_STDARG_H
