@@ -21,6 +21,12 @@
 #define H_MJT_RW_H
 
 #include <mjt_types.h>
+#if HAVE_SYS_STAT_H
+#   include <sys/stat.h>
+#endif
+#if HAVE_FCNTL_H
+#   include <fcntl.h>
+#endif
 
 BEGIN_C_DECLS
 

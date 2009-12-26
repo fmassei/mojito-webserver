@@ -14,6 +14,7 @@ bool_t mjt_isdir(const char_t *path)
 
 /* check if the path exists and the user have all the permissions */
 bool_t mjt_isrwx(const char_t *path)
+{
     if (access(path, R_OK|W_OK|W_OK)<0)
         return FALSE;
     return TRUE;

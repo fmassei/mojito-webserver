@@ -23,7 +23,7 @@ static void params_zero(struct fparam_s *params)
     params->keepalive_timeout = -1;
 }
 
-struct void params_free(struct fparam_s **params)
+void params_free(struct fparam_s **params)
 {
     if (params==NULL || *params==NULL)
         return;
@@ -40,22 +40,28 @@ struct void params_free(struct fparam_s **params)
 static int_t assign_to_int(char_t *value, int_t *res)
 {
     errno = 0;
-    *ret = strtol(value, (char_t**)NULL, 10);
+    *res = strtol(value, (char_t**)NULL, 10);
     return errno!=0;
 }
 
 static void log_ini_err_message(const char_t *optname, const char_t *defval)
 {
-    mjt_logger(LOG_ALERT, "INI: missing config option: \"%s\", "
+    mjt_logmsg(LOG_ALERT, "INI: missing config option: \"%s\", "
                             "defaulting to \"%s\"", optname, defval);
 }
 
-static int_t try_to_strdup(char_t **dest, char_t *src)
+static void log_ini_err_message_i(const char_t *optname, const int_t defval)
+{
+    mjt_logmsg(LOG_ALERT, "INI: missing config option: \"%s\", "
+                            "defaulting to \"%d\"", optname, defval);
+}
+
+static int_t try_to_strdup(char_t **dest, const char_t *src)
 {
     if (dest==NULL || src==NULL)
         return -1;
     if ((*dest = strdup(src))==NULL) {
-        mjt_logger(LOG_CRIT, "INI: system error saving a parameter (%s)",
+        mjt_logmsg(LOG_CRIT, "INI: system error saving a parameter (%s)",
                                                             strerror(errno));
         return -1;
     }
@@ -65,7 +71,7 @@ static int_t try_to_strdup(char_t **dest, char_t *src)
 static int_t get_file_with_path(char_t **fname, const char_t *path)
 {
     char_t *fpath;
-    bool_t has_slash;
+    bool_t has_slash = FALSE;
     /* if the path is absolute return it */
     if ((*fname)[0] == '/')
         return 0;
@@ -92,81 +98,81 @@ static int_t check_fparams(struct fparam_s *params)
             ++err;
     }
     if (mjt_isdir(default_tmp_dir)==FALSE || mjt_isrwx(default_tmp_dir)==FALSE){
-        mjt_logger(LOG_CRIT, "INI: '%s' dir not accessible.\n",
+        mjt_logmsg(LOG_CRIT, "INI: '%s' dir not accessible.\n",
                                                             default_tmp_dir);
         ++err;
     }
     if (params->pidfile==NULL) {
         log_ini_err_message("pidfile", default_pidfile);
-        if (try_to_strdup(&params->pidfile, default_pidfile)!=0)
+        if (try_to_strdup(&params->pidfile, default_pidfile)!=0) {
             ++err;
-    }
-    if (get_file_with_path(&params->pidfile, params->tmp_dir)!=0) {
-        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
-                                                                    "pidfile");
-        ++err;
+        } else if (get_file_with_path(&params->pidfile, params->tmp_dir)!=0) {
+            mjt_logmsg(LOG_CRIT, "INI: could not resolve file name for option "
+                                "%s\n", "pidfile");
+            ++err;
+        }
     }
     if (params->http_root==NULL) {
         log_ini_err_message("http_root", default_http_root);
-        if (try_to_strdup(&params->http_root, default_http_root)!=0)
+        if (try_to_strdup(&params->http_root, default_http_root)!=0) {
             ++err;
-    }
-    if (mjt_isdir(default_http_root)==FALSE) {
-        mjt_logger(LOG_CRIT, "INI: '%s' is not a directory!",
+        } else if (mjt_isdir(default_http_root)==FALSE) {
+            mjt_logmsg(LOG_CRIT, "INI: '%s' is not a directory!",
                                                             default_http_root);
-        ++err;
+            ++err;
+        }
     }
     if (params->default_page==NULL) {
         log_ini_err_message("default_page", default_default_page);
-        if (try_to_strdup(&params->default_page, default_default_page)!=0)
+        if (try_to_strdup(&params->default_page, default_default_page)!=0) {
             ++err;
-    }
-    if (strchr(params->default_page, '/')!=NULL) {
-        mjt_logger(LOG_CRIT, "INI: invalid characters in default_page name");
-        ++err;
+        } else if (strchr(params->default_page, '/')!=NULL) {
+            mjt_logmsg(LOG_CRIT, "INI: invalid characters in default_page");
+            ++err;
+        }
     }
     if (params->server_meta==NULL) {
         log_ini_err_message("server_meta", default_server_meta);
-        if (try_to_strdup(&params->server_meta, default_server_meta)!=0)
+        if (try_to_strdup(&params->server_meta, default_server_meta)!=0) {
             ++err;
-    }
-    if (params->logfile==NULL) {
-        log_ini_err_message("logfile", default_logfile);
-        if (try_to_strdup(&params->logfile, default_logfile)!=0)
-            ++err;
+        } else if (params->logfile==NULL) {
+            log_ini_err_message("logfile", default_logfile);
+            if (try_to_strdup(&params->logfile, default_logfile)!=0)
+                ++err;
+        }
     }
     if (get_file_with_path(&params->logfile, params->tmp_dir)!=0) {
-        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
+        mjt_logmsg(LOG_CRIT, "INI: could not resolve file name for option %s\n",
                                                                     "logfile");
         ++err;
     }
     if (params->errfile==NULL) {
         log_ini_err_message("errfile", default_errfile);
-        if (try_to_strdup(&params->errfile, default_errfile)!=0)
+        if (try_to_strdup(&params->errfile, default_errfile)!=0) {
             ++err;
+        } else if (get_file_with_path(&params->errfile, params->tmp_dir)!=0) {
+            mjt_logmsg(LOG_CRIT, "INI: could not resolve file name for option "
+                                "%s\n", "errfile");
+            ++err;
+        }
     }
-    if (get_file_with_path(&params->errfile, params->tmp_dir)!=0) {
-        mjt_logger(LOG_CRIT, "INI: could not resolve file name for option %s\n",
-                                                                    "errfile");
-        ++err;
-    }
-    if (uid<0) {
-        log_ini_err_message("uid", default_uid);
+    if (params->uid<0) {
+        log_ini_err_message_i("uid", default_uid);
         params->uid = default_uid;
     }
-    if (gid<0) {
-        log_ini_err_message("gid", default_gid);
+    if (params->gid<0) {
+        log_ini_err_message_i("gid", default_gid);
         params->gid = default_gid;
     }
-    if (listen_port<=0) {
-        log_ini_err_message("listen_port", default_listen_port);
+    if (params->listen_port<=0) {
+        log_ini_err_message_i("listen_port", default_listen_port);
         params->listen_port = default_listen_port;
     }
-    if (listen_queue<=0) {
+    if (params->listen_queue<=0) {
         params->listen_queue = default_listen_queue;
     }
-    if (keepalive_timeout<0) {
-        log_ini_err_message("keepalive_timeout", default_keepalive_timeout);
+    if (params->keepalive_timeout<0) {
+        log_ini_err_message_i("keepalive_timeout", default_keepalive_timeout);
         params->keepalive_timeout = default_keepalive_timeout;
     }
     return err;
@@ -174,11 +180,14 @@ static int_t check_fparams(struct fparam_s *params)
 
 struct fparam_s *params_loadFromINIFile(const char_t *fname)
 {
-    struct fparams_s *ret;
+    struct fparam_s *ret;
     struct inisection_s *ini, *q;
     struct kvlist_s *par;
-    if ((ini = mjt_iniparse(fname))==NULL)
+    if ((ini = mjt_iniparse(fname))==NULL) {
+        mjt_logmsg(LOG_ALERT, "INI: error parsing inifile: %s",
+                                                            mjt_inigeterror());
         return NULL;
+    }
     if ((ret = mjt_malloc(sizeof(*ret)))==NULL)
         return NULL;
     params_zero(ret);
@@ -186,11 +195,11 @@ struct fparam_s *params_loadFromINIFile(const char_t *fname)
         if (strncasecmp(q->name, "main", strlen(q->name)))
             continue;
         for (par=q->params; par!=NULL; par=par->next) {
-            if (!strncasecmp(par->key, "pidfile", strlen(par->key))) {
-                if ((ret->pidfile = strdup(par->val))==NULL)
-                    goto baderror;
-            } else if (!strncasecmp(par->key, "tmp_dir", strlen(par->key))) {
+            if (!strncasecmp(par->key, "tmp_dir", strlen(par->key))) {
                 if ((ret->tmp_dir = strdup(par->val))==NULL)
+                    goto baderror;
+            } else if (!strncasecmp(par->key, "pidfile", strlen(par->key))) {
+                if ((ret->pidfile = strdup(par->val))==NULL)
                     goto baderror;
             } else if (!strncasecmp(par->key, "http_root", strlen(par->key))) {
                 if ((ret->http_root = strdup(par->val))==NULL)

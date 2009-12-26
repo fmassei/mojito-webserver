@@ -21,6 +21,7 @@
 #define H_MJT_INIPARSE_H
 
 #include <mjt_types.h>
+#include "mjt_kvlist.h"
 
 #if HAVE_SYS_STAT_H
 #   include <sys/stat.h>

@@ -7,14 +7,14 @@ static FILE *flog = NULL, *ferr = NULL;
 static char_t *get_logprio_desc(int_t prio)
 {
     switch(prio) {
-    case LOG_EMERG: return "emerg";
-    case LOG_ALERT: return "alert";
-    case LOG_CRIT: return "crit";
-    case LOG_ERR: return "err";
-    case LOG_WARNING: return "warning";
-    case LOG_NOTICE: return "notice";
-    case LOG_INFO: return "info";
-    case LOG_DEBUG: return "debug";
+    case LOG_EMERG: return "EMERG";
+    case LOG_ALERT: return "ALERT";
+    case LOG_CRIT: return "CRIT";
+    case LOG_ERR: return "ERR";
+    case LOG_WARNING: return "WARNING";
+    case LOG_NOTICE: return "NOTICE";
+    case LOG_INFO: return "INFO";
+    case LOG_DEBUG: return "DEBUG";
     default: return "";
     }
 }
