@@ -7,18 +7,19 @@
 #define PARSESTATE_VALUE 3
 #define PARSESTATE_ERROR 4
 
-#define STR_ERROR_FORMAT "error parsing file %s, line %d: %s"
+#define STR_ERROR_FORMAT "error parsing file %s, line %d: %s (code %d)"
 static char_t inierror[0xff] = {'\0'};
 
 static void setinierror_reason(const char_t *fname, int_t line,
-                                const char_t *reason)
+                                const char_t *reason, int_t reason_code)
 {
-    snprintf(inierror, sizeof(inierror), STR_ERROR_FORMAT, fname, line, reason);
+    snprintf(inierror, sizeof(inierror), STR_ERROR_FORMAT, fname, line,
+                                                        reason, reason_code);
 }
 
 static void setinierror(const char_t *fname, int_t line)
 {
-    setinierror_reason(fname, line, strerror(errno));
+    setinierror_reason(fname, line, strerror(errno), errno);
 }
 
 char_t *mjt_inigeterror(void)
@@ -30,9 +31,9 @@ static void inisection_free(struct inisection_s **ptr)
 {
     if (ptr==NULL || *ptr==NULL)
         return;
-    mjt_free2null((*ptr)->name);
+    mjt_free(&(*ptr)->name);
     mjt_kvlist_destroy(&(*ptr)->params);
-    mjt_free2null(*ptr);
+    mjt_free2null(ptr);
 }
 
 void mjt_inifree(struct inisection_s **ptr)
@@ -99,6 +100,7 @@ struct inisection_s *mjt_iniparse(const char_t *fname)
             ((fd = open(fname, O_RDONLY))<0) ||
             ((addr = mmap(NULL, sb.st_size, PROT_READ|PROT_WRITE, MAP_PRIVATE,
                             fd, 0))==MAP_FAILED) ) {
+        /* on linux, this could fail with EINVAL if sb.st_size is zero */
         setinierror(fname, line);
         return NULL;
     }
@@ -146,7 +148,7 @@ struct inisection_s *mjt_iniparse(const char_t *fname)
                 ++line;
                 addr[i] = '\0';
                 if (ret==NULL) {
-                    setinierror_reason(fname, line, "No section found yet");
+                    setinierror_reason(fname, line, "Missing main section", 0);
                     state = PARSESTATE_ERROR;
                     goto done;
                 }

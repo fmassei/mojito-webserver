@@ -39,6 +39,6 @@ struct fparam_s {
 };
 
 struct fparam_s *params_loadFromINIFile(const char_t *fname);
-struct void params_free(struct fparam_s **params);
+void params_free(struct fparam_s **params);
 
 #endif /* H_FPARAMS_H */

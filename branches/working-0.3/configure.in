@@ -34,9 +34,11 @@ AC_CHECK_FUNCS([strftime gmtime mktime strptime])
 AC_CHECK_FUNCS([accept socket setsockopt bind listen select])
 AC_CHECK_FUNCS([bzero memset], [break])
 AC_CHECK_FUNCS([mmap munmap])
-AC_CHECK_FUNCS([lockf getpid signal fork alarm pause getppid umask setsid chdir kill mkstemp])
 AC_REPLACE_FUNCS([snprintf vsnprintf vasprintf])
 AC_REPLACE_FUNCS([basename strerror strncasecmp strdup])
+dnl daemon and unix stuff
+AC_CHECK_FUNCS([lockf getpid signal fork alarm pause getppid umask setsid \
+                chdir kill mkstemp getopt])
 
 m4_pattern_allow([^LIBOBJS$]) 
 Xsed="sed -e s/^X//"

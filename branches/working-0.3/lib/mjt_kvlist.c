@@ -23,8 +23,8 @@
 static void kvlist_destroy_node(struct kvlist_s **ptr)
 {
     if (ptr==NULL || *ptr==NULL) return;
-    mjt_free2null((*ptr)->key);
-    mjt_free2null((*ptr)->val);
+    mjt_free(&(*ptr)->key);
+    mjt_free(&(*ptr)->val);
     mjt_free2null(ptr);
 }
 
@@ -47,7 +47,7 @@ static int_t kvlist_insert_check(struct kvlist_s **ptr, char_t *k, char_t *v)
     struct kvlist_s *q;
     for (q=*ptr; q!=NULL; q=q->next)
         if (!strcmp(q->key, k)) {
-            if (q->val!=NULL) mjt_free2null(q->val);
+            if (q->val!=NULL) mjt_free(&q->val);
             q->val = strdup(v);
             return 0;
         }
