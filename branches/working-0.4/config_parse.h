@@ -1,6 +1,9 @@
 #ifndef H_CONFIG_PARSE_H
 #define H_CONFIG_PARSE_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <mmp/mmp_list.h>
 #include <mmp/mmp_string.h>
 #include <mmp/mmp_memory.h>
