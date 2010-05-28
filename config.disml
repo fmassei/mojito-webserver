@@ -1,0 +1,38 @@
+DISML \
+# mojito config file
+# ------------------
+config
+ server_settings
+  # --- ports ---
+  listen_port = 8080
+  listen_queue = 100
+  # --- temporary dir ---
+  tmp_dir = "/tmp/"
+  # --- pid file ---
+  pid_file = "/tmp/mojito-webserver.pid"
+  # --- running permissions ---
+  uid = 1000
+  gid = 1000
+  # --- keepalive stuff ---
+  keepalive_timeout = 5
+  # --- base folder for files ---
+  http_root = "/home/ftm/projwww/mojitosite/"
+  default_page = "index.html"
+  # --- logging ---
+  # main log file
+  log_file = "/tmp/mojito-webserver.log"
+  # error log file
+  err_file = "/tmp/mojito-webserver.elog"
+  # --- server string sent with any response ---
+  server_meta = "Mojito/0.1"
+  # --- module base path --- 
+  modules_basepath = "mojitomodules/"
+ modules
+  mod_identity
+  mod_gzip
+  mod_deflate
+  mod_cgi
+  mod_fcgi
+  mod_stat
+  mod_cacheshm
+   cache_dir = "/tmp"
