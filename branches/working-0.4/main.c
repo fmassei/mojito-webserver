@@ -11,6 +11,7 @@ int main(/*const int argc, const char *argv[]*/)
         return EXIT_FAILURE;
     }
     printf("ok\n");
+    config_manager_freeall();
     return EXIT_SUCCESS;
 }
 
