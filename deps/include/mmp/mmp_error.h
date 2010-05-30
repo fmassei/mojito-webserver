@@ -19,7 +19,8 @@ enum error_e {
     MMP_ERR_DL,
     MMP_ERR_PARSE,
     MMP_ERR_SEMAPHORE,
-    MMP_ERR_SHM
+    MMP_ERR_SHM,
+    MMP_ERR_SOCKET
 };
 typedef enum error_e ret_t;     /* mmp error */
 typedef int err_t;              /* system error */
