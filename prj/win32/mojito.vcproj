@@ -67,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mmp_base.lib disml.lib"
+				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../deps/lib/win32"
 				GenerateManifest="false"
@@ -216,6 +216,10 @@
 				RelativePath="..\..\main.c"
 				>
 			</File>
+			<File
+				RelativePath="..\..\socket_unit.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -236,6 +240,10 @@
 			</File>
 			<File
 				RelativePath="..\..\defaults.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\socket_unit.h"
 				>
 			</File>
 		</Filter>
