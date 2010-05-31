@@ -3,7 +3,7 @@ LD = gcc
 RM = rm -f
 AR = ar rcs
 GCCFLAG = -Wall -ansi -pedantic
-LDFLAG = -L../../deps/lib/linux -ldisml
+LDFLAG = -L../../deps/lib/linux -ldisml -lpthread
 ELIB = ../../deps/lib/linux/libmmp_base.a
 INCLUDE = -I../../deps/include -I../../deps/include/mmp \
 			-I../../deps/include/disml
