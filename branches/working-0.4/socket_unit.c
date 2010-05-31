@@ -79,6 +79,8 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
         return MMP_ERR_PARAMS;
     }
     build_select_list(su);
+    if (su->nsockets<=0)
+        return MMP_ERR_OK;
     read_socks = socket_server_select(su->nsockets, &su->sockets, (fd_set*)0,
                                                         (fd_set*)0, &su->to);
     if (read_socks<0) {
