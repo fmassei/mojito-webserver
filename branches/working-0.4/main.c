@@ -8,6 +8,7 @@ socket_t srv_sock;
 
 int main(/*const int argc, const char *argv[]*/)
 {
+    int done = 0;
     fprintf(stdout, "starting\n");
     if (config_manager_loadfile(DEFAULT_CONFIGFILE)!=MMP_ERR_OK) {
         mmp_trace_print(stdout);
@@ -23,7 +24,7 @@ int main(/*const int argc, const char *argv[]*/)
         mmp_trace_print(stdout);
         return EXIT_FAILURE;
     }
-    while(1) {
+    while(!done) {
         
     }
     socket_close(&srv_sock, 1);

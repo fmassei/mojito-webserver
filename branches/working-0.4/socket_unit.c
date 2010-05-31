@@ -28,16 +28,19 @@ void socket_unit_destroy(t_socket_unit_s **su)
     *su = NULL;
 }
 
+#pragma warning(push)
+#pragma warning(disable:4127) /* disable win32 warning for FD_SET */
 static void build_select_list(t_socket_unit_s *su)
 {
     int i;
     FD_ZERO(&su->sockets);
     for (i=0; i<su->queue_size; ++i) {
         if (su->connect_list[i]!=0) {
-            FD_SET(su->connect_list[i], &su->sockets);
+            FD_SET(((unsigned int)(su->connect_list[i])), (&su->sockets));
         }
     }
 }
+#pragma warning(pop)
 
 int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
 {

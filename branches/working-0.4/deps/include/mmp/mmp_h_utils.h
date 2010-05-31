@@ -9,8 +9,8 @@
 #   define MMP_CEXTERN_END
 #endif
 
-#ifndef UNREFERENCED_PARAMETER
-#   define UNREFERENCED_PARAMETER(_P) ((void)(_P))
+#ifndef UNREFERENCED_PARAM
+#   define UNREFERENCED_PARAM(_P) ((void)(_P))
 #endif
 
 #endif /* H_MMP_H_UTILS_H */

@@ -16,8 +16,11 @@
     typedef int socket_t;
 #   define  SOCKET_INVALID  (-1)
 #else
-#   include <windows.h>
+#   ifndef WIN32_LEAN_AND_MEAN
+#       define WIN32_LEAN_AND_MEAN
+#   endif
 #   include <winsock2.h>
+#   include <windows.h>
 #   include <ws2tcpip.h>
     typedef SOCKET socket_t;
 #   define SOCKET_INVALID   INVALID_SOCKET
