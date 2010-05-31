@@ -13,7 +13,6 @@ void *socket_unit_thr(void *ptr)
     t_socket_unit_s *su = (t_socket_unit_s*)ptr;
     while (socket_unit_select_loop(su)==MMP_ERR_OK)
         ;
-    printf("%d\n", WSAGetLastError());
     return NULL;
 }
 
