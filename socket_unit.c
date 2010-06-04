@@ -51,7 +51,7 @@ static void build_select_list(t_socket_unit_s *su)
 
 int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
 {
-    int i;
+    int i, ret;
     if (su==NULL || socket==SOCKET_INVALID) {
         mmp_setError(MMP_ERR_PARAMS);
         return -1;
@@ -61,17 +61,19 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
         return -1;
     }
     ++su->nsockets;
+    ret = -1;
     for (i=0; i<su->queue_size; ++i) {
         if (su->connect_list[i]==0) {
             su->connect_list[i] = socket;
-            return i;
+            ret = i;
+            break;
         }
     }
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
     }
-    return -1;  /* full */
+    return ret;
 }
 
 static void read_sockets(t_socket_unit_s *su)
