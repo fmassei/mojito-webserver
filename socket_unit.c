@@ -12,6 +12,12 @@ t_socket_unit_s *socket_unit_create(int qsize)
         mmp_setError(MMP_ERR_ENOMEM);
         return NULL;
     }
+    if ((ret->mtx = mmp_thr_mtx_create())==MMP_THRMTX_INVALID) {
+        xfree(ret->connect_list);
+        xfree(ret);
+        mmp_setError(MMP_ERR_SYNC);
+        return NULL;
+    }
     ret->nsockets = 0;
     ret->queue_size = qsize;
     ret->to.tv_sec = 1;     /* move to config */
@@ -24,6 +30,7 @@ void socket_unit_destroy(t_socket_unit_s **su)
 {
     if (su==NULL || *su==NULL) return;
     if ((*su)->connect_list!=NULL) xfree((*su)->connect_list);
+    if ((*su)->mtx!=MMP_THRMTX_INVALID) mmp_thr_mtx_close((*su)->mtx);
     xfree(*su);
     *su = NULL;
 }
@@ -49,12 +56,20 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
         mmp_setError(MMP_ERR_PARAMS);
         return -1;
     }
+    if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return -1;
+    }
     ++su->nsockets;
     for (i=0; i<su->queue_size; ++i) {
         if (su->connect_list[i]==0) {
             su->connect_list[i] = socket;
             return i;
         }
+    }
+    if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return -1;
     }
     return -1;  /* full */
 }
@@ -78,11 +93,24 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
     }
+    if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return MMP_ERR_SYNC;
+    }
     build_select_list(su);
-    if (su->nsockets<=0)
+    if (su->nsockets<=0) {
+        if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
+            mmp_setError(MMP_ERR_SYNC);
+            return MMP_ERR_SYNC;
+        }
         return MMP_ERR_OK;
+    }
     read_socks = socket_server_select(su->nsockets, &su->sockets, (fd_set*)0,
                                                         (fd_set*)0, &su->to);
+    if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return MMP_ERR_SYNC;
+    }
     if (read_socks<0) {
         mmp_setError(MMP_ERR_SOCKET);
         return MMP_ERR_SOCKET;

@@ -6,6 +6,7 @@
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
+#include <mmp/mmp_sync.h>
 
 /* server general function pointer type for callbacks */
 typedef ret_t(*t_sckunit_fptr)(int, socket_t);
@@ -17,6 +18,7 @@ typedef struct socket_unit_s {
     int queue_size;     /* size of the connection queue */
     fd_set sockets;     /* all the sockets */
     struct timeval to;  /* time out for fd selecting */
+    mmp_thr_mtx_t mtx;  /* unit mutex */
     t_sckunit_fptr  newdata_cback;  /* data ready callback */
 } t_socket_unit_s;
 
