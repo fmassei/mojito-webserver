@@ -40,9 +40,15 @@ static ret_t check_config(void)
             DEFAULT_DEFAULT_PAGE);
         s_config->server->default_page = xstrdup(DEFAULT_DEFAULT_PAGE);
     }
+    /* no warning opts */
     if (s_config->server->server_meta==NULL) {
-        /* no warnings for server_meta */
         s_config->server->server_meta = xstrdup(DEFAULT_SERVER_META);
+    }
+    if (s_config->server->num_socket_units==0) {
+        s_config->server->num_socket_units = DEFAULT_NUM_SU;
+    }
+    if (s_config->server->num_socket_units_fds==0) {
+        s_config->server->num_socket_units_fds = DEFAULT_NUM_SU_FDS;
     }
     return MMP_ERR_OK;
 }

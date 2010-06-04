@@ -115,6 +115,10 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, struct diskv_s *kv)
         return copy_or_die_str(&(csrv->server_meta), kv->val);
     if (!strcmp(kv->key, "modules_basepath"))
         return copy_or_die_str(&(csrv->modules_basepath), kv->val);
+    if (!strcmp(kv->key, "num_socket_units"))
+        return copy_or_die_int(&(csrv->num_socket_units), kv->val);
+    if (!strcmp(kv->key, "num_socket_units_fds"))
+        return copy_or_die_int(&(csrv->num_socket_units_fds), kv->val);
     sprintf(buf, "Unknown option %.80s\n", kv->key);
     mmp_setError_ext(MMP_ERR_PARSE, buf);
     return MMP_ERR_PARSE;
