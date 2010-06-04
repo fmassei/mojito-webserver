@@ -220,6 +220,10 @@
 				RelativePath="..\..\socket_unit.c"
 				>
 			</File>
+			<File
+				RelativePath="..\..\socket_unit_manager.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -244,6 +248,10 @@
 			</File>
 			<File
 				RelativePath="..\..\socket_unit.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\socket_unit_manager.h"
 				>
 			</File>
 		</Filter>

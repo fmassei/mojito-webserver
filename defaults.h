@@ -10,5 +10,7 @@
 #define DEFAULT_KEEPALIVE_TO    5
 #define DEFAULT_DEFAULT_PAGE    "index.html"
 #define DEFAULT_SERVER_META     "Mojito 0.4b"
+#define DEFAULT_NUM_SU          64
+#define DEFAULT_NUM_SU_FDS      64
 
 #endif /* H_DEFAULTS_H */

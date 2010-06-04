@@ -25,6 +25,9 @@ config
   err_file = "/tmp/mojito-webserver.elog"
   # --- server string sent with any response ---
   server_meta = "Mojito/0.1"
+  # --- socket units data ---
+  num_socket_units = 64
+  num_socket_units_fds = 64
   # --- module base path --- 
   modules_basepath = "mojitomodules/"
  modules
