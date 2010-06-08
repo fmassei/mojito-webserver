@@ -1,26 +1,30 @@
 #include "request_parse.h"
 
-#define SOCKBUFSIZE 8196
+#define SOCKBUFSIZE 8196    /* TODO: calculate this one! */
 
-int request_parse_read(socket_t *sock, t_request_s *req)
+t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
 {
-    int reline;
-    int rb, mr, len, pos;
-    char c, *buf, *cur_head;
-    len = pos = 0;
+    req->parse.len = req->parse.pos = 0;
     while(1) {
-        mr = SOCKBUFSIZE + pos;
-        if (len<mr) {
-            reline = (int)cur_head - (int)buf;
-            buf = xrealloc(buf, mr);
-            cur_head = (char*)((int)buf + reline);
-            len = mr;
+        req->parse.mr = SOCKBUFSIZE + req->parse.pos;
+        if (req->parse.len<req->parse.mr) {
+            req->parse.reline =(int)(req->parse.cur_head)-(int)(req->parse.buf);
+            req->parse.buf = xrealloc(req->parse.buf, req->parse.mr);
+            req->parse.cur_head =(char*)((int)req->parse.buf+req->parse.reline);
+            req->parse.len = req->parse.mr;
         }
-        rb = socket_read(sock, buf+pos, SOCKBUFSIZE);
-        if (rb<=0)
-            break;
-        return 0;
+        req->parse.rb =
+                socket_read(sock, req->parse.buf+req->parse.pos, SOCKBUFSIZE);
+        if (req->parse.rb==SOCKET_ERROR) {
+            if (socket_is_block_last_error())
+                return REQUEST_PARSE_CONTINUE;
+            return REQUEST_PARSE_ERROR;
+        }
+        if (req->parse.rb==0) {
+            return REQUEST_PARSE_FINISH;
+        }
+        return REQUEST_PARSE_FINISH;
     }
-    return 1;
+    return REQUEST_PARSE_ERROR; /* this should never happen */
 }
 

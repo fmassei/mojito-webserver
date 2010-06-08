@@ -2,15 +2,33 @@
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
 #include <mmp/mmp_thread.h>
+#include "socket_unit.h"
 #include "socket_unit_manager.h"
 #include "config_manager.h"
+#include "request_parse.h"
 #include "defaults.h"
 
 socket_t srv_sock;
 
-ret_t sck_data(int i, socket_t sock)
+ret_t sck_data(int i, t_socket_unit_s *su)
 {
-    printf("data from %d %d\n", i, sock);
+    t_request_parse_e rst;
+    if (su->socket_states[i]==SOCKET_STATE_READREQUEST) {
+        rst = request_parse_read(&su->connect_list[i], su->reqs[i]);
+        switch (rst) {
+        case REQUEST_PARSE_ERROR:
+            /* TODO: mark and close */
+        case REQUEST_PARSE_CLOSECONN:
+            /* TODO: close! */
+            break;
+        case REQUEST_PARSE_FINISH:
+            /* TODO: respond! */
+            break;
+        case REQUEST_PARSE_CONTINUE:
+            /* nothing */
+            break;
+        }
+    }
     return MMP_ERR_OK;
 }
 
@@ -44,6 +62,7 @@ int main(/*const int argc, const char *argv[]*/)
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
+        /* TODO: set the new socket as non blocking */
         if ((sock_unit = socket_unit_management_getsu())==NULL) {
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
