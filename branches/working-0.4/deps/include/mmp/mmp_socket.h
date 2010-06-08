@@ -15,6 +15,7 @@
 #   include <unistd.h>
     typedef int socket_t;
 #   define  SOCKET_INVALID  (-1)
+#   define SOCKET_ERROR -1
 #else
 #   ifndef WIN32_LEAN_AND_MEAN
 #       define WIN32_LEAN_AND_MEAN
@@ -24,6 +25,7 @@
 #   include <ws2tcpip.h>
     typedef SOCKET socket_t;
 #   define SOCKET_INVALID   INVALID_SOCKET
+    /* socket error is defined */
 #endif
 
 #include "mmp_trace.h"
@@ -37,5 +39,9 @@ ret_t socket_close(socket_t *sock, int shut);
 ret_t socket_server_accept(socket_t *listen_sock, socket_t *out, char **ip);
 int socket_server_select(int nfds, fd_set *rd, fd_set *wd, fd_set *ex,
                                                             struct timeval *to);
+int socket_read(socket_t *sock, void *buf, size_t len);
+int socket_write(socket_t *sock, void *buf, size_t len);
+
+int socket_is_block_last_error(void);
 
 #endif /* H_MMP_SOCKET_H */

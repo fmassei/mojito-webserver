@@ -3,40 +3,67 @@
 t_socket_unit_s *socket_unit_create(int qsize)
 {
     t_socket_unit_s *ret;
+    int i;
     if ((ret = xmalloc(sizeof(*ret)))==NULL) {
         mmp_setError(MMP_ERR_ENOMEM);
-        return NULL;
+        goto bad_exit;
     }
+    ret->queue_size = qsize;
     if ((ret->connect_list = xcalloc(qsize, sizeof(*ret)))==NULL) {
-        xfree(ret);
         mmp_setError(MMP_ERR_ENOMEM);
-        return NULL;
+        goto bad_exit;
+    }
+    if ((ret->reqs = xcalloc(qsize, sizeof(*(ret->reqs))))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        goto bad_exit;
+    }
+    if ((ret->socket_states = xcalloc(qsize, sizeof(*(ret->socket_states))))
+                                                                    ==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        goto bad_exit;
     }
     if ((ret->mtx = mmp_thr_mtx_create())==MMP_THRMTX_INVALID) {
-        xfree(ret->connect_list);
-        xfree(ret);
         mmp_setError(MMP_ERR_SYNC);
-        return NULL;
+        goto bad_exit;
+    }
+    for (i=0; i<qsize; ++i) {
+        ret->reqs[i] = NULL;
+        ret->socket_states[i] = SOCKET_STATE_NOTPRESENT;
     }
     ret->nsockets = 0;
-    ret->queue_size = qsize;
-    ret->to.tv_sec = 1;     /* move to config */
+    ret->highest_socket = -1;
+    ret->to.tv_sec = 20;        /* move to config */
     ret->to.tv_usec = 0;
     ret->newdata_cback = NULL;
+    ret->state = SOCKET_UNIT_STATE_RUNNING;
     return ret;
+bad_exit:
+    if (ret!=NULL)
+        socket_unit_destroy(&ret);
+    return NULL;
 }
 
 void socket_unit_destroy(t_socket_unit_s **su)
 {
+    int i;
     if (su==NULL || *su==NULL) return;
     if ((*su)->connect_list!=NULL) xfree((*su)->connect_list);
-    if ((*su)->mtx!=MMP_THRMTX_INVALID) mmp_thr_mtx_close((*su)->mtx);
+    if ((*su)->socket_states!=NULL) xfree((*su)->socket_states);
+    if ((*su)->reqs!=NULL) {
+        for (i=0; i<(*su)->queue_size; ++i)
+            if ((*su)->reqs[i]!=NULL)
+                request_destroy(&((*su)->reqs[i]));
+        xfree((*su)->reqs);
+    }
+    if ((*su)->mtx!=MMP_THRMTX_INVALID) mmp_thr_mtx_close(&(*su)->mtx);
     xfree(*su);
     *su = NULL;
 }
 
-#pragma warning(push)
-#pragma warning(disable:4127) /* disable win32 warning for FD_SET */
+#ifdef _WIN32
+#   pragma warning(push)
+#   pragma warning(disable:4127) /* disable win32 warning for FD_SET */
+#endif
 static void build_select_list(t_socket_unit_s *su)
 {
     int i;
@@ -44,10 +71,12 @@ static void build_select_list(t_socket_unit_s *su)
     for (i=0; i<su->queue_size; ++i) {
         if (su->connect_list[i]!=0) {
             FD_SET(((unsigned int)(su->connect_list[i])), (&su->sockets));
-        }
+        } else break;
     }
 }
-#pragma warning(pop)
+#ifdef _WIN32
+#   pragma warning(pop)
+#endif
 
 int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
 {
@@ -60,7 +89,6 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
         mmp_setError(MMP_ERR_SYNC);
         return -1;
     }
-    ++su->nsockets;
     ret = -1;
     for (i=0; i<su->queue_size; ++i) {
         if (su->connect_list[i]==0) {
@@ -69,6 +97,11 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
             break;
         }
     }
+    su->socket_states[ret] = SOCKET_STATE_READREQUEST;
+    su->reqs[ret] = request_create();
+    ++su->nsockets;
+    if (socket>su->highest_socket)
+        su->highest_socket = socket;
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
@@ -79,10 +112,10 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
 static void read_sockets(t_socket_unit_s *su)
 {
     int i;
-    for (i=0; i<su->queue_size; ++i) {
+    for (i=0; i<su->nsockets; ++i) {
         if (FD_ISSET(su->connect_list[i], &su->sockets)) {
             if (su->newdata_cback!=NULL) {
-                su->newdata_cback(i, su->connect_list[i]);
+                su->newdata_cback(i, su);
             }
         }
     }
@@ -107,8 +140,8 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
         }
         return MMP_ERR_OK;
     }
-    read_socks = socket_server_select(su->nsockets, &su->sockets, (fd_set*)0,
-                                                        (fd_set*)0, &su->to);
+    read_socks = socket_server_select(su->highest_socket+1, &su->sockets, NULL,
+                                                        NULL, &su->to);
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;
