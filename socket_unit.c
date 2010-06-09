@@ -28,14 +28,17 @@ t_socket_unit_s *socket_unit_create(int qsize)
     }
     for (i=0; i<qsize; ++i) {
         ret->reqs[i] = NULL;
+        ret->connect_list[i] = SOCKET_INVALID;
         ret->socket_states[i] = SOCKET_STATE_NOTPRESENT;
     }
     ret->nsockets = 0;
-    ret->highest_socket = -1;
     ret->to.tv_sec = 20;        /* move to config */
     ret->to.tv_usec = 0;
     ret->newdata_cback = NULL;
     ret->state = SOCKET_UNIT_STATE_RUNNING;
+#ifndef _WIN32
+    ret->highest_socket = -1;
+#endif
     return ret;
 bad_exit:
     if (ret!=NULL)
@@ -69,7 +72,7 @@ static void build_select_list(t_socket_unit_s *su)
     int i;
     FD_ZERO(&su->sockets);
     for (i=0; i<su->queue_size; ++i) {
-        if (su->connect_list[i]!=0) {
+        if (su->connect_list[i]!=SOCKET_INVALID) {
             FD_SET(((unsigned int)(su->connect_list[i])), (&su->sockets));
         } else break;
     }
@@ -91,7 +94,7 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
     }
     ret = -1;
     for (i=0; i<su->queue_size; ++i) {
-        if (su->connect_list[i]==0) {
+        if (su->connect_list[i]==SOCKET_INVALID) {
             su->connect_list[i] = socket;
             ret = i;
             break;
@@ -100,8 +103,10 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
     su->socket_states[ret] = SOCKET_STATE_READREQUEST;
     su->reqs[ret] = request_create();
     ++su->nsockets;
+#ifndef _WIN32
     if (socket>su->highest_socket)
         su->highest_socket = socket;
+#endif
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
@@ -123,7 +128,7 @@ static void read_sockets(t_socket_unit_s *su)
 
 ret_t socket_unit_select_loop(t_socket_unit_s *su)
 {
-    int read_socks;
+    int read_socks, hs;
     if (su==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
@@ -140,8 +145,12 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
         }
         return MMP_ERR_OK;
     }
-    read_socks = socket_server_select(su->highest_socket+1, &su->sockets, NULL,
-                                                        NULL, &su->to);
+#ifndef _WIN32
+    hs = su->highest_socket+1;
+#else
+    hs = 0;
+#endif
+    read_socks = socket_server_select(hs, &su->sockets, NULL, NULL, &su->to);
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;
