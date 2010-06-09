@@ -28,7 +28,7 @@ t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
             return REQUEST_PARSE_ERROR;
         }
         if (req->parse.rb==0) {
-            return REQUEST_PARSE_FINISH;
+            return REQUEST_PARSE_CLOSECONN;
         }
         return REQUEST_PARSE_FINISH;
     }

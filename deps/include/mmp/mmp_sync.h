@@ -9,15 +9,19 @@
 #   include <windows.h>
     typedef HANDLE mmp_thr_sem_t;
     typedef HANDLE mmp_thr_mtx_t;
+    typedef HANDLE mmp_thr_evt_t;
 #   define MMP_THRSEM_INVALID INVALID_HANDLE_VALUE
 #   define MMP_THRMTX_INVALID INVALID_HANDLE_VALUE
+#   define MMP_THREVT_INVALID INVALID_HANDLE_VALUE
 #else
 #   include <pthread.h>
 #   include <semaphore.h>
     typedef sem_t *mmp_thr_sem_t;
     typedef pthread_mutex_t *mmp_thr_mtx_t;
+    typedef sem_t *mmp_thr_evt_t;
 #   define MMP_THRSEM_INVALID NULL
 #   define MMP_THRMTX_INVALID NULL
+#   define MMP_THREVT_INVALID NULL
 #endif
 
 #include "mmp_trace.h"
@@ -34,5 +38,11 @@ mmp_thr_mtx_t mmp_thr_mtx_create(void);
 ret_t mmp_thr_mtx_close(mmp_thr_mtx_t *mtx);
 ret_t mmp_thr_mtx_lock(mmp_thr_mtx_t mtx);
 ret_t mmp_thr_mtx_release(mmp_thr_mtx_t mtx);
+
+/* event */
+mmp_thr_evt_t mmp_thr_evt_create();
+ret_t mmp_thr_evt_close(mmp_thr_evt_t *evt);
+ret_t mmp_thr_evt_signal(mmp_thr_evt_t evt);
+ret_t mmp_thr_evt_wait(mmp_thr_evt_t evt);
 
 #endif /* H_MMP_SYNC_H */

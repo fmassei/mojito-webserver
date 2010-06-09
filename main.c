@@ -10,16 +10,19 @@
 
 socket_t srv_sock;
 
-ret_t sck_data(int i, t_socket_unit_s *su)
+ret_t sck_data(int slot, t_socket_unit_s *su)
 {
     t_request_parse_e rst;
-    if (su->socket_states[i]==SOCKET_STATE_READREQUEST) {
-        rst = request_parse_read(&su->connect_list[i], su->reqs[i]);
+    if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
+        rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
         switch (rst) {
         case REQUEST_PARSE_ERROR:
             /* TODO: mark and close */
         case REQUEST_PARSE_CLOSECONN:
-            /* TODO: close! */
+            /* TODO: check for this errors! */
+            (void)socket_close(&su->connect_list[slot], 1);
+            (void)socket_unit_del_connection(su, slot);
+            printf("disconnected\n");
             break;
         case REQUEST_PARSE_FINISH:
             /* TODO: respond! */
