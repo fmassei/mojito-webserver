@@ -26,6 +26,10 @@ t_socket_unit_s *socket_unit_create(int qsize)
         mmp_setError(MMP_ERR_SYNC);
         goto bad_exit;
     }
+    if ((ret->sleep_evt = mmp_thr_evt_create())==MMP_THREVT_INVALID) {
+        mmp_setError(MMP_ERR_SYNC);
+        goto bad_exit;
+    }
     for (i=0; i<qsize; ++i) {
         ret->reqs[i] = NULL;
         ret->connect_list[i] = SOCKET_INVALID;
@@ -107,11 +111,53 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
     if (socket>su->highest_socket)
         su->highest_socket = socket;
 #endif
+    if (su->nsockets==1 && su->state==SOCKET_UNIT_STATE_SLEEPING) {
+        if (mmp_thr_evt_signal(su->sleep_evt)!=MMP_ERR_OK) {
+            mmp_setError(MMP_ERR_SYNC);
+        } else {
+            su->state = SOCKET_UNIT_STATE_RUNNING;
+        }
+    }
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
     }
     return ret;
+}
+
+ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
+{
+    int i;
+#ifndef _WIN32
+    socket_t socket;
+#endif
+    if (su==NULL || socket==SOCKET_INVALID) {
+        mmp_setError(MMP_ERR_PARAMS);
+        return MMP_ERR_PARAMS;
+    }
+    if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return MMP_ERR_SYNC;
+    }
+#ifndef _WIN32
+    socket = su->connect_list[slot];
+#endif
+    su->connect_list[slot] = SOCKET_INVALID;
+    --su->nsockets;
+#ifndef _WIN32
+    if (socket==su->highest_socket) {
+        su->highest_socket = -1;
+        for (i=0; i<su->nsockets; ++i) {
+            if (su->connect_list[i]>su->highest_socket)
+                su->highest_socket = su->connect_list[i];
+        }
+    }
+#endif
+    if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_SYNC);
+        return MMP_ERR_SYNC;
+    }
+    return MMP_ERR_OK;
 }
 
 static void read_sockets(t_socket_unit_s *su)
@@ -140,6 +186,11 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
     build_select_list(su);
     if (su->nsockets<=0) {
         if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
+            mmp_setError(MMP_ERR_SYNC);
+            return MMP_ERR_SYNC;
+        }
+        su->state = SOCKET_UNIT_STATE_SLEEPING;
+        if (mmp_thr_evt_wait(su->sleep_evt)!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_SYNC);
             return MMP_ERR_SYNC;
         }

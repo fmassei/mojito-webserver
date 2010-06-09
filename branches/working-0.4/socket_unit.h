@@ -16,8 +16,9 @@ typedef enum socket_state_e {
 } t_socket_state_e;
 
 typedef enum socket_unit_state_e {
-    SOCKET_UNIT_STATE_RUNNING   = 0,
-    SOCKET_UNIT_STATE_CLOSING   = 1
+    SOCKET_UNIT_STATE_SLEEPING  = 0,
+    SOCKET_UNIT_STATE_RUNNING   = 1,
+    SOCKET_UNIT_STATE_CLOSING   = 2
 } t_socket_unit_state_e;
 
 /* forward typedef declaration */
@@ -42,12 +43,14 @@ struct socket_unit_s {
     t_request_s **reqs;                 /* list of requests */
     t_socket_state_e *socket_states;    /* logical state of the sockets */
     t_socket_unit_state_e state;        /* state of the socket unit */
-    t_sckunit_fptr  newdata_cback;  /* data ready callback */
+    mmp_thr_evt_t sleep_evt;            /* sleeping event */
+    t_sckunit_fptr  newdata_cback;      /* data ready callback */
 };
 
 t_socket_unit_s *socket_unit_create(int qsize);
 void socket_unit_destroy(t_socket_unit_s **su);
 int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket);
+ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot);
 ret_t socket_unit_select_loop(t_socket_unit_s *su);
 
 #endif /* H_SOCKET_UNIT_H */
