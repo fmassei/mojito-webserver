@@ -28,11 +28,13 @@ typedef ret_t(*t_sckunit_fptr)(int, t_socket_unit_s *);
 
 /* socket unit structure */
 struct socket_unit_s {
-    int *connect_list;                  /* list of connections */
+    socket_t *connect_list;             /* list of connections */
     int nsockets;                       /* number of sockets present */
-    int highest_socket;                 /* highest socket number. This is not
+#ifndef _WIN32
+    socket_t highest_socket;            /* highest socket number. This is not
                                          * used in win32 select(), but we need
                                          * it in the posix one. */
+#endif
     int queue_size;                     /* size of the connection queue */
     fd_set sockets;                     /* all the sockets */
     struct timeval to;                  /* time out for fd selecting */

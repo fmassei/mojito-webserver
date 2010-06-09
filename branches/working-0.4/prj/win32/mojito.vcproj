@@ -217,6 +217,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\request.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\request_parse.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\socket_unit.c"
 				>
 			</File>
@@ -244,6 +252,14 @@
 			</File>
 			<File
 				RelativePath="..\..\defaults.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\request.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\request_parse.h"
 				>
 			</File>
 			<File

@@ -5,7 +5,14 @@
 t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
 {
     req->parse.len = req->parse.pos = 0;
+#ifdef _WIN32
+#   pragma warning(push)
+#   pragma warning(disable:4127)
+#endif
     while(1) {
+#ifdef _WIN32
+#   pragma warning(pop)
+#endif
         req->parse.mr = SOCKBUFSIZE + req->parse.pos;
         if (req->parse.len<req->parse.mr) {
             req->parse.reline =(int)(req->parse.cur_head)-(int)(req->parse.buf);
