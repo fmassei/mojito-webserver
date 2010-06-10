@@ -19,7 +19,7 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
         case REQUEST_PARSE_ERROR:
             /* TODO: mark and close */
         case REQUEST_PARSE_CLOSECONN:
-            /* TODO: check for this errors! */
+            /* TODO: check for these errors! */
             (void)socket_close(&su->connect_list[slot], 1);
             (void)socket_unit_del_connection(su, slot);
             printf("disconnected\n");
