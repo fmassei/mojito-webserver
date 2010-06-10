@@ -127,11 +127,11 @@ int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
 
 ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
 {
-    int i;
 #ifndef _WIN32
+    int i;
     socket_t socket;
 #endif
-    if (su==NULL || socket==SOCKET_INVALID) {
+    if (su==NULL || slot<0) {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
     }
