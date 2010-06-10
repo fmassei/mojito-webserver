@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of mojito webserver.
+
+        Mojito is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Mojito is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "socket_unit.h"
 
 t_socket_unit_s *socket_unit_create(int qsize)
@@ -85,7 +103,7 @@ static void build_select_list(t_socket_unit_s *su)
 #   pragma warning(pop)
 #endif
 
-int socket_unit_add_connection(t_socket_unit_s *su, socket_t socket)
+int socket_unit_add_connection(t_socket_unit_s *su, t_socket socket)
 {
     int i, ret;
     if (su==NULL || socket==SOCKET_INVALID) {
@@ -129,7 +147,7 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
 {
 #ifndef _WIN32
     int i;
-    socket_t socket;
+    t_socket socket;
 #endif
     if (su==NULL || slot<0) {
         mmp_setError(MMP_ERR_PARAMS);
@@ -201,7 +219,7 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
 #else
     hs = 0;
 #endif
-    read_socks = socket_server_select(hs, &su->sockets, NULL, NULL, &su->to);
+    read_socks = mmp_socket_server_select(hs, &su->sockets, NULL,NULL, &su->to);
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;

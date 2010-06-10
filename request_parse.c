@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of mojito webserver.
+
+        Mojito is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Mojito is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "request_parse.h"
 
 #define SOCKBUFSIZE 8196    /* TODO: calculate this one! */
@@ -13,7 +31,7 @@ static int parse_option(t_request_s *req, char *line)
         return parse_header_line(req, line);
 }
 
-t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
+t_request_parse_e request_parse_read(t_socket *sock, t_request_s *req)
 {
     req->parse.len = req->parse.pos = 0;
 #ifdef _WIN32
@@ -32,9 +50,9 @@ t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
             req->parse.len = req->parse.mr;
         }
         req->parse.rb =
-                socket_read(sock, req->parse.buf+req->parse.pos, SOCKBUFSIZE);
+            mmp_socket_read(sock, req->parse.buf+req->parse.pos, SOCKBUFSIZE);
         if (req->parse.rb==SOCKET_ERROR) {
-            if (socket_is_block_last_error())
+            if (mmp_socket_is_block_last_error())
                 return REQUEST_PARSE_CONTINUE;
             return REQUEST_PARSE_ERROR;
         }
@@ -73,6 +91,9 @@ t_request_parse_e request_parse_read(socket_t *sock, t_request_s *req)
                     req->parse.status = REQUEST_PARSE_STATUS_BODY;
                 else if (req->parse.c=='\r')
                     req->parse.status = REQUEST_PARSE_STATUS_HEAD;
+                break;
+            default:
+                /* nothing */
                 break;
             }
             ++req->parse.pos;

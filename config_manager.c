@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of mojito webserver.
+
+        Mojito is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Mojito is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "config_manager.h"
 
 /* Mojito configuration object. The one and only. */
@@ -56,7 +74,7 @@ static ret_t check_config(void)
 /* load the configuration from file */
 ret_t config_manager_loadfile(const char *filename)
 {
-    struct disobj_s *obj;
+    t_disobj_s *obj;
     if (filename==NULL || *filename=='\0') {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;

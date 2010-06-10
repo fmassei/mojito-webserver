@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of the MMP library.
+
+        MMP is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    MMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with MMP.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #ifndef H_MMP_LIST_H
 #define H_MMP_LIST_H
 
@@ -6,54 +24,54 @@
 #include "mmp_memory.h"
 #include "mmp_trace.h"
 
-struct list_s {
-    int nelems;
-    struct listelem_s *head, *tail;
-};
-
-struct listelem_s {
+typedef struct mmp_listelem_s {
     void *data;
-    struct listelem_s *next, *prev;
-};
+    struct mmp_listelem_s *next, *prev;
+} t_mmp_listelem_s;
+
+typedef struct mmp_list_s {
+    int nelems;
+    t_mmp_listelem_s *head, *tail;
+} t_mmp_list_s;
 
 /* creates an empty list */
-struct list_s *list_create(void);
+t_mmp_list_s *mmp_list_create(void);
 /* delete a complete list */
-void list_delete(struct list_s **list);
+void mmp_list_delete(t_mmp_list_s **list);
 /* delete a complete list calling a function on each data before deletion */
-void list_delete_withdata(struct list_s **list, void(*cback)(void**));
+void mmp_list_delete_withdata(t_mmp_list_s **list, void(*cback)(void**));
 /* add data to the list */
-ret_t list_add_data(struct list_s *list, void *data);
+ret_t mmp_list_add_data(t_mmp_list_s *list, void *data);
 /* add sorted data to the list */
-ret_t list_add_data_sorted(struct list_s *list, void *data,
+ret_t mmp_list_add_data_sorted(t_mmp_list_s *list, void *data,
                                                     int(*comp)(void*, void*));
 /* delete an element from the list, return the element data */
-void *list_del_elem(struct list_s *list, struct listelem_s **elem);
+void *mmp_list_del_elem(t_mmp_list_s *list, t_mmp_listelem_s **elem);
 /* delete an element from the list, by data */
-void* list_del_elem_by_data(struct list_s *list, void *data);
+void* mmp_list_del_elem_by_data(t_mmp_list_s *list, void *data);
 /* find data in the list */
-struct listelem_s *list_find_data(struct list_s *list, void *data);
+t_mmp_listelem_s *mmp_list_find_data(t_mmp_list_s *list, void *data);
 /* find data in the list by comparer lambda */
-struct listelem_s *list_find_data_lambda(struct list_s *list, void *data,
+t_mmp_listelem_s *mmp_list_find_data_lambda(t_mmp_list_s *list, void *data,
                                                     int (*comp)(void*, void*));
 /* execute a lambda function for each element in list */
-void list_lambda_elem(struct list_s *list, void(*fnc)(struct listelem_s *));
+void mmp_list_lambda_elem(t_mmp_list_s *list, void(*fnc)(t_mmp_listelem_s *));
 /* execute a lambda function for each element data in list */
-void list_lambda_data(struct list_s *list, void(*fnc)(void*));
+void mmp_list_lambda_data(t_mmp_list_s *list, void(*fnc)(void*));
 /* execute a lambda function for each element data in list, with extra params*/
-void list_lambda_data_ext(struct list_s *list, void(*fnc)(void*, void*),
+void mmp_list_lambda_data_ext(t_mmp_list_s *list, void(*fnc)(void*, void*),
                                                                 void *params);
 /* execute a lambda function for each element data in list, with extra params*/
-void list_lambda_data_ext_rev(struct list_s *list, void(*fnc)(void*, void*),
+void mmp_list_lambda_data_ext_rev(t_mmp_list_s *list, void(*fnc)(void*, void*),
                                                                 void *params);
 /* swap two list elements */
-void list_swap_elems(struct listelem_s *e1, struct listelem_s *e2);
+void mmp_list_swap_elems(t_mmp_listelem_s *e1, t_mmp_listelem_s *e2);
 /* sory a list by elements, with a comparer lambda */
-void list_sort_by_data(struct list_s *list, int (*comp)(void*, void*));
+void mmp_list_sort_by_data(t_mmp_list_s *list, int (*comp)(void*, void*));
 
 #ifdef UNIT_TESTING
 #include "mmp_tap.h"
-ret_t mmp_list_unittest(struct mmp_tap_cycle_s *cycle);
+ret_t mmp_list_unittest(t_mmp_tap_cycle_s *cycle);
 #endif /* UNIT_TESTING */
 
 #endif /* H_MMP_LIST_H */
