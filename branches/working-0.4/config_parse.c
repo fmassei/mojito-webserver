@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of mojito webserver.
+
+        Mojito is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Mojito is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "config_parse.h"
 
 static ret_t copy_or_die_str(char **dest, char *src)
@@ -49,7 +67,7 @@ static void config_module_destroy(t_config_module_s **cm)
 {
     if (cm==NULL || *cm==NULL) return;
     if ((*cm)->name!=NULL) xfree((*cm)->name);
-    list_delete_withdata(&(*cm)->settings, config_module_setting_destroy_v);
+    mmp_list_delete_withdata(&(*cm)->settings, config_module_setting_destroy_v);
     xfree(*cm);
     *cm = NULL;
 }
@@ -77,12 +95,12 @@ void config_destroy(t_config_s **config)
 {
     if (config==NULL || *config==NULL) return;
     config_server_destroy(&(*config)->server);
-    list_delete_withdata(&(*config)->modules, config_module_destroy_v);
+    mmp_list_delete_withdata(&(*config)->modules, config_module_destroy_v);
     xfree(*config);
     *config = NULL;
 }
 
-static ret_t parse_config_server_kv(t_config_server_s *csrv, struct diskv_s *kv)
+static ret_t parse_config_server_kv(t_config_server_s *csrv, t_diskv_s *kv)
 {
     char buf[0xff];
     if (csrv==NULL || kv==NULL) {
@@ -125,7 +143,7 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, struct diskv_s *kv)
 }
 
 static t_config_module_setting_s *disobj_to_config_module_setting(
-                                                        struct diskv_s *kv)
+                                                        t_diskv_s *kv)
 {
     t_config_module_setting_s *ret;
     if (kv==NULL) {
@@ -142,11 +160,11 @@ static t_config_module_setting_s *disobj_to_config_module_setting(
     return ret;
 }
 
-static ret_t parse_config_module_obj(struct list_s *cm, struct disobj_s *obj)
+static ret_t parse_config_module_obj(t_mmp_list_s *cm, t_disobj_s *obj)
 {
     t_config_module_s *mod;
-    struct diselem_s *de;
-    struct listelem_s *p;
+    t_diselem_s *de;
+    t_mmp_listelem_s *p;
     if (cm==NULL || obj==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
@@ -156,19 +174,19 @@ static ret_t parse_config_module_obj(struct list_s *cm, struct disobj_s *obj)
         return MMP_ERR_ENOMEM;
     }
     if (    ((mod->name = xstrdup(obj->name))==NULL) ||
-            ((mod->settings = list_create())==NULL) ) {
+            ((mod->settings = mmp_list_create())==NULL) ) {
         config_module_destroy(&mod);
         mmp_setError(MMP_ERR_ENOMEM);
         return MMP_ERR_ENOMEM;
     }
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
-        if ((de = (struct diselem_s *)p->data)==NULL)
+        if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */
         if (de->type==OT_KV) {
             t_config_module_setting_s *cms;
             cms = disobj_to_config_module_setting(de->elem.kv);
             if (    (cms==NULL) ||
-                    (list_add_data(mod->settings, cms)!=MMP_ERR_OK)   ) {
+                    (mmp_list_add_data(mod->settings, cms)!=MMP_ERR_OK)   ) {
                 config_module_destroy(&mod);
                 return MMP_ERR_PARSE;
             }
@@ -178,32 +196,32 @@ static ret_t parse_config_module_obj(struct list_s *cm, struct disobj_s *obj)
             return MMP_ERR_PARSE;
         }
     }
-    return list_add_data(cm, mod);
+    return mmp_list_add_data(cm, mod);
 }
 
-static struct list_s *disobj_to_config_module(struct disobj_s *obj)
+static t_mmp_list_s *disobj_to_config_module(t_disobj_s *obj)
 {
-    struct list_s *ret;
-    struct diselem_s *de;
-    struct listelem_s *p;
+    t_mmp_list_s *ret;
+    t_diselem_s *de;
+    t_mmp_listelem_s *p;
     if (obj==NULL || strcmp(obj->name, "modules")!=0) {
         mmp_setError(MMP_ERR_PARAMS);
         return NULL;
     }
-    if ((ret = list_create())==NULL) {
+    if ((ret = mmp_list_create())==NULL) {
         mmp_setError(MMP_ERR_GENERIC);
         return NULL;
     }
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
-        if ((de = (struct diselem_s *)p->data)==NULL)
+        if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */
         if (de->type==OT_KV) {
             /* we expect no kv here */
-            list_delete_withdata(&ret, config_module_destroy_v);
+            mmp_list_delete_withdata(&ret, config_module_destroy_v);
             goto done;
         } else {
             if (parse_config_module_obj(ret, de->elem.obj)!=MMP_ERR_OK) {
-                list_delete_withdata(&ret, config_module_destroy_v);
+                mmp_list_delete_withdata(&ret, config_module_destroy_v);
                 goto done;
             }
         }
@@ -212,11 +230,11 @@ done:
     return ret;
 }
 
-static t_config_server_s *disobj_to_config_server(struct disobj_s *obj)
+static t_config_server_s *disobj_to_config_server(t_disobj_s *obj)
 {
     t_config_server_s *ret;
-    struct diselem_s *de;
-    struct listelem_s *p;
+    t_diselem_s *de;
+    t_mmp_listelem_s *p;
     if (obj==NULL || strcmp(obj->name, "server_settings")!=0) {
         mmp_setError(MMP_ERR_PARAMS);
         return NULL;
@@ -231,7 +249,7 @@ static t_config_server_s *disobj_to_config_server(struct disobj_s *obj)
     ret->http_root = ret->default_page = ret->log_file = ret->err_file =
         ret->server_meta = ret->modules_basepath = NULL;
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
-        if ((de = (struct diselem_s *)p->data)==NULL)
+        if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */
         if (de->type==OT_KV) {
             if (parse_config_server_kv(ret, de->elem.kv)!=MMP_ERR_OK) {
@@ -248,7 +266,7 @@ done:
     return ret;
 }
 
-static ret_t parse_config_obj(t_config_s *config, struct disobj_s *obj)
+static ret_t parse_config_obj(t_config_s *config, t_disobj_s *obj)
 {
     if (config==NULL || obj==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
@@ -261,7 +279,7 @@ static ret_t parse_config_obj(t_config_s *config, struct disobj_s *obj)
         config->server = config_server;
         return MMP_ERR_OK;
     } else if (!strcmp(obj->name, "modules")) {
-        struct list_s *config_module;
+        t_mmp_list_s *config_module;
         if ((config_module = disobj_to_config_module(obj))==NULL)
             return MMP_ERR_PARSE;
         config->modules = config_module;
@@ -274,11 +292,11 @@ static ret_t parse_config_obj(t_config_s *config, struct disobj_s *obj)
     }
 }
 
-t_config_s *disobj_to_config(struct disobj_s *obj)
+t_config_s *disobj_to_config(t_disobj_s *obj)
 {
     t_config_s *ret;
-    struct diselem_s *de;
-    struct listelem_s *p;
+    t_diselem_s *de;
+    t_mmp_listelem_s *p;
     if (obj==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
         return NULL;
@@ -294,7 +312,7 @@ t_config_s *disobj_to_config(struct disobj_s *obj)
     ret->server = NULL;
     ret->modules = NULL;
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
-        if ((de = (struct diselem_s *)p->data)==NULL)
+        if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */
         if (de->type==OT_KV) {
             /* we expect no k/v in here */

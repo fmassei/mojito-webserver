@@ -1,3 +1,21 @@
+/*
+    Copyright 2010 Francesco Massei
+
+    This file is part of the MMP library.
+
+        MMP is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    MMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with MMP.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #ifndef H_MMP_SYNC_H
 #define H_MMP_SYNC_H
 
@@ -7,18 +25,18 @@
 
 #ifdef _WIN32
 #   include <windows.h>
-    typedef HANDLE mmp_thr_sem_t;
-    typedef HANDLE mmp_thr_mtx_t;
-    typedef HANDLE mmp_thr_evt_t;
+    typedef HANDLE t_mmp_thr_sem;
+    typedef HANDLE t_mmp_thr_mtx;
+    typedef HANDLE t_mmp_thr_evt;
 #   define MMP_THRSEM_INVALID INVALID_HANDLE_VALUE
 #   define MMP_THRMTX_INVALID INVALID_HANDLE_VALUE
 #   define MMP_THREVT_INVALID INVALID_HANDLE_VALUE
 #else
 #   include <pthread.h>
 #   include <semaphore.h>
-    typedef sem_t *mmp_thr_sem_t;
-    typedef pthread_mutex_t *mmp_thr_mtx_t;
-    typedef sem_t *mmp_thr_evt_t;
+    typedef sem_t *t_mmp_thr_sem;
+    typedef pthread_mutex_t *t_mmp_thr_mtx;
+    typedef sem_t *t_mmp_thr_evt;
 #   define MMP_THRSEM_INVALID NULL
 #   define MMP_THRMTX_INVALID NULL
 #   define MMP_THREVT_INVALID NULL
@@ -28,21 +46,21 @@
 #include "mmp_memory.h"
 
 /* semaphore */
-mmp_thr_sem_t mmp_thr_sem_create(long initCount, long maxCount);
-ret_t mmp_thr_sem_close(mmp_thr_sem_t *sem);
-ret_t mmp_thr_sem_lock(mmp_thr_sem_t sem);
-ret_t mmp_thr_sem_release(mmp_thr_sem_t sem);
+t_mmp_thr_sem mmp_thr_sem_create(long initCount, long maxCount);
+ret_t mmp_thr_sem_close(t_mmp_thr_sem *sem);
+ret_t mmp_thr_sem_lock(t_mmp_thr_sem sem);
+ret_t mmp_thr_sem_release(t_mmp_thr_sem sem);
 
 /* mutex */
-mmp_thr_mtx_t mmp_thr_mtx_create(void);
-ret_t mmp_thr_mtx_close(mmp_thr_mtx_t *mtx);
-ret_t mmp_thr_mtx_lock(mmp_thr_mtx_t mtx);
-ret_t mmp_thr_mtx_release(mmp_thr_mtx_t mtx);
+t_mmp_thr_mtx mmp_thr_mtx_create(void);
+ret_t mmp_thr_mtx_close(t_mmp_thr_mtx *mtx);
+ret_t mmp_thr_mtx_lock(t_mmp_thr_mtx mtx);
+ret_t mmp_thr_mtx_release(t_mmp_thr_mtx mtx);
 
 /* event */
-mmp_thr_evt_t mmp_thr_evt_create();
-ret_t mmp_thr_evt_close(mmp_thr_evt_t *evt);
-ret_t mmp_thr_evt_signal(mmp_thr_evt_t evt);
-ret_t mmp_thr_evt_wait(mmp_thr_evt_t evt);
+t_mmp_thr_evt mmp_thr_evt_create();
+ret_t mmp_thr_evt_close(t_mmp_thr_evt *evt);
+ret_t mmp_thr_evt_signal(t_mmp_thr_evt evt);
+ret_t mmp_thr_evt_wait(t_mmp_thr_evt evt);
 
 #endif /* H_MMP_SYNC_H */
