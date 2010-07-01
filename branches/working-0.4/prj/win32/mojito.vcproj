@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\header_w_quality.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\main.c"
 				>
 			</File>
@@ -252,6 +256,10 @@
 			</File>
 			<File
 				RelativePath="..\..\defaults.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\header_w_quality.h"
 				>
 			</File>
 			<File

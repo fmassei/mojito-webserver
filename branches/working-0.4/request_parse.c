@@ -20,8 +20,96 @@
 
 #define SOCKBUFSIZE 8196    /* TODO: calculate this one! */
 
-static int parse_first_line(t_request_s *req, char *line) {return 0;}
-static int parse_header_line(t_request_s *req, char *line) {return 0;}
+/* parse the request first line */
+static int parse_first_line(t_request_s *req, char *line)
+{
+    char *st, *st2;
+    if (memcmp(line, "GET ", 4))
+        req->method = REQUEST_METHOD_GET;
+    else if (memcmp(line, "HEAD ", 5))
+        req->method = REQUEST_METHOD_HEAD;
+    else if (memcmp(line, "POST ", 5))
+        req->method = REQUEST_METHOD_POST;
+    else
+        return -1;
+    /* go to next arg. Here and below we skip more than one whitespace if
+     * present between arguments. This is not RFC2616 conforming, but adds
+     * some robustness to the client/server communication. */
+    st = line + 3;
+    if (*st!=' ') ++st;
+    while (*(++st)==' ' && *st!='\0') ;
+    /* find end or space */
+    for (st2=st; *st2!='\0' && *st2!=' '; ++st2);
+    req->URI = malloc(st2-st+1);
+    memcpy(req->URI, st, st2-st);
+    req->URI[st2-st] = '\0';
+    /* find protocol version */
+    st = st2;
+    while(*(++st)==' ' && *st!='\0');
+    /* again, we skip whitespaces at the end, breaking the specs. */
+    for (st2=st; *st2!='\0' && *st2!=' '; ++st2);
+    /* get protocol */
+    req->protocol = REQUEST_PROTOCOL_UNKNOWN;
+    if ((st2-st)>=8) {
+        if (!memcmp(st, "HTTP/1.1", 8)) {
+            req->protocol = REQUEST_PROTOCOL_HTTP11;
+            req->keeping_alive = 1;  /* by default (RFC2616-8.1.2) */
+        }
+        else if (!memcmp(st, "HTTP/1.0", 8))
+            req->protocol = REQUEST_PROTOCOL_HTTP10;
+    }
+    return 0;
+}
+
+/* a smarter toupper() function */
+static char *head_to_upper(char *str)
+{
+    char *st = str;
+    while (*str) {
+        if (*str=='-') *str = '_';
+        else *str = (char)toupper(*str);
+        ++str;
+    }
+    return st;
+}
+
+/* parse a generic header line */
+static int parse_header_line(t_request_s *req, char *line)
+{
+    char *value, c;
+    char *endptr; /* useded by strtol */
+    if ((value = strchr(line, ':'))==NULL)
+        return 0;
+    *value++ = '\0';
+    for(c=*value; c!='\0' || c==' ' || c=='\t'; c=*value)
+        ++value;
+    head_to_upper(line);
+    if (!memcmp(line, "CONTENT_LENGTH", 15) && req->content_length==0) {
+        req->content_length = strtol(value, &endptr, 10);
+        /* try to convert content_length in a valid number */
+        if ((errno==ERANGE
+                && (req->content_length==LONG_MAX || 
+                    req->content_length==LONG_MIN))
+                || (errno!=0 && value==0) || (endptr==value)) {
+            req->content_length = 0;
+            return 0;
+        }
+    } else if (!memcmp(line, "ACCEPT_ENCODING", 15) &&
+            !req->accept_encoding) {
+        req->accept_encoding = qhead_parse(value);
+    } else if (!memcmp(line, "CONTENT_TYPE", 12) && req->content_type==NULL) {
+        req->content_type = value;
+    } else if (!memcmp(line, "CONNECTION", 10)) {
+        if ( (req->protocol==REQUEST_PROTOCOL_HTTP10) &&
+                (!xstrncasecmp(value, "keep-alive", strlen(value))) )
+            req->keeping_alive = 1;
+        else if ( (req->protocol==REQUEST_PROTOCOL_HTTP11) &&
+                (!xstrncasecmp(value, "close", strlen(value))) )
+            req->keeping_alive = 0;
+    }
+    return 0;
+}
+
 /* parse an option */
 static int parse_option(t_request_s *req, char *line)
 {
@@ -103,9 +191,10 @@ t_request_parse_e request_parse_read(t_socket *sock, t_request_s *req)
                 parse_option(req, req->parse.cur_head);
                 req->parse.cur_head = req->parse.buf+req->parse.pos;
             } else if (req->parse.status==REQUEST_PARSE_STATUS_BODY) {
+                if (req->content_length<=0 && req->method!=REQUEST_METHOD_POST)
+                    return REQUEST_PARSE_FINISH;
             }
         }
-        /* return REQUEST_PARSE_FINISH; somewhere */ 
     }
     return REQUEST_PARSE_ERROR; /* this should never happen */
 }

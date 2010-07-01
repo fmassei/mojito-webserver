@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
+#include "header_w_quality.h"
 
 typedef enum request_parse_status_e {
         REQUEST_PARSE_STATUS_HEAD,
@@ -33,10 +34,17 @@ typedef enum request_parse_status_e {
 } t_request_parse_status_e;
 
 typedef enum request_method_e {
+        REQUEST_METHOD_UNKNOWN,
         REQUEST_METHOD_GET,
         REQUEST_METHOD_HEAD,
         REQUEST_METHOD_POST
 } t_request_method_e;
+
+typedef enum request_protocol_e {
+        REQUEST_PROTOCOL_UNKNOWN,
+        REQUEST_PROTOCOL_HTTP10,
+        REQUEST_PROTOCOL_HTTP11
+} t_request_protocol_e;
 
 /* variables needed for request parsing */
 typedef struct request_parse_s {
@@ -50,6 +58,12 @@ typedef struct request_parse_s {
 typedef struct request_s {
     t_request_parse_s parse;
     t_request_method_e method;
+    t_request_protocol_e protocol;
+    char *URI;
+    int keeping_alive;
+    size_t content_length;
+    char *content_type;
+    struct qhead_s *accept_encoding;
 } t_request_s;
 
 t_request_s *request_create(void);

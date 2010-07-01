@@ -29,6 +29,8 @@
 char *xstrdup(const char *s);
 /* unix index() */
 char *xindex(char *s, char c);
+/* unix strncasecmp() */
+int xstrncasecmp(const char *s1, const char *s2, size_t n);
 
 /* trim functions */
 int mmp_str_is_trimmable(char c);   /* is a character "trimmable"? */
