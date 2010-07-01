@@ -24,7 +24,7 @@
 #include "defaults.h"
 
 /* get _the_ configuration object. */
-const t_config_s * const config_get(void);
+const t_config_s * config_get(void);
 
 /* load the configuration from file */
 ret_t config_manager_loadfile(const char *filename);

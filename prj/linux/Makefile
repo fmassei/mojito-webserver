@@ -1,8 +1,6 @@
-GCC = gcc
-LD = gcc
-RM = rm -f
-AR = ar rcs
-GCCFLAG = -Wall -ansi -pedantic
+include Makefile.vars
+
+GCCFLAG = $(CFLAGS)
 LDFLAG = -L../../deps/lib/linux -ldisml -lpthread
 ELIB = ../../deps/lib/linux/libmmp_base.a
 INCLUDE = -I../../deps/include -I../../deps/include/mmp \
@@ -17,17 +15,19 @@ OBJS = main.o config_parse.o config_manager.o socket_unit.o \
 		modules.o
 OBJWD = echo $(OBJDIR)/$(OBJS) | sed 's/\ /\ \.\//g'
 
-base: all
+base: all mod_all
+clean: main_clean modules_clean
 
 %.o: $(SRCDIR)/%.c
 	$(GCC) $(INCLUDE) $(GCCFLAG) -c $< -o $(OBJDIR)/$@
 
-clean:
+main_clean:
 	-$(RM) $(OBJDIR)/*.o
 	-$(RM) $(BINDIR)/$(FINAME)
 
 all: $(OBJS)
 	$(LD) $(LDFLAG) -o $(BINDIR)/$(FINAME) $(shell $(OBJWD)) $(ELIB)
 
-debug: GCCFLAG += -g
-debug: all
+include Makefile.modules
+
+mod_all: $(build_modules)
