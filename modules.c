@@ -1,0 +1,213 @@
+/*
+    Copyright 2009 Francesco Massei
+
+    This file is part of mojito webserver.
+
+        Mojito is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Mojito is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#include "modules.h"
+
+typedef t_mmp_list_s t_module_list_s;
+
+static t_module_list_s *s_modules = NULL;
+static t_module_list_s *s_filters = NULL;
+static t_module_s *s_ch_filter = NULL;
+
+/* delete a module from the queue.
+ * NOTE1: the modules will NOT be unloaded!
+ * NOTE2: don't change pointer of *todrop, as it will be impossible to manage
+ *      module-drops in a cycle! */
+static void dropmod(t_module_list_s *list, t_module_s **todrop)
+{
+    if (list==NULL) return;
+    mmp_list_del_elem_by_data(list, todrop);
+    /* TODO FIXME XXX try not to unload modules just free()ing them! */
+    xfree(*todrop);
+    *todrop = NULL;
+}
+
+/* FIXME horrible style, but I didn't find a better way... */
+#define MOD_LOOP_HEAD \
+    t_module_s *p; \
+    t_module_ret_e ret; \
+    t_mmp_listelem_s *el; \
+    for (el=s_modules->head; el!=NULL; el=el->next) { \
+        p = (t_module_s*)(el->data);
+#define MOD_LOOP_SKIP_STOPPED \
+        if (p->will_run==0) \
+            continue;
+#define MOD_LOOP_SWITCH \
+        switch(ret) { \
+        case MOD_NOHOOK: \
+            break; \
+        case MOD_CORE_CRIT: \
+            return -1;
+#define MOD_LOOP_CASE_CRIT \
+        case MOD_CRIT: \
+            dropmod(s_modules, &p); \
+            continue;
+#define MOD_LOOP_CASE_ERR \
+        case MOD_ERR: \
+            p->will_run = 0; \
+            break;
+#define MOD_LOOP_CASE_PROCDONE \
+        case MOD_PROCDONE: \
+            return 0;
+#define MOD_LOOP_CASE_ALLDONE \
+        case MOD_ALLDONE: \
+            return 1;
+#define MOD_LOOP_END \
+        default: \
+            break; \
+        } \
+    }
+
+#define MOD_LOOP_NORMFLOW \
+    MOD_LOOP_SWITCH \
+    MOD_LOOP_SKIP_STOPPED \
+    MOD_LOOP_CASE_CRIT \
+    MOD_LOOP_CASE_ERR \
+    MOD_LOOP_CASE_PROCDONE \
+    MOD_LOOP_CASE_ALLDONE \
+    MOD_LOOP_END
+ 
+int mod_set_params(t_config_module_s *params)
+{
+    MOD_LOOP_HEAD
+        ret = (p->set_params!=NULL) ? p->set_params(params) : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
+}
+
+int mod_init(void)
+{
+    MOD_LOOP_HEAD
+        ret = (p->init!=NULL) ? p->init() : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
+}
+
+int mod_fini(void)
+{
+    MOD_LOOP_HEAD
+        ret = (p->fini!=NULL) ? p->fini() : MOD_NOHOOK;
+    MOD_LOOP_SWITCH
+    MOD_LOOP_CASE_CRIT
+    MOD_LOOP_CASE_ERR
+    MOD_LOOP_END
+    return 0;
+}
+
+int can_run(t_request_s *req)
+{
+    MOD_LOOP_HEAD
+        ret = (p->can_run!=NULL) ? p->can_run(req) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_accept(void)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_accept!=NULL) ? p->on_accept() : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_presend(int sock, t_request_s *req)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_presend!=NULL) ? p->on_presend(sock, req) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_prehead(t_mmp_stat_s *sb)
+{
+    MOD_LOOP_HEAD
+        if ((p->category==MODCAT_FILTER) && (p!=s_ch_filter)) {
+            ret = MOD_NOHOOK;
+        } else {
+            ret = (p->on_prehead!=NULL) ? p->on_prehead(sb) : MOD_NOHOOK;
+        }
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_send(void *addr, int sock, t_mmp_stat_s *sb)
+{
+    MOD_LOOP_HEAD
+        if ((p->category==MODCAT_FILTER) && (p!=s_ch_filter)) {
+            ret = MOD_NOHOOK;
+        } else {
+            ret = (p->on_send!=NULL) ? p->on_send(addr, sock, sb) : MOD_NOHOOK;
+        }
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+int on_postsend(t_request_s *req, char *mime, void *addr, t_mmp_stat_s *sb)
+{
+    MOD_LOOP_HEAD
+        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, mime, addr, sb) : MOD_NOHOOK;
+    MOD_LOOP_NORMFLOW
+    return 0;
+}
+
+/* loaders */
+t_module_s *module_add_static(t_get_module_f get_module)
+{
+    t_module_s *p;
+    if ((p = get_module())==NULL)
+        return NULL;
+    if (s_modules==NULL) {
+        if ((s_modules = mmp_list_create())==NULL) {
+            mmp_setError(MMP_ERR_GENERIC);
+            return NULL;
+        }
+    }
+    if (mmp_list_add_data(s_modules, p)!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_GENERIC);
+        return NULL;
+    }
+    if (p->category==MODCAT_FILTER) {
+        if (s_filters==NULL) {
+            if ((s_filters = mmp_list_create())==NULL) {
+                mmp_setError(MMP_ERR_GENERIC);
+                return NULL;
+            }
+        }
+        if (mmp_list_add_data(s_filters, p)!=MMP_ERR_OK) {
+            mmp_setError(MMP_ERR_GENERIC);
+            return NULL;
+        }
+    }
+    return p;
+}
+
+#ifdef DYNAMIC
+t_module_s *module_add_dynamic(char *fname, char **error)
+{
+    t_get_module_f get_module;
+    get_module = mmp_dl_open_and_get_fnc(fname, "getmodule");
+    return module_add_static(get_module);
+}
+#endif /* DYNAMIC */
+

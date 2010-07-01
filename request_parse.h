@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <limits.h>
 #include <mmp/mmp_socket.h>
 #include "request.h"
 #include "header_w_quality.h"
