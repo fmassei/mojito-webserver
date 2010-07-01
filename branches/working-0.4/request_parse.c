@@ -96,7 +96,7 @@ static int parse_header_line(t_request_s *req, char *line)
         }
     } else if (!memcmp(line, "ACCEPT_ENCODING", 15) &&
             !req->accept_encoding) {
-        req->accept_encoding = qhead_parse(value);
+        req->accept_encoding = qhead_list_parse(value);
     } else if (!memcmp(line, "CONTENT_TYPE", 12) && req->content_type==NULL) {
         req->content_type = value;
     } else if (!memcmp(line, "CONNECTION", 10)) {

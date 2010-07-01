@@ -45,6 +45,8 @@ t_request_s *request_create(void)
 void request_destroy(t_request_s **request)
 {
     if (request==NULL || *request==NULL) return;
+    if ((*request)->accept_encoding!=NULL)
+        qhead_list_destroy(&((*request)->accept_encoding));
     xfree(*request);
     *request = NULL;
 }
