@@ -13,7 +13,8 @@ BINDIR = .
 FINAME = mojito
 
 OBJS = main.o config_parse.o config_manager.o socket_unit.o \
-		socket_unit_manager.o request.o request_parse.o header_w_quality.o
+		socket_unit_manager.o request.o request_parse.o header_w_quality.o \
+		modules.o
 OBJWD = echo $(OBJDIR)/$(OBJS) | sed 's/\ /\ \.\//g'
 
 base: all

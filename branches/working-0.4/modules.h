@@ -23,6 +23,10 @@
 #ifdef DYNAMIC
 #include <mmp/mmp_dl.h>
 #endif
+#include <mmp/mmp_trace.h>
+#include <mmp/mmp_memory.h>
+#include <mmp/mmp_files.h>
+#include "config_type.h"
 #include "request.h"
 
 /* module functions return codes */
@@ -59,9 +63,9 @@ typedef struct module_s {
     int (*can_run)(t_request_s *);
     int (*on_accept)(void);
     int (*on_presend)(int, t_request_s *);
-    int (*on_prehead)(struct stat *);
-    int (*on_send)(void *, int, struct stat *);
-    int (*on_postsend)(t_request_s *, char *, void *, struct stat *);
+    int (*on_prehead)(t_mmp_stat_s *);
+    int (*on_send)(void *, int, t_mmp_stat_s *);
+    int (*on_postsend)(t_request_s *, char *, void *, t_mmp_stat_s *);
     int will_run;
     int category;
 } t_module_s;
@@ -73,16 +77,16 @@ int mod_fini(void);
 int can_run(t_request_s *req);
 int on_accept(void);
 int on_presend(int sock, t_request_s *req);
-int on_prehead(struct stat *sb);
-int on_send(void *addr, int sock, struct stat *sb);
-int on_postsend(t_request_s *, char *mime, void *addr, struct stat *sb);
+int on_prehead(t_mmp_stat_s *sb);
+int on_send(void *addr, int sock, t_mmp_stat_s *sb);
+int on_postsend(t_request_s *, char *mime, void *addr, t_mmp_stat_s *sb);
 
 /* loaders */
 typedef t_module_s *(*t_get_module_f)(void);
 
-struct module_s *module_add_static(t_get_module_f get_module);
+t_module_s *module_add_static(t_get_module_f get_module);
 #ifdef DYNAMIC
-struct module_s *module_add_dynamic(char *fname, char **error);
+t_module_s *module_add_dynamic(char *fname, char **error);
 #endif /* DYNAMIC */
 
 #endif /* H_MODULES_H */
