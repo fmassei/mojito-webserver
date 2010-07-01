@@ -45,9 +45,9 @@ typedef enum error_e ret_t;     /* mmp error */
 typedef int err_t;              /* system error */
 
 /* get internal error description */
-const char * const mmp_error_ret_getdesc(ret_t ret);
+const char * mmp_error_ret_getdesc(ret_t ret);
 /* get system error description */
-const char * const mmp_error_err_getdesc(err_t err);
+const char * mmp_error_err_getdesc(err_t err);
 
 #ifdef UNIT_TESTING
 #include "mmp_tap.h"

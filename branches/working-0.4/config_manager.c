@@ -22,7 +22,7 @@
 static t_config_s *s_config = NULL;
 
 /* get _the_ configuration object. */
-const t_config_s * const config_get(void)
+const t_config_s * config_get(void)
 {
     return s_config;
 }
