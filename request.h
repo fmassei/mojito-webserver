@@ -63,7 +63,7 @@ typedef struct request_s {
     int keeping_alive;
     size_t content_length;
     char *content_type;
-    struct qhead_s *accept_encoding;
+    t_qhead_list_s *accept_encoding;
 } t_request_s;
 
 t_request_s *request_create(void);
