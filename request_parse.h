@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <mmp/mmp_socket.h>
 #include "request.h"
+#include "header_w_quality.h"
 
 typedef enum request_parse_e {
     REQUEST_PARSE_CLOSECONN = 0,

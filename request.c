@@ -32,6 +32,13 @@ t_request_s *request_create(void)
         return NULL;
     }
     request_parse_init(&ret->parse);
+    ret->method = REQUEST_METHOD_UNKNOWN;
+    ret->protocol = REQUEST_PROTOCOL_UNKNOWN;
+    ret->URI = NULL;
+    ret->keeping_alive = 0;
+    ret->content_length = 0;
+    ret->content_type = NULL;
+    ret->accept_encoding = NULL;
     return ret;
 }
 
