@@ -74,8 +74,8 @@ static void dropmod(t_module_list_s *list, t_module_s **todrop)
     }
 
 #define MOD_LOOP_NORMFLOW \
-    MOD_LOOP_SWITCH \
     MOD_LOOP_SKIP_STOPPED \
+    MOD_LOOP_SWITCH \
     MOD_LOOP_CASE_CRIT \
     MOD_LOOP_CASE_ERR \
     MOD_LOOP_CASE_PROCDONE \

@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\modules.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\request.c"
 				>
 			</File>
@@ -260,6 +264,10 @@
 			</File>
 			<File
 				RelativePath="..\..\header_w_quality.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\modules.h"
 				>
 			</File>
 			<File
