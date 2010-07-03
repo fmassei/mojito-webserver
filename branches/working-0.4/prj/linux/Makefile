@@ -1,3 +1,4 @@
+include Makefile.config
 include Makefile.vars
 
 GCCFLAG = $(CFLAGS)
@@ -15,7 +16,7 @@ OBJS = main.o config_parse.o config_manager.o socket_unit.o \
 		modules.o
 OBJWD = echo $(OBJDIR)/$(OBJS) | sed 's/\ /\ \.\//g'
 
-base: all mod_all
+base: all modules_all
 clean: main_clean modules_clean
 
 %.o: $(SRCDIR)/%.c
@@ -28,6 +29,9 @@ main_clean:
 all: $(OBJS)
 	$(LD) $(LDFLAG) -o $(BINDIR)/$(FINAME) $(shell $(OBJWD)) $(ELIB)
 
-include Makefile.modules
+modules_all:
+	@(cd modules; make -f Makefile.modules)
 
-mod_all: $(build_modules)
+modules_clean:
+	@(cd modules; make -f Makefile.modules modules_clean)
+
