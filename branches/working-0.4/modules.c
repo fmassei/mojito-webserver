@@ -131,7 +131,7 @@ int on_accept(void)
     return 0;
 }
 
-int on_presend(int sock, t_request_s *req)
+int on_presend(t_socket sock, t_request_s *req)
 {
     MOD_LOOP_HEAD
         ret = (p->on_presend!=NULL) ? p->on_presend(sock, req) : MOD_NOHOOK;
@@ -151,7 +151,7 @@ int on_prehead(t_mmp_stat_s *sb)
     return 0;
 }
 
-int on_send(void *addr, int sock, t_mmp_stat_s *sb)
+int on_send(void *addr, t_socket sock, t_mmp_stat_s *sb)
 {
     MOD_LOOP_HEAD
         if ((p->category==MODCAT_FILTER) && (p!=s_ch_filter)) {

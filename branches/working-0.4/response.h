@@ -20,10 +20,12 @@
 #define H_RESPONSE_H
 
 #include <mmp/mmp_socket.h>
+#include "request.h"
+#include "response_type.h"
+#include "resp_headers.h"
+#include "modules.h"
+#include "mime.h"
 
-typedef struct response_s {
-    char *resbuf, *tmpbuf;
-    t_socket sock;
-} t_response_s;
+void response_send(t_response_s *res, t_request_s *req);
 
 #endif /* H_RESPONSE_H */

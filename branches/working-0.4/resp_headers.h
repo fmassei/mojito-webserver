@@ -24,17 +24,12 @@
 #include <string.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_date.h>
-#include "response.h"
+#include "config_manager.h"
+#include "response_type.h"
+#include "request.h"
 
-typedef enum hresp_e {
-    HRESP_200   =   0,
-    HRESP_404   =   1,
-    HRESP_406   =   2,
-    HRESP_500   =   3,
-    HRESP_501   =   4
-} t_hresp_e;
-
-void header_push_code(t_response_s *resp, t_hresp_e code, int proto_version);
+void header_push_code(t_response_s *resp, t_hresp_e code,
+                                        t_request_protocol_e proto_version);
 
 void header_push_contentlength(t_response_s *resp, long len);
 void header_push_contenttype(t_response_s *resp, char *name);
@@ -43,6 +38,7 @@ void header_push_contentencoding(t_response_s *resp, char *name);
 void header_part_send(t_response_s *resp);
 void header_send(t_response_s *resp);
 
-void header_kill_w_code(t_response_s *resp, t_hresp_e code);
+void header_kill_w_code(t_response_s *resp, t_hresp_e code,
+                                        t_request_protocol_e proto_version);
 
 #endif /* H_RESP_HEADERS_H */
