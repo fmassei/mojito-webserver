@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\mime.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\modules.c"
 				>
 			</File>
@@ -230,6 +234,14 @@
 			</File>
 			<File
 				RelativePath="..\..\request_parse.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\resp_headers.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\response.c"
 				>
 			</File>
 			<File
@@ -267,6 +279,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\mime.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\modules.h"
 				>
 			</File>
@@ -276,6 +292,18 @@
 			</File>
 			<File
 				RelativePath="..\..\request_parse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\resp_headers.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\response.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\response_type.h"
 				>
 			</File>
 			<File

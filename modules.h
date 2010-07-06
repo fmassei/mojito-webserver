@@ -26,6 +26,7 @@
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_files.h>
+#include <mmp/mmp_socket.h>
 #include "config_type.h"
 #include "request.h"
 
@@ -62,9 +63,9 @@ typedef struct module_s {
     int (*fini)(void);
     int (*can_run)(t_request_s *);
     int (*on_accept)(void);
-    int (*on_presend)(int, t_request_s *);
+    int (*on_presend)(t_socket, t_request_s *);
     int (*on_prehead)(t_mmp_stat_s *);
-    int (*on_send)(void *, int, t_mmp_stat_s *);
+    int (*on_send)(void *, t_socket, t_mmp_stat_s *);
     int (*on_postsend)(t_request_s *, char *, void *, t_mmp_stat_s *);
     int will_run;
     int category;
@@ -76,9 +77,9 @@ int mod_init(void);
 int mod_fini(void);
 int can_run(t_request_s *req);
 int on_accept(void);
-int on_presend(int sock, t_request_s *req);
+int on_presend(t_socket sock, t_request_s *req);
 int on_prehead(t_mmp_stat_s *sb);
-int on_send(void *addr, int sock, t_mmp_stat_s *sb);
+int on_send(void *addr, t_socket sock, t_mmp_stat_s *sb);
 int on_postsend(t_request_s *, char *mime, void *addr, t_mmp_stat_s *sb);
 
 /* loaders */

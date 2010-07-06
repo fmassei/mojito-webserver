@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
+#include <mmp/mmp_files.h>
 #include "header_w_quality.h"
 
 typedef enum request_parse_status_e {
@@ -64,6 +65,9 @@ typedef struct request_s {
     size_t content_length;
     char *content_type;
     t_qhead_list_s *accept_encoding;
+    /* filled by response */
+    char *page, *query_string, *abs_filename;
+    t_mmp_stat_s file_stat;
 } t_request_s;
 
 t_request_s *request_create(void);

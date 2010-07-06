@@ -43,19 +43,23 @@ static void header_send_hl(t_response_s *resp, char *h, long l)
     strcat(resp->resbuf, resp->tmpbuf);
 }
 
-void header_push_code(t_response_s *resp, t_hresp_e code, int proto_version)
+void header_push_code(t_response_s *resp, t_hresp_e code,
+                                        t_request_protocol_e proto_version)
 {
     extern struct fparam_s params;
+    char datebuf[30];
     const t_config_s *config;
     resp->resbuf[0] = '\0';
     /* RFC2145 - conservative approach */
-    if (proto_version==P_HTTP_11)
+    if (proto_version==REQUEST_PROTOCOL_HTTP11)
         strcat(resp->resbuf, HTTP11);
-    else strcat(resp->resbuf, HTTP10);
+    else
+        strcat(resp->resbuf, HTTP10);
     strcat(resp->resbuf, RESP[code]);
-    header_send_hs(resp, "Date", mmp_time_1123_format(time(NULL)));
-    if ((config = config_get())!=NULL && config->server_meta!=NULL) {
-        header_send_hs(resp, "Server", config->server_meta);
+    mmp_time_1123_format(time(NULL), datebuf, sizeof(datebuf));
+    header_send_hs(resp, "Date", datebuf);
+    if ((config = config_get())!=NULL && config->server->server_meta!=NULL) {
+        header_send_hs(resp, "Server", config->server->server_meta);
     }
 }
 
@@ -78,19 +82,19 @@ void header_push_contentencoding(t_response_s *resp, char *name)
 
 void header_part_send(t_response_s *resp)
 {
-    mmp_socket_write(resp->sock, resp->resbuf, strlen(resp->resbuf));
+    mmp_socket_write(&resp->sock, resp->resbuf, strlen(resp->resbuf));
 }
 
 void header_send(t_response_s *resp)
 {
     strcat(resp->resbuf, "\r\n");
-    mmp_socket_write(resp->sock, resp->resbuf, strlen(resp->resbuf));
+    mmp_socket_write(&resp->sock, resp->resbuf, strlen(resp->resbuf));
 }
 
-void header_kill_w_code(t_response_s *resp, t_hresp_e code)
+void header_kill_w_code(t_response_s *resp, t_hresp_e code,
+                                            t_request_protocol_e proto_version)
 {
-    header_push_code(code);
-    header_push_contentlength(0);
+    header_push_code(resp, code, proto_version);
+    header_push_contentlength(resp, 0);
     header_send(resp);
 }
-

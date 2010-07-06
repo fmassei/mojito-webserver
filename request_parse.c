@@ -40,7 +40,7 @@ static int parse_first_line(t_request_s *req, char *line)
     while (*(++st)==' ' && *st!='\0') ;
     /* find end or space */
     for (st2=st; *st2!='\0' && *st2!=' '; ++st2);
-    req->URI = malloc(st2-st+1);
+    req->URI = xmalloc(st2-st+1);
     memcpy(req->URI, st, st2-st);
     req->URI[st2-st] = '\0';
     /* find protocol version */
