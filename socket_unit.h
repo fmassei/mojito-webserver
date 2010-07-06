@@ -26,6 +26,7 @@
 #include <mmp/mmp_socket.h>
 #include <mmp/mmp_sync.h>
 #include "request.h"
+#include "response.h"
 
 typedef enum socket_state_e {
     SOCKET_STATE_NOTPRESENT     = 0,
