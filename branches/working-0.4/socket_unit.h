@@ -60,6 +60,7 @@ struct socket_unit_s {
     struct timeval to;                  /* time out for fd selecting */
     t_mmp_thr_mtx mtx;                  /* unit mutex */
     t_request_s **reqs;                 /* list of requests */
+    t_response_s **resps;               /* list of responses */
     t_socket_state_e *socket_states;    /* logical state of the sockets */
     t_socket_unit_state_e state;        /* state of the socket unit */
     t_mmp_thr_evt sleep_evt;            /* sleeping event */

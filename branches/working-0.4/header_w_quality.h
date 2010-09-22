@@ -48,10 +48,15 @@ typedef struct qhead_s {
 
 typedef t_mmp_list_s t_qhead_list_s;
 
+/* create a qhead */
+t_qhead_s *qhead_create(const char *id);
+/* destroy a qhead */
+void qhead_destroy(t_qhead_s **qhead);
+
 /* insert on the top of the queue. Hack for inserting despite of parsing. */
-ret_t qhead_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead);
+ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead);
 /* delete an entry */
-void qhead_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d);
+void qhead_list_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d);
 /* parse the "quality header" */
 t_qhead_list_s *qhead_list_parse(char *head);
 /* frees the memory of a qhead struct */

@@ -52,7 +52,7 @@ static int qhead_compare_v(const void *p1, const void *p2)
  * entries have the same quality, the new one will be inserted after (in other
  * words, in the same order in which they appear in the original parsed
  * string) */
-ret_t qhead_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead)
+ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead)
 {
     if (qhead_list==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
@@ -62,7 +62,7 @@ ret_t qhead_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead)
 }
 
 /* drop an entry. */
-void qhead_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d)
+void qhead_list_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d)
 {
     if (e2d==NULL) return;
     mmp_list_del_elem_by_data(qhead_list, *e2d);
@@ -71,6 +71,33 @@ void qhead_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d)
     xfree(*e2d);
     *e2d = NULL;
 }
+
+t_qhead_s *qhead_create(const char *id)
+{
+    t_qhead_s *ret;
+    if ((ret = xmalloc(sizeof(*ret)))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        return NULL;
+    }
+    if (id!=NULL) {
+        if ((ret->id = xstrdup(id))==NULL) {
+            mmp_setError(MMP_ERR_ENOMEM);
+            xfree(ret);
+            return NULL;
+        }
+    } else {
+        ret->id = NULL;
+    }
+    ret->quality = 0;
+    ret->extp_list = NULL;
+    return ret;
+}
+
+void qhead_destroy(t_qhead_s **qhead)
+{
+    qhead_free(qhead);
+}
+
 
 /* convert a string into a "quality value". A "quality value" is a float number
  * from 0 to 1. In RFC2616 this value must have from zero to three decimal 
@@ -201,7 +228,7 @@ t_qhead_list_s *qhead_list_parse(char *head)
                     goto prs_error;
             }
             if (brk==0) {
-                if (qhead_insert(ret, q)!=MMP_ERR_OK)
+                if (qhead_list_insert(ret, q)!=MMP_ERR_OK)
                     goto prs_error;
                 if ((q = xmalloc(sizeof(*q)))==NULL) {
                     mmp_setError(MMP_ERR_ENOMEM);
@@ -212,7 +239,7 @@ t_qhead_list_s *qhead_list_parse(char *head)
                 has_q = 0;
                 head = st+1;
             } else {
-                if (qhead_insert(ret, q)!=MMP_ERR_OK)
+                if (qhead_list_insert(ret, q)!=MMP_ERR_OK)
                     goto prs_error;
                 goto done;
             }

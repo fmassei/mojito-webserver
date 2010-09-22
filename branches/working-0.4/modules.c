@@ -206,10 +206,14 @@ t_module_s *module_add_dynamic(char *fname)
     void *fptr;
     if ((fptr = mmp_dl_open_and_get_fnc(fname, "getmodule"))==NULL)
         return NULL;
-#pragma warning(push)
-#pragma warning(disable:4055)   /* disable cast warning */
+#ifdef _WIN32
+#   pragma warning(push)
+#   pragma warning(disable:4055)   /* disable cast warning */
+#endif
     get_module = (t_get_module_f)fptr;
-#pragma warning(pop)
+#ifdef _WIN32
+#   pragma warning(pop)
+#endif
     return module_add_static(get_module);
 }
 #endif /* DISABLE_DYNAMIC */

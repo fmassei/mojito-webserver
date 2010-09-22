@@ -34,6 +34,23 @@ static t_module_s *filter_findbyid(char *id)
     return NULL;
 }
 
+static t_qhead_s *qhead_create_and_add(t_qhead_list_s *list, const char *id,
+                                                                    float q)
+{
+    t_qhead_s *ret;
+    if ((ret = qhead_create(id))==NULL) {
+        mmp_setError(MMP_ERR_GENERIC);
+        return NULL;
+    }
+    ret->quality = q;
+    ret->extp_list = NULL;
+    if (qhead_list_insert(list, ret)!=MMP_ERR_OK) {
+        qhead_destroy(&ret);
+        return NULL;
+    }
+    return NULL;
+}
+
 /* for filter queues we have a few rules:
  * - identity filter (if not present) has to be considered present. We choose
  *   quality = 1.000
@@ -47,9 +64,6 @@ ret_t filter_sanitize_queue(t_qhead_list_s *qhead)
     t_mmp_listelem_s *p, *q, *k;
     t_module_list_s *filters;
     t_module_s *filt;
-    ret_t ret;
-    /*struct qhead_s *p, *q;
-    struct module_filter_s *f;*/
     float rq;
     t_qhead_s *qh, *qh2;
     filters = module_getfilterlist();
@@ -63,21 +77,9 @@ ret_t filter_sanitize_queue(t_qhead_list_s *qhead)
     }
     /* no identity? add it */
     if (qh==NULL) {
-        if ((qh = xmalloc(sizeof(*qh)))==NULL) {
-            mmp_setError(MMP_ERR_ENOMEM);
-            return MMP_ERR_ENOMEM;
-        }
-        if ((qh->id = xstrdup("identity"))==NULL) {
-            free(qh);
-            mmp_setError(MMP_ERR_ENOMEM);
-            return MMP_ERR_ENOMEM;
-        }
-        qh->quality = 1.0f;
-        qh->extp_list = NULL;
-        if ((ret = qhead_insert(qhead, qh))!=MMP_ERR_OK) {
-            xfree(qh->id);
-            xfree(qh);
-            return ret;
+        if ((qh = qhead_create_and_add(qhead, "identity", 1.0f))==NULL) {
+            mmp_setError(MMP_ERR_GENERIC);
+            return MMP_ERR_GENERIC;
         }
     }
     /* check for '*' */
@@ -88,7 +90,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s *qhead)
         /* ok - we've got a '*'. Drop the entry and, for each filter we've
          * got that is not present, do an insert with the '*' quality */
         rq = qh->quality;
-        qhead_delete(qhead, &qh);
+        qhead_list_delete(qhead, &qh);
         for (q=filters->head; q!=NULL; q=q->next) {
             filt = (t_module_s*)q->data;
             if (filt==NULL) continue;
@@ -100,21 +102,9 @@ ret_t filter_sanitize_queue(t_qhead_list_s *qhead)
                     break;
             }
             if (qh2==NULL) {
-                if ((qh2 = xmalloc(sizeof(*qh2)))==NULL) {
-                    mmp_setError(MMP_ERR_ENOMEM);
-                    return MMP_ERR_ENOMEM;
-                }
-                if ((qh2->id = xstrdup(filt->name))==NULL) {
-                    free(qh2);
-                    mmp_setError(MMP_ERR_ENOMEM);
-                    return MMP_ERR_ENOMEM;
-                }
-                qh2->quality = rq;
-                qh2->extp_list = NULL;
-                if ((ret = qhead_insert(qhead, qh2))!=MMP_ERR_OK) {
-                    xfree(qh2->id);
-                    xfree(qh2);
-                    return ret;
+                if ((qh2 = qhead_create_and_add(qhead, filt->name, rq))==NULL) {
+                    mmp_setError(MMP_ERR_GENERIC);
+                    return MMP_ERR_GENERIC;
                 }
             }
         }
@@ -125,7 +115,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s *qhead)
         qh = (t_qhead_s*)p;
         if (qh==NULL) continue;
         if (filter_findbyid(qh->id)==NULL)
-            qhead_delete(qhead, &qh);
+            qhead_list_delete(qhead, &qh);
     }
     return 0;
 }
