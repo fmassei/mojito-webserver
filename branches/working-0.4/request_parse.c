@@ -191,6 +191,7 @@ t_request_parse_e request_parse_read(t_socket *sock, t_request_s *req)
                 parse_option(req, req->parse.cur_head);
                 req->parse.cur_head = req->parse.buf+req->parse.pos;
             } else if (req->parse.status==REQUEST_PARSE_STATUS_BODY) {
+                filter_sanitize_queue(req->accept_encoding);
                 if (req->content_length<=0 && req->method!=REQUEST_METHOD_POST)
                     return REQUEST_PARSE_FINISH;
             }

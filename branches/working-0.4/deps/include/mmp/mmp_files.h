@@ -16,6 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+/** \file   mmp_files.h
+ * \brief   common file management functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ */
 #ifndef H_MMP_FILES_H
 #define H_MMP_FILES_H
 
@@ -24,25 +29,46 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #ifndef _WIN32
 #   include <unistd.h>
 #else
 #   include <windows.h>
+#   include <io.h>
+#   include <share.h>
 #endif
 
+#include "mmp_compat.h"
+#include "mmp_h_utils.h"
 #include "mmp_list.h"
 #include "mmp_trace.h"
 #include "mmp_memory.h"
 #include "mmp_string.h"
 
+/** unix stat structure */
 #ifndef _WIN32
     typedef struct stat t_mmp_stat_s;
 #else
     typedef struct _stat t_mmp_stat_s;
 #endif
 
-int mmp_stat(const char *path, t_mmp_stat_s *stat_ptr);
+/** unix open */
+int mmp_open(const char *path, int flags, int mode);
+/** unix read */
+int mmp_read(int fd, void *buf, size_t count);
+/** unix write */
+int mmp_write(int fd, const void *buf, size_t count);
+/** unix close */
+int mmp_close(int fd);
+
+/** unix pwrite */
+int mmp_pwrite(int fd, const void *buf, size_t nbyte, long offset);
+
+/** unix stat */
+int mmp_stat(const char * __restrict path, t_mmp_stat_s * __restrict stat_ptr);
+/** unix fstat */
+int mmp_fstat(int fd, t_mmp_stat_s * stat_ptr);
 
 #ifdef UNIT_TESTING
 #   include "mmp_tap.h"

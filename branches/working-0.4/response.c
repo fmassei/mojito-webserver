@@ -81,7 +81,7 @@ void response_send(t_response_s *res, t_request_s *req)
 {
     const t_config_s *config;
     extern int content_length_sent;
-    unsigned char *addr;
+    t_mmp_mmap_s *filemap;
     int fd, find_ret;
 
     config = config_get();
@@ -102,17 +102,17 @@ void response_send(t_response_s *res, t_request_s *req)
         header_kill_w_code(res, find_ret, req->protocol);
         return;
     }
-    if ((ch_filter = filter_findfilter(req->header.accept_encoding))==NULL) {
+    if ((res->ch_filter = filter_findfilter(req->accept_encoding))==NULL) {
         header_kill_w_code(res, HRESP_406, req->protocol);
         return;
     }
-    if ((fd = open(req->abs_filename, O_RDONLY))<=0) {
+    if ((fd = mmp_open(req->abs_filename, O_RDONLY, 0))<=0) {
         header_kill_w_code(res, HRESP_404, req->protocol);
         return;
     }
     header_push_code(res, HRESP_200, req->protocol);
     header_push_contenttype(res, mime_gettype(req->abs_filename));
-    if (on_prehead(&req->file_stat)!=0)
+    if (on_prehead(&req->file_stat, res)!=0)
         return;
     /* no length? no party. We can't keep the connection alive 
      * FIXME this is very ugly. Move this check somewhere else */
@@ -121,9 +121,13 @@ void response_send(t_response_s *res, t_request_s *req)
     header_send(res);
     if (req->method==REQUEST_METHOD_HEAD)
         return;
-    addr = mmap(NULL, req->file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (on_send(addr, res->sock, &req->file_stat)!=0)
+    filemap = mmp_mmap(NULL, req->file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (on_send(filemap->ptr, &req->file_stat, res)!=0) {
+        mmp_munmap(&filemap);
         return;
-    if (on_postsend(req, mime_gettype(req->abs_filename), addr, &req->file_stat)!=0)
+    }
+    if (on_postsend(req, mime_gettype(req->abs_filename), filemap->ptr, &req->file_stat)!=0) {
+        mmp_munmap(&filemap);
         return;
+    }
 }

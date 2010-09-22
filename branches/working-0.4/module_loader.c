@@ -16,32 +16,27 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "module_loader.h"
 
-#include "mime.h"
-
-/* return the mime type based on file extension */
-char *mime_gettype(char *fname)
+#ifndef DISABLE_DYNAMIC
+ret_t module_loader_load(t_config_s *params)
 {
-    char *ext;
-    if ((ext = strrchr(fname, '.'))==NULL)
-        return "text/plain";
-    ++ext;
-    if (!strcmp(ext, "html"))
-        return "text/html";
-    if (!strcmp(ext, "htm"))
-        return "text/html";
-    if (!strcmp(ext, "css"))
-        return "text/css";
-    if (!strcmp(ext, "rss"))
-        return "application/rss+xml";
-    if (!strcmp(ext, "jpg"))
-        return "image/jpg";
-    if (!strcmp(ext, "gif"))
-        return "image/gif";
-    if (!strcmp(ext, "png"))
-        return "image/png";
-    if (!strcmp(ext, "ico"))
-        return "image/x-icon";
-    return "application/octet-stream";
+    t_mmp_listelem_s *p;
+    t_module_s *mod;
+    t_config_module_s *mod_conf;
+    if (params==NULL || params->modules==NULL) {
+        mmp_setError(MMP_ERR_PARAMS);
+        return MMP_ERR_PARAMS;
+    }
+    for (p=params->modules->head; p!=NULL; p=p->next) {
+        mod_conf = (t_config_module_s*)p->data;
+        if (mod_conf==NULL || mod_conf->name==NULL)
+            continue;
+        mod = module_add_dynamic(mod_conf->name);
+        if (mod==NULL || mod->set_params==NULL)
+            continue;
+        mod->set_params(mod_conf);
+    }
+    return MMP_ERR_OK;
 }
-
+#endif

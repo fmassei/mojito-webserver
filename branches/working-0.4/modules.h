@@ -20,15 +20,20 @@
 #ifndef H_MODULES_H
 #define H_MODULES_H
 
-#ifdef DYNAMIC
+#ifndef DISABLE_DYNAMIC
 #include <mmp/mmp_dl.h>
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_memory.h>
-#include <mmp/mmp_files.h>
 #include <mmp/mmp_socket.h>
+#include <mmp/mmp_files.h>
 #include "config_type.h"
 #include "request.h"
+#include "response.h"
+#include "types.h"
 
 /* module functions return codes */
 typedef enum module_ret_e {
@@ -56,7 +61,7 @@ typedef enum module_category_e {
     MODCAT_DYNAMIC  =   3
 } t_module_category_e;
 
-typedef struct module_s {
+struct module_s {
     char *name;
     int (*set_params)(t_config_module_s *);
     int (*init)(void);
@@ -64,12 +69,12 @@ typedef struct module_s {
     int (*can_run)(t_request_s *);
     int (*on_accept)(void);
     int (*on_presend)(t_socket, t_request_s *);
-    int (*on_prehead)(t_mmp_stat_s *);
-    int (*on_send)(void *, t_socket, t_mmp_stat_s *);
+    int (*on_prehead)(t_mmp_stat_s *, t_response_s *);
+    int (*on_send)(void *, t_mmp_stat_s *, t_response_s *);
     int (*on_postsend)(t_request_s *, char *, void *, t_mmp_stat_s *);
     int will_run;
     int category;
-} t_module_s;
+};
 
 /* wrappers */
 int mod_set_params(t_config_module_s *params);
@@ -78,16 +83,18 @@ int mod_fini(void);
 int can_run(t_request_s *req);
 int on_accept(void);
 int on_presend(t_socket sock, t_request_s *req);
-int on_prehead(t_mmp_stat_s *sb);
-int on_send(void *addr, t_socket sock, t_mmp_stat_s *sb);
+int on_prehead(t_mmp_stat_s *sb, t_response_s *res);
+int on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res);
 int on_postsend(t_request_s *, char *mime, void *addr, t_mmp_stat_s *sb);
 
 /* loaders */
 typedef t_module_s *(*t_get_module_f)(void);
 
 t_module_s *module_add_static(t_get_module_f get_module);
-#ifdef DYNAMIC
-t_module_s *module_add_dynamic(char *fname, char **error);
-#endif /* DYNAMIC */
+#ifndef DISABLE_DYNAMIC
+t_module_s *module_add_dynamic(char *fname);
+#endif /* DISABLE_DYNAMIC */
+
+t_module_list_s *module_getfilterlist(void);
 
 #endif /* H_MODULES_H */

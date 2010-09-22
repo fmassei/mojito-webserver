@@ -19,7 +19,11 @@
 #ifndef H_MMP_ERROR_H
 #define H_MMP_ERROR_H
 
-/* some error functions wraps */
+/** \file   mmp_error.h
+ * \brief   some error functions wraps
+ * \author  FtM
+ * \date    2010-Jul-08
+ * */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,8 +31,8 @@
 #include <errno.h>
 #include "mmp_compat.h"
 
-/* internal type error */
-enum error_e {
+/** internal type error */
+typedef enum mmp_error_e {
     MMP_ERR_OK,
     MMP_ERR_GENERIC,
     MMP_ERR_PARAMS,
@@ -39,15 +43,22 @@ enum error_e {
     MMP_ERR_SEMAPHORE,
     MMP_ERR_SHM,
     MMP_ERR_SOCKET,
-    MMP_ERR_SYNC
-};
-typedef enum error_e ret_t;     /* mmp error */
+    MMP_ERR_SYNC,
+    MMP_ERR_FULL,
+    MMP_ERR_EMPTY,
+    MMP_ERR_NOTFOUND
+} t_mmp_error_e;
+
+/** mmp internal error type */
+typedef t_mmp_error_e ret_t;    /* mmp error */
+
+/** system error type */
 typedef int err_t;              /* system error */
 
-/* get internal error description */
-const char * mmp_error_ret_getdesc(ret_t ret);
-/* get system error description */
-const char * mmp_error_err_getdesc(err_t err);
+/** get internal error description */
+const char * const mmp_error_ret_getdesc(ret_t ret);
+/** get system error description */
+const char * const mmp_error_err_getdesc(err_t err);
 
 #ifdef UNIT_TESTING
 #include "mmp_tap.h"

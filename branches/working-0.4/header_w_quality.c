@@ -34,7 +34,7 @@ void qhead_list_destroy(t_qhead_list_s **qhead_list)
 }
 
 /* qhead comparer functions */
-static int qhead_compare(t_qhead_s *q1, t_qhead_s *q2)
+static int qhead_compare(const t_qhead_s *q1, const t_qhead_s *q2)
 {
     if (q1->quality > q2->quality)
         return -1;
@@ -42,7 +42,7 @@ static int qhead_compare(t_qhead_s *q1, t_qhead_s *q2)
         return 1;
     return 0;
 }
-static int qhead_compare_v(void *p1, void *p2)
+static int qhead_compare_v(const void *p1, const void *p2)
 {
     return qhead_compare((t_qhead_s*)p1, (t_qhead_s*)p2);
 }

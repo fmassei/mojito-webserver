@@ -1,5 +1,5 @@
 /*
-    Copyright 2010 Francesco Massei
+    Copyright 2009 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,25 +16,13 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_RESPONSE_TYPE_H
-#define H_RESPONSE_TYPE_H
 
-#include <mmp/mmp_socket.h>
-#include "modules.h"
-#include "types.h"
+#ifndef H_TYPES_H
+#define H_TYPES_H
 
-typedef enum hresp_e {
-    HRESP_200   =   0,
-    HRESP_404   =   1,
-    HRESP_406   =   2,
-    HRESP_500   =   3,
-    HRESP_501   =   4
-} t_hresp_e;
+typedef struct module_s t_module_s;
+typedef t_mmp_list_s t_module_list_s;
 
-struct response_s {
-    char *resbuf, *tmpbuf;
-    t_socket sock;
-    t_module_s *ch_filter;  /**< selected filter for response */
-};
+typedef struct response_s t_response_s;
 
-#endif /* H_RESPONSE_TYPE_H */
+#endif /* H_TYPES_H */

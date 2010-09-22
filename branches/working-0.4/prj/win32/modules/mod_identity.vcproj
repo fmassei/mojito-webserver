@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="mojito"
-	ProjectGUID="{27289B09-29AC-4479-9853-221DFDD22FC7}"
-	RootNamespace="mojito"
+	Name="mod_identity"
+	ProjectGUID="{B54809DC-9CE1-46BE-AB88-FFB974BCFEF2}"
+	RootNamespace="mod_identity"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -19,7 +19,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="2"
 			EnableManagedIncrementalBuild="0"
@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../deps/include; ../../deps/include/mmp; ../../deps/include/disml"
-				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="../../../deps/include; ../../../deps/include/mmp; ../../../deps/include/disml"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS; DYNAMIC"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="0"
@@ -55,7 +55,6 @@
 				WarnAsError="true"
 				DebugInformationFormat="3"
 				CompileAs="1"
-				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -68,11 +67,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkLibraryDependencies="true"
 				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../deps/lib/win32"
+				AdditionalLibraryDirectories="../../../deps/lib/win32"
 				GenerateManifest="false"
 				EnableUAC="false"
+				IgnoreAllDefaultLibraries="false"
 				IgnoreEmbeddedIDL="true"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -102,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\deps\lib\win32\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -133,7 +134,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../deps/include"
+				AdditionalIncludeDirectories="../../../deps/include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -161,7 +162,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="mmp_base.lib disml.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../deps/lib/win32"
+				AdditionalLibraryDirectories="../../../deps/lib/win32"
 				GenerateManifest="false"
 				EnableUAC="false"
 				IgnoreEmbeddedIDL="true"
@@ -193,7 +194,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\deps\lib\win32\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
@@ -206,59 +207,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\config_manager.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\config_parse.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\filter_manager.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\header_w_quality.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\main.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\mime.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\module_loader.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\modules.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\request.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\request_parse.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\resp_headers.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\response.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\socket_unit.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\socket_unit_manager.c"
+				RelativePath="..\..\..\modules\mod_identity\mod_identity.c"
 				>
 			</File>
 		</Filter>
@@ -267,74 +216,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\config_manager.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\config_parse.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\config_type.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\defaults.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\filter_manager.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\header_w_quality.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\mime.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\module_loader.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\modules.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\request.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\request_parse.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\resp_headers.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\response.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\response_type.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\socket_unit.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\socket_unit_manager.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\types.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

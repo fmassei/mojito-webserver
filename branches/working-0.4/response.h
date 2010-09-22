@@ -19,12 +19,18 @@
 #ifndef H_RESPONSE_H
 #define H_RESPONSE_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <mmp/mmp_memory.h>
+#include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
+#include <mmp/mmp_mmap.h>
 #include "request.h"
 #include "response_type.h"
 #include "resp_headers.h"
 #include "modules.h"
 #include "mime.h"
+#include "filter_manager.h"
 
 void response_send(t_response_s *res, t_request_s *req);
 

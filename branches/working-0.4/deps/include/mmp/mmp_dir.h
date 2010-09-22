@@ -16,6 +16,12 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/**  \file  mmp_dir.h
+ * \brief   common directory functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ */
 #ifndef H_MMP_DIR_H
 #define H_MMP_DIR_H
 
@@ -33,15 +39,20 @@
 #include "mmp_trace.h"
 #include "mmp_memory.h"
 #include "mmp_string.h"
+#include "mmp_compat.h"
 
-/* list all files in a directory */
-t_mmp_list_s *mmp_dir_listfiles(const char * const dirname);
+/** list of file results */
+typedef t_mmp_list_s t_mmp_dirlist_s;
 
-/* free the results of a mmp_dir_listfiles */
-void mmp_dir_free_list_results(t_mmp_list_s **list);
+/** list all files in a directory */
+t_mmp_dirlist_s *mmp_dir_listfiles(const char *dirname);
+
+/** free the results of a mmp_dir_listfiles */
+void mmp_dir_free_list_results(t_mmp_dirlist_s **list);
 
 #ifdef UNIT_TESTING
 #include "mmp_tap.h"
+/** unit testing */
 ret_t mmp_dir_unittest(t_mmp_tap_cycle_s *cycle);
 #endif /* UNIT_TESTING */
 
