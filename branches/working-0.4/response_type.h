@@ -34,7 +34,8 @@ typedef enum hresp_e {
 struct response_s {
     char *resbuf, *tmpbuf;
     t_socket sock;
-    t_module_s *ch_filter;  /**< selected filter for response */
+    t_module_s *ch_filter;      /**< selected filter for response */
+    int content_length_sent;    /**< has the content-length been sent? */
 };
 
 #endif /* H_RESPONSE_TYPE_H */
