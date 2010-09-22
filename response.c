@@ -80,7 +80,6 @@ static int check_method(t_request_s *req)
 void response_send(t_response_s *res, t_request_s *req)
 {
     const t_config_s *config;
-    extern int content_length_sent;
     t_mmp_mmap_s *filemap;
     int fd, find_ret;
 
@@ -116,7 +115,7 @@ void response_send(t_response_s *res, t_request_s *req)
         return;
     /* no length? no party. We can't keep the connection alive 
      * FIXME this is very ugly. Move this check somewhere else */
-    if (req->keeping_alive==1 && content_length_sent==0)
+    if (req->keeping_alive==1 && res->content_length_sent==0)
         req->keeping_alive = 0;
     header_send(res);
     if (req->method==REQUEST_METHOD_HEAD)

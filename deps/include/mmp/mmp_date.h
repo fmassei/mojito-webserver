@@ -40,14 +40,14 @@ char *xstrptime(const char *buf, const char *fmt, struct tm *tm);
 
 /** format the current time in RFC-1123 format 
  * (Sun, 06 Nov 1994 08:49:37 GMT) */
-__inline void mmp_time_1123_format(time_t t, char * datestr, size_t strsize);
+void mmp_time_1123_format(time_t t, char * datestr, size_t strsize);
 
 /** format the current time in RFC-1036 format
  * (Sunday, 06-Nov-94 08:49:37 GMT) */
-__inline void mmp_time_1036_format(time_t t, char * datestr, size_t strsize);
+void mmp_time_1036_format(time_t t, char * datestr, size_t strsize);
 
 /** format the current time in asctime format */
-__inline void mmp_time_asctime_format(time_t t, char * datestr, size_t strsize);
+void mmp_time_asctime_format(time_t t, char * datestr, size_t strsize);
 
 /** \brief parse the passed string into a date
  * try all the parsing between 1123, 1036 and asctime

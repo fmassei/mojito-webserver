@@ -66,6 +66,7 @@ void header_push_code(t_response_s *resp, t_hresp_e code,
 void header_push_contentlength(t_response_s *resp, long len)
 {
     header_send_hl(resp, "Content-Length", len);
+    resp->content_length_sent = 1;
 }
 
 void header_push_contenttype(t_response_s *resp, char *name)

@@ -80,6 +80,7 @@
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				TurnOffAssemblyGeneration="false"
+				ImportLibrary=""
 				TargetMachine="1"
 			/>
 			<Tool
