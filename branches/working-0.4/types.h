@@ -26,3 +26,4 @@ typedef t_mmp_list_s t_module_list_s;
 typedef struct response_s t_response_s;
 
 #endif /* H_TYPES_H */
+
