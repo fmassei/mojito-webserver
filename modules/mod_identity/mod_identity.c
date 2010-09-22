@@ -17,17 +17,18 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../../modules.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
+#include <mmp/mmp_socket.h>
+#include "../../modules.h"
 
 /* TODO: missing parameter checks! */
 
-static int _compress(unsigned char *addr, int fd, ssize_t len)
+static int _compress(unsigned char *addr, int fd, int len)
 {
-    if (write(fd, addr, len)!=len)
+    if (mmp_write(fd, addr, (unsigned int)len)!=len)
         return -1;
     return 0;
 }
@@ -53,18 +54,18 @@ static int _can_run(t_request_s *req)
     return MOD_ERR;
 }
 
-static int _on_prehead(t_mmp_stat_s *sb)
+static int _on_prehead(t_mmp_stat_s *sb, t_response_s *res)
 {
-    ssize_t len;
+    size_t len;
     if ((len = _prelen(sb))>=0)
-        header_push_contentlength(len);
-    header_push_contentencoding("identity");
+        header_push_contentlength(res, len);
+    header_push_contentencoding(res, "identity");
     return MOD_PROCDONE;
 }
 
-static int _on_send(void *addr, int sock, t_mmp_stat_s *sb)
+static int _on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
 {
-    if (_compress(addr, sock, sb->st_size)!=0)
+    if (_compress(addr, res->sock, sb->st_size)!=0)
         return MOD_CRIT;
     return MOD_PROCDONE;
 }

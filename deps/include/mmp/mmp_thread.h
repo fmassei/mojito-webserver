@@ -16,6 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+/** \file   mmp_thread.h
+ * \brief   threads functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ */
 #ifndef H_MMP_THREAD_H
 #define H_MMP_THREAD_H
 
@@ -29,13 +34,20 @@
 #   include <windows.h>
     typedef HANDLE t_mmp_thread;
 #endif
+/** \typedef t_mmp_thread
+ * \brief mmp thread type */
 
 #include "mmp_memory.h"
 #include "mmp_trace.h"
 
+/** \brief thread starting function type */
 typedef void*(*t_mmp_thread_start)(void *);
+
+/** \brief create a thread */
 ret_t mmp_thread_create(t_mmp_thread_start fnc, void *arg, t_mmp_thread *out);
+/** \brief join the thread */
 ret_t mmp_thread_join(t_mmp_thread *id);
+/** \brief exit the thread */
 void mmp_thread_exit(int code);
 
 #ifdef UNIT_TESTING

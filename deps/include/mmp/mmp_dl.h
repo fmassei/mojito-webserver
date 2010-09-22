@@ -16,6 +16,12 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/** \file mmp_dl.h
+ * \brief   dynamic loading functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ */
 #ifndef H_MMP_DL_H
 #define H_MMP_DL_H
 
@@ -25,12 +31,15 @@
 #ifndef _WIN32
 #   include <dlfcn.h>
 #else
+#   define WIN32_LEAN_AND_MEAN
 #   include <windows.h>
 #endif
 
+#include "mmp_compat.h"
 #include "mmp_trace.h"
 
-/* open a dinamically loadable library */
-void *mmp_dl_open_and_get_fnc(char *filename, char *getfnc_name);
+/** open a dinamically loadable library */
+void *mmp_dl_open_and_get_fnc(const char * __restrict filename,
+                              const char * __restrict getfnc_name);
 
 #endif /* H_MMP_DL_H */

@@ -19,6 +19,7 @@
 #ifndef H_DEFAULTS_H
 #define H_DEFAULTS_H
 
+/* default configuration file */
 #define DEFAULT_CONFIGFILE  "../../config.disml"
 
 /* config defaults */

@@ -16,10 +16,17 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+/** \file   mmp_trace.h
+ * \brief   error tracing functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ *
+ * this module is completely statically allocated to keep working in case of
+ * memory exaustion (one of the cases in which we'd like to trace where things
+ * broke ;) )
+ */
 #ifndef H_MMP_TRACE_H
 #define H_MMP_TRACE_H
-
-/* generic tracing module. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,21 +34,29 @@
 #include "mmp_compat.h"
 #include "mmp_error.h"
 
-/* low-level trace creator. Use the mmp_setError() macros instead! */
-void mmp_trace_create(const char * const f, int l, ret_t ret, err_t err,
-                      const char * const extramsg);
+/** \brief low-level trace creator. Use the mmp_setError() macros instead!
+ * \internal */
+void mmp_trace_create(const char * __restrict f, int l, ret_t ret, err_t err,
+                      const char * __restrict extramsg);
 
-/* set an error on the trace list */
+/** \brief set an error on the trace list */
 #define mmp_setError(_R)    \
     mmp_trace_create(__FILE__, __LINE__, (_R), errno, NULL)
-/* set an error on the trace list, with an extra message */
+/** \brief set an error on the trace list, with an extra message */
 #define mmp_setError_ext(_R, _E)    \
     mmp_trace_create(__FILE__, __LINE__, (_R), errno, (_E))
 
-/* print out the complete trace list messages */
+/** \brief print out the complete trace list messages */
 void mmp_trace_print(FILE *out);
 
-/* reset the trace stack */
+/** \brief reset the trace stack */
 void mmp_trace_reset(void);
+
+/** \brief assert()-like macro for parameter check */
+#define MMP_CHECK_OR_RETURN(_COND, _RET) \
+    if (!(_COND)) { \
+        mmp_setError(MMP_ERR_PARAMS); \
+        return (_RET); \
+    }
 
 #endif /* H_MMP_TRACE_H */

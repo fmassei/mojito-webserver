@@ -18,11 +18,8 @@
 */
 #include "modules.h"
 
-typedef t_mmp_list_s t_module_list_s;
-
 static t_module_list_s *s_modules = NULL;
 static t_module_list_s *s_filters = NULL;
-static t_module_s *s_ch_filter = NULL;
 
 /* delete a module from the queue.
  * NOTE1: the modules will NOT be unloaded!
@@ -139,25 +136,25 @@ int on_presend(t_socket sock, t_request_s *req)
     return 0;
 }
 
-int on_prehead(t_mmp_stat_s *sb)
+int on_prehead(t_mmp_stat_s *sb, t_response_s *res)
 {
     MOD_LOOP_HEAD
-        if ((p->category==MODCAT_FILTER) && (p!=s_ch_filter)) {
+        if ((p->category==MODCAT_FILTER) && (p!=res->ch_filter)) {
             ret = MOD_NOHOOK;
         } else {
-            ret = (p->on_prehead!=NULL) ? p->on_prehead(sb) : MOD_NOHOOK;
+            ret = (p->on_prehead!=NULL) ? p->on_prehead(sb, res) : MOD_NOHOOK;
         }
     MOD_LOOP_NORMFLOW
     return 0;
 }
 
-int on_send(void *addr, t_socket sock, t_mmp_stat_s *sb)
+int on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
 {
     MOD_LOOP_HEAD
-        if ((p->category==MODCAT_FILTER) && (p!=s_ch_filter)) {
+        if ((p->category==MODCAT_FILTER) && (p!=res->ch_filter)) {
             ret = MOD_NOHOOK;
         } else {
-            ret = (p->on_send!=NULL) ? p->on_send(addr, sock, sb) : MOD_NOHOOK;
+            ret = (p->on_send!=NULL) ? p->on_send(addr, sb, res) : MOD_NOHOOK;
         }
     MOD_LOOP_NORMFLOW
     return 0;
@@ -202,12 +199,23 @@ t_module_s *module_add_static(t_get_module_f get_module)
     return p;
 }
 
-#ifdef DYNAMIC
-t_module_s *module_add_dynamic(char *fname, char **error)
+#ifndef DISABLE_DYNAMIC
+t_module_s *module_add_dynamic(char *fname)
 {
     t_get_module_f get_module;
-    get_module = mmp_dl_open_and_get_fnc(fname, "getmodule");
+    void *fptr;
+    if ((fptr = mmp_dl_open_and_get_fnc(fname, "getmodule"))==NULL)
+        return NULL;
+#pragma warning(push)
+#pragma warning(disable:4055)   /* disable cast warning */
+    get_module = (t_get_module_f)fptr;
+#pragma warning(pop)
     return module_add_static(get_module);
 }
-#endif /* DYNAMIC */
+#endif /* DISABLE_DYNAMIC */
+
+t_module_list_s *module_getfilterlist(void)
+{
+    return s_filters;
+}
 

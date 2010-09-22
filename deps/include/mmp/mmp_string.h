@@ -16,29 +16,42 @@
     You should have received a copy of the GNU General Public License
     along with MMP.  If not, see <http://www.gnu.org/licenses/>.
 */
+/** \file   mmp_string.h
+ * \brief   string functions
+ * \author  FtM
+ * \date    2010-Jul-08
+ */
 #ifndef H_MMP_STRING_H
 #define H_MMP_STRING_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
+#   include <strings.h>
+#endif
 #include "mmp_error.h"
 #include "mmp_memory.h"
 
-/* unix strdup() */
+/** \brief unix strdup() */
 char *xstrdup(const char *s);
-/* unix index() */
-char *xindex(char *s, char c);
-/* unix strncasecmp() */
+/** \brief unix index() */
+char *xindex(const char *s, char c);
+/** \brief unix rindex() */
+char *xrindex(const char *s, char c);
+/** \brief unix strncasecmp() */
 int xstrncasecmp(const char *s1, const char *s2, size_t n);
-/* GNU strtok_r() */
+/** \brief GNU strtok_r() */
 char *xstrtok_r(char *str, const char *delim, char **ctx);
 
-/* trim functions */
-int mmp_str_is_trimmable(char c);   /* is a character "trimmable"? */
-char *mmp_str_ltrim(char *str);     /* left trim */
-char *mmp_str_rtrim(char *str);     /* right trim */
-char *mmp_str_trim(char *str);      /* left and right trim */
+/** \brief is a character "trimmable"? */
+int mmp_str_is_trimmable(char c);
+/** \brief left trim */
+char *mmp_str_ltrim(const char *str);
+/** \brief right trim */
+char *mmp_str_rtrim(char *str);
+/** \brief left and right trim */
+char *mmp_str_trim(char *str);
 
 #ifdef UNIT_TESTING
 #include "mmp_tap.h"
