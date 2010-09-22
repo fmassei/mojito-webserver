@@ -54,12 +54,33 @@ static int _can_run(t_request_s *req)
     return MOD_ERR;
 }
 
+typedef void(*t_hpclfptr)(t_response_s*,long);
+typedef void(*t_hpcefptr)(t_response_s*,char*);
+static t_hpclfptr _gethpcl(void)
+{
+#ifndef _WIN32
+    return header_push_contentlength;
+#else
+    return (t_hpclfptr)GetProcAddress(GetModuleHandle(NULL),
+                                        "header_push_contentlength");
+#endif
+}
+static t_hpcefptr _gethpce(void)
+{
+#ifndef _WIN32
+    return header_push_contentencoding;
+#else
+    return (t_hpcefptr)GetProcAddress(GetModuleHandle(NULL),
+                                        "header_push_contentencoding");
+#endif
+}
+
 static int _on_prehead(t_mmp_stat_s *sb, t_response_s *res)
 {
     size_t len;
     if ((len = _prelen(sb))>=0)
-        header_push_contentlength(res, len);
-    header_push_contentencoding(res, "identity");
+        (*_gethpcl())(res, len);
+    (*_gethpce())(res, "identity");
     return MOD_PROCDONE;
 }
 
@@ -71,9 +92,9 @@ static int _on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
 }
 
 #ifdef MODULE_STATIC
-t_module_s *mod_identity_getmodule()
+t_module_s *mod_identity_getmodule(void)
 #else
-t_module_s *getmodule()
+t_module_s *getmodule(void)
 #endif
 {
     t_module_s *ret;

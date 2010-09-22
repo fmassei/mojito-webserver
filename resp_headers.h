@@ -28,17 +28,25 @@
 #include "response_type.h"
 #include "request.h"
 
-void header_push_code(t_response_s *resp, t_hresp_e code,
+/* these functions are used in modules DLLs too, so in win32 we need to export
+ * them. */
+#ifdef WIN32
+#   define EXPRT    __declspec(dllexport)
+#else
+#   define EXPRT
+#endif
+
+EXPRT void header_push_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version);
 
-void header_push_contentlength(t_response_s *resp, long len);
-void header_push_contenttype(t_response_s *resp, char *name);
-void header_push_contentencoding(t_response_s *resp, char *name);
+EXPRT void header_push_contentlength(t_response_s *resp, long len);
+EXPRT void header_push_contenttype(t_response_s *resp, char *name);
+EXPRT void header_push_contentencoding(t_response_s *resp, char *name);
 
-void header_part_send(t_response_s *resp);
-void header_send(t_response_s *resp);
+EXPRT void header_part_send(t_response_s *resp);
+EXPRT void header_send(t_response_s *resp);
 
-void header_kill_w_code(t_response_s *resp, t_hresp_e code,
+EXPRT void header_kill_w_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version);
 
 #endif /* H_RESP_HEADERS_H */

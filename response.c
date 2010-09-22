@@ -19,6 +19,30 @@
 
 #include "response.h"
 
+t_response_s *response_create(void)
+{
+    t_response_s *ret;
+    if ((ret = xmalloc(sizeof(*ret)))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        return NULL;
+    }
+    ret->resbuf = ret->tmpbuf = NULL;
+    ret->sock = SOCKET_INVALID;
+    ret->ch_filter = NULL;
+    ret->content_length_sent = 0;
+    return ret;
+}
+
+void response_destroy(t_response_s **resp)
+{
+    if ((*resp)->resbuf!=NULL)
+        xfree((*resp)->resbuf);
+    if ((*resp)->tmpbuf!=NULL)
+        xfree((*resp)->tmpbuf);
+    xfree(*resp);
+    *resp = NULL;
+}
+
 /* extract url and query string from the uri */
 static void strip_uri(t_request_s *req)
 {

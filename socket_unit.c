@@ -35,6 +35,10 @@ t_socket_unit_s *socket_unit_create(int qsize)
         mmp_setError(MMP_ERR_ENOMEM);
         goto bad_exit;
     }
+    if ((ret->resps = xcalloc(qsize, sizeof(*(ret->resps))))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        goto bad_exit;
+    }
     if ((ret->socket_states = xcalloc(qsize, sizeof(*(ret->socket_states))))
                                                                     ==NULL) {
         mmp_setError(MMP_ERR_ENOMEM);
@@ -50,6 +54,7 @@ t_socket_unit_s *socket_unit_create(int qsize)
     }
     for (i=0; i<qsize; ++i) {
         ret->reqs[i] = NULL;
+        ret->resps[i] = NULL;
         ret->connect_list[i] = SOCKET_INVALID;
         ret->socket_states[i] = SOCKET_STATE_NOTPRESENT;
     }
@@ -79,6 +84,12 @@ void socket_unit_destroy(t_socket_unit_s **su)
             if ((*su)->reqs[i]!=NULL)
                 request_destroy(&((*su)->reqs[i]));
         xfree((*su)->reqs);
+    }
+    if ((*su)->resps!=NULL) {
+        for (i=0; i<(*su)->queue_size; ++i)
+            if ((*su)->resps[i]!=NULL)
+                response_destroy(&((*su)->resps[i]));
+        xfree((*su)->resps);
     }
     if ((*su)->mtx!=MMP_THRMTX_INVALID) mmp_thr_mtx_close(&(*su)->mtx);
     xfree(*su);
@@ -124,6 +135,8 @@ int socket_unit_add_connection(t_socket_unit_s *su, t_socket socket)
     }
     su->socket_states[ret] = SOCKET_STATE_READREQUEST;
     su->reqs[ret] = request_create();
+    su->resps[ret] = response_create();
+    su->resps[ret]->sock = socket;
     ++su->nsockets;
 #ifndef _WIN32
     if (socket>su->highest_socket)
@@ -161,6 +174,8 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
     socket = su->connect_list[slot];
 #endif
     su->connect_list[slot] = SOCKET_INVALID;
+    request_destroy(&su->reqs[slot]);
+    response_destroy(&su->resps[slot]);
     --su->nsockets;
 #ifndef _WIN32
     if (socket==su->highest_socket) {
@@ -219,7 +234,10 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
 #else
     hs = 0;
 #endif
+reselect:
     read_socks = mmp_socket_server_select(hs, &su->sockets, NULL,NULL, &su->to);
+    if (read_socks==-1 && errno==EINTR)
+        goto reselect; /* interrupt */
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;

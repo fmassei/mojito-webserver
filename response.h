@@ -32,6 +32,8 @@
 #include "mime.h"
 #include "filter_manager.h"
 
+t_response_s *response_create(void);
+void response_destroy(t_response_s **resp);
 void response_send(t_response_s *res, t_request_s *req);
 
 #endif /* H_RESPONSE_H */

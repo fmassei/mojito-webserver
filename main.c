@@ -43,7 +43,8 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
             printf("disconnected\n");
             break;
         case REQUEST_PARSE_FINISH:
-            /* TODO: respond! */
+            response_send(su->resps[slot], su->reqs[slot]);
+            /* TODO: deal with keepalive/close! */
             break;
         case REQUEST_PARSE_CONTINUE:
             /* nothing */
@@ -83,7 +84,7 @@ int main(/*const int argc, const char *argv[]*/)
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
-        /* TODO: set the new socket as non blocking */
+        /* TODO: set the new socket as non blocking? */
         if ((sock_unit = socket_unit_management_getsu())==NULL) {
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
