@@ -26,7 +26,9 @@
 #define H_MMP_DATE_H
 
 #ifndef _WIN32
-#   define _XOPEN_SOURCE
+#   ifndef _XOPEN_SOURCE
+#      define _XOPEN_SOURCE
+#   endif
 #endif
 #include <stdio.h>
 #include <stdlib.h>
