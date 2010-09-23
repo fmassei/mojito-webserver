@@ -26,7 +26,7 @@ t_response_s *response_create(void)
         mmp_setError(MMP_ERR_ENOMEM);
         return NULL;
     }
-    ret->resbuf = ret->tmpbuf = NULL;
+    *ret->resbuf = *ret->tmpbuf = '\0';
     ret->sock = SOCKET_INVALID;
     ret->ch_filter = NULL;
     ret->content_length_sent = 0;
@@ -35,10 +35,10 @@ t_response_s *response_create(void)
 
 void response_destroy(t_response_s **resp)
 {
-    if ((*resp)->resbuf!=NULL)
+    /*if ((*resp)->resbuf!=NULL)
         xfree((*resp)->resbuf);
     if ((*resp)->tmpbuf!=NULL)
-        xfree((*resp)->tmpbuf);
+        xfree((*resp)->tmpbuf);*/
     xfree(*resp);
     *resp = NULL;
 }
