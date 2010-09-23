@@ -26,6 +26,12 @@
 
 /* TODO: missing parameter checks! */
 
+#ifdef _WIN32
+#   define OUTLINK  __declspec(dllexport)
+#else
+#   define OUTLINK
+#endif
+
 static int _compress(unsigned char *addr, int fd, int len)
 {
     if (mmp_write(fd, addr, (unsigned int)len)!=len)
@@ -94,7 +100,7 @@ static int _on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
 #ifdef MODULE_STATIC
 t_module_s *mod_identity_getmodule(void)
 #else
-t_module_s *getmodule(void)
+OUTLINK t_module_s *getmodule(void)
 #endif
 {
     t_module_s *ret;
