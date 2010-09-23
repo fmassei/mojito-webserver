@@ -19,7 +19,7 @@
 #include "module_loader.h"
 
 #ifndef DISABLE_DYNAMIC
-ret_t module_loader_load(t_config_s *params)
+ret_t module_loader_load(const t_config_s *params)
 {
     t_mmp_listelem_s *p;
     t_module_s *mod;
@@ -32,10 +32,19 @@ ret_t module_loader_load(t_config_s *params)
         mod_conf = (t_config_module_s*)p->data;
         if (mod_conf==NULL || mod_conf->name==NULL)
             continue;
+        mmp_trace_reset();
+        printf("Loading module %s... ", mod_conf->name);
         mod = module_add_dynamic(mod_conf->name);
-        if (mod==NULL || mod->set_params==NULL)
+        if (mod==NULL) {
+            printf("ERR\n");
+            mmp_trace_print(stdout);
             continue;
-        mod->set_params(mod_conf);
+        }
+        printf("Ok\n");
+        if (mod->set_params!=NULL)
+            mod->set_params(mod_conf);
+        if (mod->init!=NULL)
+            mod->init();
     }
     return MMP_ERR_OK;
 }

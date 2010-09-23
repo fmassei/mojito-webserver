@@ -25,6 +25,7 @@
 #include "config_manager.h"
 #include "request_parse.h"
 #include "defaults.h"
+#include "module_loader.h"
 
 t_socket srv_sock;
 
@@ -63,6 +64,10 @@ int main(/*const int argc, const char *argv[]*/)
         return EXIT_FAILURE;
     }
     if (mmp_socket_initSystem()!=MMP_ERR_OK) {
+        mmp_trace_print(stdout);
+        return EXIT_FAILURE;
+    }
+    if (module_loader_load(config_get())!=MMP_ERR_OK) {
         mmp_trace_print(stdout);
         return EXIT_FAILURE;
     }
