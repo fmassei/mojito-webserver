@@ -32,7 +32,7 @@ typedef enum hresp_e {
 } t_hresp_e;
 
 struct response_s {
-    char *resbuf, *tmpbuf;
+    char resbuf[0xff], tmpbuf[0xff];
     t_socket sock;
     t_module_s *ch_filter;      /**< selected filter for response */
     int content_length_sent;    /**< has the content-length been sent? */

@@ -26,7 +26,7 @@
 #include "header_w_quality.h"
 #include "types.h"
 
-ret_t filter_sanitize_queue(t_qhead_list_s *qhead);
+ret_t filter_sanitize_queue(t_qhead_list_s **qhead);
 t_module_s *filter_findfilter(t_qhead_list_s *qlist);
 
 #endif /* H_FILTER_MANAGER_H */
