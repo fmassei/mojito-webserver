@@ -19,7 +19,7 @@ st_pname = libmod_identity.a
 sh_objs = mod_identity.oh
 st_objs = mod_identity.ot
 mod_identity: $(st_objs) $(sh_objs)
-	$(GCC) -shared -Wl,-soname,$(sh_pname) -o $(BINDIR)/$(sh_pname) $(sh_objs) -lc
+	$(GCC) -shared -Wl,-soname,$(sh_pname) -o $(BINDIR)/$(sh_pname) $(sh_objs) -lmmp_base -lc
 	$(AR) $(BINDIR)/$(st_pname) $(st_objs)
 
 %.ot: $(SRCDIR)/%.c

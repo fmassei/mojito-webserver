@@ -28,16 +28,22 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #ifndef _WIN32
 #   include <unistd.h>
+#   ifndef XOPEN_SOURCE
+#       define XOPEN_SOURCE 500
+#   endif
+#   ifndef __USE_XOPEN
+#       define __USE_XOPEN
+#   endif
 #else
 #   include <windows.h>
 #   include <io.h>
 #   include <share.h>
 #endif
+#include <sys/stat.h>
 
 #include "mmp_compat.h"
 #include "mmp_h_utils.h"
