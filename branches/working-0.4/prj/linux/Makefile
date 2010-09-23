@@ -2,8 +2,7 @@ include Makefile.config
 include Makefile.vars
 
 GCCFLAG = $(CFLAGS)
-LDFLAG = -L../../deps/lib/linux -ldisml -lpthread
-ELIB = ../../deps/lib/linux/libmmp_base.a
+LDFLAG = -L../../deps/lib/linux -ldisml -lpthread -ldl -lmmp_base
 INCLUDE = -I../../deps/include -I../../deps/include/mmp \
 			-I../../deps/include/disml
 SRCDIR = ../..
@@ -13,7 +12,8 @@ FINAME = mojito
 
 OBJS = main.o config_parse.o config_manager.o socket_unit.o \
 		socket_unit_manager.o request.o request_parse.o header_w_quality.o \
-		modules.o mime.o response.o resp_headers.c
+		modules.o mime.o response.o resp_headers.o filter_manager.o \
+        module_loader.o
 OBJWD = echo $(OBJDIR)/$(OBJS) | sed 's/\ /\ \.\//g'
 
 base: all modules_all
@@ -27,7 +27,7 @@ main_clean:
 	-$(RM) $(BINDIR)/$(FINAME)
 
 all: $(OBJS)
-	$(LD) $(LDFLAG) -o $(BINDIR)/$(FINAME) $(shell $(OBJWD)) $(ELIB)
+	$(LD) $(shell $(OBJWD)) $(LDFLAG) -o $(BINDIR)/$(FINAME) 
 
 modules_all:
 	@(cd modules; make -f Makefile.modules)
