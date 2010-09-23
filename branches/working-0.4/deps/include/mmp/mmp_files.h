@@ -66,9 +66,9 @@ int mmp_close(int fd);
 int mmp_pwrite(int fd, const void *buf, size_t nbyte, long offset);
 
 /** unix stat */
-int mmp_stat(const char * __restrict path, t_mmp_stat_s * __restrict stat_ptr);
+ret_t mmp_stat(const char *__restrict path, t_mmp_stat_s *__restrict stat_ptr);
 /** unix fstat */
-int mmp_fstat(int fd, t_mmp_stat_s * stat_ptr);
+ret_t mmp_fstat(int fd, t_mmp_stat_s * stat_ptr);
 
 #ifdef UNIT_TESTING
 #   include "mmp_tap.h"
