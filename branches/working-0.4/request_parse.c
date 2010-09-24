@@ -81,7 +81,7 @@ static int parse_header_line(t_request_s *req, char *line)
     if ((value = strchr(line, ':'))==NULL)
         return 0;
     *value++ = '\0';
-    for(c=*value; c!='\0' || c==' ' || c=='\t'; c=*value)
+    for(c=*value; c=='\0' || c==' ' || c=='\t'; c=*value)
         ++value;
     head_to_upper(line);
     if (!memcmp(line, "CONTENT_LENGTH", 15) && req->content_length==0) {
