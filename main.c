@@ -33,11 +33,13 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
 {
     t_request_parse_e rst;
     if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
+keep_request_alive:
         rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
         switch (rst) {
         case REQUEST_PARSE_ERROR:
             /* TODO: mark and close */
         case REQUEST_PARSE_CLOSECONN:
+kill_connection:
             /* TODO: check for these errors! */
             (void)mmp_socket_close(&su->connect_list[slot], 1);
             (void)socket_unit_del_connection(su, slot);
@@ -45,7 +47,11 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
             break;
         case REQUEST_PARSE_FINISH:
             response_send(su->resps[slot], su->reqs[slot]);
-            /* TODO: deal with keepalive/close! */
+            /*if (su->reqs[slot]->keeping_alive) {
+                printf("keeping alive\n");
+                goto keep_request_alive;
+            }*/
+            goto kill_connection;
             break;
         case REQUEST_PARSE_CONTINUE:
             /* nothing */
