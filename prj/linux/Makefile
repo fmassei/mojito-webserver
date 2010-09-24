@@ -2,7 +2,7 @@ include Makefile.config
 include Makefile.vars
 
 GCCFLAG = $(CFLAGS)
-LDFLAG = -ldisml -lpthread -ldl -lmmp_base
+LDFLAG = -ldisml -lpthread -ldl -lmmp_base -lrt -Wl,-E
 INCLUDE = -I.
 SRCDIR = ../..
 OBJDIR = .

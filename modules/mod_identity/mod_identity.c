@@ -41,8 +41,8 @@ static int _compress(unsigned char *addr, int fd, int len)
 
 static int _prelen(t_mmp_stat_s *sb)
 {
-    if (sb->st_size==0)
-        return 0;
+    if (sb->st_size>=0)
+        return sb->st_size;
     return -1;
 }
 
@@ -83,7 +83,7 @@ static t_hpcefptr _gethpce(void)
 
 static int _on_prehead(t_mmp_stat_s *sb, t_response_s *res)
 {
-    size_t len;
+    long len;
     if ((len = _prelen(sb))>=0)
         (*_gethpcl())(res, len);
     (*_gethpce())(res, "identity");

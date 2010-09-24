@@ -24,11 +24,11 @@
 static int parse_first_line(t_request_s *req, char *line)
 {
     char *st, *st2;
-    if (memcmp(line, "GET ", 4))
+    if (!memcmp(line, "GET ", 4))
         req->method = REQUEST_METHOD_GET;
-    else if (memcmp(line, "HEAD ", 5))
+    else if (!memcmp(line, "HEAD ", 5))
         req->method = REQUEST_METHOD_HEAD;
-    else if (memcmp(line, "POST ", 5))
+    else if (!memcmp(line, "POST ", 5))
         req->method = REQUEST_METHOD_POST;
     else
         return -1;

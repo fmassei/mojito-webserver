@@ -16,7 +16,7 @@ config
   # --- keepalive stuff ---
   keepalive_timeout = 5
   # --- base folder for files ---
-  http_root = "/home/ftm/projwww/mojitosite/"
+  http_root = "/home/ftm/mojitosite/"
   default_page = "index.html"
   # --- logging ---
   # main log file
@@ -32,10 +32,10 @@ config
   modules_basepath = "mojitomodules/"
  modules
   mod_identity
-  mod_gzip
-  mod_deflate
-  mod_cgi
-  mod_fcgi
-  mod_stat
-  mod_cacheshm
-   cache_dir = "/tmp"
+  #mod_gzip
+  #mod_deflate
+  #mod_cgi
+  #mod_fcgi
+  #mod_stat
+  #mod_cacheshm
+  # cache_dir = "/tmp"
