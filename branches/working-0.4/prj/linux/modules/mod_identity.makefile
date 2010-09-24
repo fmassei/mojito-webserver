@@ -6,8 +6,7 @@ include ../Makefile.vars
 SH_CFLAGS = -fPIC
 ST_CFLAGS = 
 
-INCLUDE = -I../../../deps/include -I../../../deps/include/mmp \
-			-I../../../deps/include/disml
+INCLUDE = -I.
 SRCDIR = ../../../modules/mod_identity
 OBJDIR = .
 BINDIR = .

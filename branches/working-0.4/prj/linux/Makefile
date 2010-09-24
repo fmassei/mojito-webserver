@@ -2,9 +2,8 @@ include Makefile.config
 include Makefile.vars
 
 GCCFLAG = $(CFLAGS)
-LDFLAG = -L../../deps/lib/linux -ldisml -lpthread -ldl -lmmp_base
-INCLUDE = -I../../deps/include -I../../deps/include/mmp \
-			-I../../deps/include/disml
+LDFLAG = -ldisml -lpthread -ldl -lmmp_base
+INCLUDE = -I.
 SRCDIR = ../..
 OBJDIR = .
 BINDIR = .
