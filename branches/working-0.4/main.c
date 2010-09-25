@@ -95,7 +95,7 @@ int main(/*const int argc, const char *argv[]*/)
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
-        /* TODO: set the new socket as non blocking? */
+        mmp_socket_set_nonblocking(&newsock);
         if ((sock_unit = socket_unit_management_getsu())==NULL) {
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
