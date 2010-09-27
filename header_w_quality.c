@@ -208,7 +208,6 @@ t_qhead_list_s *qhead_list_parse(char *head)
             break;
         case '\0':
             brk = 1;
-            break;
         case ',':
             *st = '\0';
             if (rq==PARSE_MAIN) {
