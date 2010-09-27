@@ -177,6 +177,7 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
     request_destroy(&su->reqs[slot]);
     response_destroy(&su->resps[slot]);
     --su->nsockets;
+    su->socket_states[slot] = SOCKET_STATE_NOTPRESENT;
 #ifndef _WIN32
     if (socket==su->highest_socket) {
         su->highest_socket = -1;
