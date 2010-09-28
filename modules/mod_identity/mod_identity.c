@@ -54,6 +54,10 @@ static int _can_run(t_request_s *req)
         return MOD_ERR;
     for (el=req->accept_encoding->head; el!=NULL; el=el->next) {
         p = (t_qhead_s*)(el->data);
+        if (p==NULL || p->id==NULL) {
+            printf("aaaaahhhhhhh\n");
+            continue;
+        }
         if (!strcmp("identity", p->id))
             return MOD_OK;
     }

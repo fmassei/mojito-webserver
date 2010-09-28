@@ -58,8 +58,12 @@ ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead);
 /* delete an entry */
 void qhead_list_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d);
 /* parse the "quality header" */
-t_qhead_list_s *qhead_list_parse(char *head);
+t_qhead_list_s *qhead_list_parse(const char *head);
 /* frees the memory of a qhead struct */
 void qhead_list_destroy(t_qhead_list_s **qhead_list);
+
+#ifdef UNIT_TESTING
+ret_t test_qhead_unittest(t_mmp_tap_cycle_s *cycle);
+#endif /* UNIT_TESTING */
 
 #endif /* HEADER_W_QUALITY */
