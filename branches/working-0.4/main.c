@@ -62,6 +62,7 @@ kill_connection:
     return MMP_ERR_OK;
 }
 
+#ifndef UNIT_TESTING
 int main(/*const int argc, const char *argv[]*/)
 {
     int done = 0;
@@ -111,4 +112,5 @@ int main(/*const int argc, const char *argv[]*/)
     config_manager_freeall();
     return EXIT_SUCCESS;
 }
+#endif /* UNIT_TESTING */
 

@@ -104,20 +104,19 @@ void qhead_destroy(t_qhead_s **qhead)
  * digits after the point [3.9]. We use a more relaxed approach, converting with
  * strtod() (we don't use strtof() to be more C89 compliant). If the resulting
  * value is invalid, 1.0f is taken (AKA "Better choice" :-) ). */
-static float string2quality(char *str)
+static float string2quality(const char *str)
 {
-    char *endptr;
+    char *endptr = NULL;
     float ret;
     errno = 0;
     ret = (float)strtod(str, &endptr);
-    if ((errno==ERANGE) || (endptr!=NULL) || (errno!=0 && ret==0) || 
-            (ret<0.0f && ret>1.0f))
+    if ((errno==ERANGE) || (errno!=0 && ret==0) || (ret<0.0f && ret>1.0f))
         return 1.0f;
     return ret;
 }
 
 /* create a new extp */
-static t_extp_s *extp_create(char *name)
+static t_extp_s *extp_create_n(const char *name, size_t n)
 {
     t_extp_s *ret;
     if ((ret = xmalloc(sizeof(*ret)))==NULL) {
@@ -127,7 +126,7 @@ static t_extp_s *extp_create(char *name)
     if (name==NULL) {
         ret->name = NULL;
     } else {
-        if ((ret->name = xstrdup(name))==NULL) {
+        if ((ret->name = xstrdupn(name, n))==NULL) {
             mmp_setError(MMP_ERR_ENOMEM);
             xfree(ret);
             return NULL;
@@ -157,13 +156,13 @@ static ret_t qhead_insert_extp(t_qhead_s *parent, t_extp_s *extp)
 #define PARSE_KEY   1
 #define PARSE_QVAL  2
 #define PARSE_VAL   3
-t_qhead_list_s *qhead_list_parse(char *head)
+t_qhead_list_s *qhead_list_parse(const char *head)
 {
     t_qhead_list_s *ret = NULL;
     t_extp_s *e = NULL;
     t_qhead_s *q = NULL;
     int rq, has_q, brk;
-    char *st;
+    const char *st;
     if (head==NULL || *head=='\0')
         return NULL;
     if ((ret = mmp_list_create())==NULL) {
@@ -189,9 +188,8 @@ t_qhead_list_s *qhead_list_parse(char *head)
         while(((*st==' ') || (*st=='\t')) && (*st!='\0')) ++st;
         switch(*st) {
         case ';':
-            *st = '\0';
             if (rq==PARSE_MAIN) {
-                if ((q->id = xstrdup(head))==NULL)
+                if ((q->id = xstrdupn(head, st-head))==NULL)
                     goto prs_error;
             } else if (rq==PARSE_QVAL) {
                 q->quality = string2quality(head);
@@ -199,7 +197,7 @@ t_qhead_list_s *qhead_list_parse(char *head)
             } else if (rq==PARSE_VAL) {
                 e->quality = string2quality(head);
             } else {
-                if (    ((e = extp_create(head))==NULL) ||
+                if (    ((e = extp_create_n(head, st-head))==NULL) ||
                         (qhead_insert_extp(q, e)!=MMP_ERR_OK) )
                     goto prs_error;
             }
@@ -209,9 +207,8 @@ t_qhead_list_s *qhead_list_parse(char *head)
         case '\0':
             brk = 1;
         case ',':
-            *st = '\0';
             if (rq==PARSE_MAIN) {
-                if ((q->id = xstrdup(head))==NULL)
+                if ((q->id = xstrdupn(head, st-head))==NULL)
                     goto prs_error;
                 if (has_q == 0)
                     q->quality = 1.0f;
@@ -222,7 +219,7 @@ t_qhead_list_s *qhead_list_parse(char *head)
                     goto prs_error;
                 e->quality = string2quality(head);
             } else {
-                if (    ((e = extp_create(head))==NULL) ||
+                if (    ((e = extp_create_n(head, st-head))==NULL) ||
                         (qhead_insert_extp(q, e)!=MMP_ERR_OK) )
                     goto prs_error;
             }
@@ -244,12 +241,11 @@ t_qhead_list_s *qhead_list_parse(char *head)
             }
             break;
         case '=':
-            *st = '\0';
             if (rq==PARSE_KEY) {
-                if (!strcmp(head, "q")) {
+                if (!strncmp(head, "q", 1)) {
                     rq = PARSE_QVAL;
                 } else {
-                    if (    ((e = extp_create(head))==NULL) ||
+                    if (    ((e = extp_create_n(head, st-head))==NULL) ||
                             (qhead_insert_extp(q, e)!=MMP_ERR_OK) )
                         goto prs_error;
                 }
@@ -268,3 +264,42 @@ prs_error:
     return NULL;
 }
 
+#ifdef UNIT_TESTING
+static t_mmp_tap_result_e test_qhead_parse(void)
+{
+    t_qhead_list_s *ql;
+    t_mmp_listelem_s *p;
+    t_qhead_s *qh;
+    char *qstr, *a, *b;
+    char *tt[] = { "deflate", "gzip" };
+    int i;
+    if ((qstr = xstrdup("gzip,deflate"))==NULL)
+        return MMP_TAP_FAILED;
+    if ((ql = qhead_list_parse(qstr))==NULL)
+        return MMP_TAP_FAILED;
+    for (i=0, p=ql->head; p!=NULL; p=p->next, ++i) {
+        qh = (t_qhead_s*)p->data;
+        if (qh==NULL || qh->id==NULL)
+            return MMP_TAP_FAILED;
+        if (strcmp(qh->id, tt[i])!=0)
+            return MMP_TAP_FAILED;
+    }
+    qhead_list_destroy(&ql);
+    if (ql!=NULL)
+        return MMP_TAP_FAILED;
+    xfree(qstr);
+    return MMP_TAP_PASSED;
+}
+
+ret_t test_qhead_unittest(t_mmp_tap_cycle_s *cycle)
+{
+    ret_t ret;
+    if (
+            ((ret=mmp_tap_test(cycle, "qhead_parse", NULL,
+                                        test_qhead_parse()))!=MMP_ERR_OK)
+
+       )
+        return ret;
+    return MMP_ERR_OK;
+}
+#endif /* UNIT_TESTING */
