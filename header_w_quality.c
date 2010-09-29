@@ -270,12 +270,9 @@ static t_mmp_tap_result_e test_qhead_parse(void)
     t_qhead_list_s *ql;
     t_mmp_listelem_s *p;
     t_qhead_s *qh;
-    char *qstr, *a, *b;
     char *tt[] = { "deflate", "gzip" };
     int i;
-    if ((qstr = xstrdup("gzip,deflate"))==NULL)
-        return MMP_TAP_FAILED;
-    if ((ql = qhead_list_parse(qstr))==NULL)
+    if ((ql = qhead_list_parse("gzip,deflate"))==NULL)
         return MMP_TAP_FAILED;
     for (i=0, p=ql->head; p!=NULL; p=p->next, ++i) {
         qh = (t_qhead_s*)p->data;
@@ -287,7 +284,6 @@ static t_mmp_tap_result_e test_qhead_parse(void)
     qhead_list_destroy(&ql);
     if (ql!=NULL)
         return MMP_TAP_FAILED;
-    xfree(qstr);
     return MMP_TAP_PASSED;
 }
 
