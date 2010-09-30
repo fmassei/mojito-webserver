@@ -48,7 +48,7 @@ static t_qhead_s *qhead_create_and_add(t_qhead_list_s *list, const char *id,
         qhead_destroy(&ret);
         return NULL;
     }
-    return NULL;
+    return ret;
 }
 
 /* for filter queues we have a few rules:
@@ -77,6 +77,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
         if (qh==NULL) continue;
         if (!strcmp(qh->id, "identity"))
             break;
+        qh = NULL;
     }
     /* no identity? add it */
     if (qh==NULL) {
@@ -103,6 +104,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
                 if (qh2==NULL) continue;
                 if (!strcmp(qh2->id, filt->name))
                     break;
+                qh2 = NULL;
             }
             if (qh2==NULL) {
                 if ((qh2 = qhead_create_and_add(*qhead, filt->name, rq))==NULL) {
@@ -114,13 +116,16 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
         break;
     }
     /* drop all the filters that we can't handle */
-    for (p=(*qhead)->head; p!=NULL; p=p->next) {
-        qh = (t_qhead_s*)p;
+    for (p=(*qhead)->head; p!=NULL; p=q) {
+        q = p->next;
+        qh = (t_qhead_s*)p->data;
         if (qh==NULL) continue;
-        if (filter_findbyid(qh->id)==NULL)
-            qhead_list_delete(*qhead, &qh);
+        if (filter_findbyid(qh->id)==NULL) {
+            printf("Delete %s\n", qh->id);
+            qhead_list_delete(*qhead, &p);
+        }
     }
-    return 0;
+    return MMP_ERR_OK;
 }
 
 t_module_s *filter_findfilter(t_qhead_list_s *qlist)

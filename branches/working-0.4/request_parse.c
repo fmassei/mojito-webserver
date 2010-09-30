@@ -21,7 +21,7 @@
 #define SOCKBUFSIZE 8196    /* TODO: calculate this one! */
 
 /* parse the request first line */
-static int parse_first_line(t_request_s *req, char *line)
+static int parse_first_line(t_request_s *req, const char *line)
 {
     char *st, *st2;
     if (!memcmp(line, "GET ", 4))
