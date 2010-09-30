@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include/"
+				AdditionalIncludeDirectories="../../include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -70,7 +70,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../deps/lib/win32"
+				AdditionalLibraryDirectories="..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName);..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)"
 				GenerateManifest="false"
 				EnableUAC="false"
 				IgnoreEmbeddedIDL="true"
@@ -103,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\deps\lib\win32\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -134,7 +134,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../deps/include"
+				AdditionalIncludeDirectories="../../include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -162,7 +162,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="mmp_base.lib disml.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../deps/lib/win32"
+				AdditionalLibraryDirectories="..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName);..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)"
 				GenerateManifest="false"
 				EnableUAC="false"
 				IgnoreEmbeddedIDL="true"
@@ -194,7 +194,98 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\deps\lib\win32\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="unittest|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			CharacterSet="2"
+			EnableManagedIncrementalBuild="0"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../include"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;UNIT_TESTING"
+				MinimalRebuild="false"
+				ExceptionHandling="0"
+				BasicRuntimeChecks="0"
+				SmallerTypeCheck="true"
+				RuntimeLibrary="1"
+				BufferSecurityCheck="false"
+				DisableLanguageExtensions="false"
+				WarningLevel="4"
+				WarnAsError="true"
+				DebugInformationFormat="3"
+				CompileAs="1"
+				ShowIncludes="false"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\..\..\..\..\libmmp\trunk\vc98\Debug;..\..\..\..\..\disml\trunk\disml\vc98\Debug"
+				GenerateManifest="false"
+				EnableUAC="false"
+				IgnoreEmbeddedIDL="true"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				TurnOffAssemblyGeneration="false"
+				ImportLibrary=""
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\Debug\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\Debug\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -260,6 +351,10 @@
 			</File>
 			<File
 				RelativePath="..\..\socket_unit_manager.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\unittest.c"
 				>
 			</File>
 		</Filter>

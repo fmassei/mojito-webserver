@@ -33,7 +33,7 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
 {
     t_request_parse_e rst;
     if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
-keep_request_alive:
+/*keep_request_alive:*/
         rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
         switch (rst) {
         case REQUEST_PARSE_ERROR:
@@ -46,7 +46,7 @@ kill_connection:
             printf("disconnected\n");
             break;
         case REQUEST_PARSE_FINISH:
-            su->socket_states[slot]==SOCKET_STATE_WRITERESPONSE;
+            su->socket_states[slot]=SOCKET_STATE_WRITERESPONSE;
             response_send(su->resps[slot], su->reqs[slot]);
             /*if (su->reqs[slot]->keeping_alive) {
                 printf("keeping alive\n");
