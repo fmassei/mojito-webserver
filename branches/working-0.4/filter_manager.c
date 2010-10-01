@@ -121,7 +121,6 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
         qh = (t_qhead_s*)p->data;
         if (qh==NULL) continue;
         if (filter_findbyid(qh->id)==NULL) {
-            printf("Delete %s\n", qh->id);
             qhead_list_delete(*qhead, &qh);
         }
     }
