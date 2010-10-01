@@ -65,9 +65,7 @@ ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead)
 void qhead_list_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d)
 {
     if (e2d==NULL) return;
-    printf("%d\n", qhead_list->nelems);
     mmp_list_del_elem_by_data(qhead_list, *e2d);
-    printf("%d\n", qhead_list->nelems);
     mmp_list_delete_withdata(&(*e2d)->extp_list, extp_free_v);
     xfree((*e2d)->id);
     xfree(*e2d);

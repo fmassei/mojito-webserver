@@ -122,7 +122,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
         if (qh==NULL) continue;
         if (filter_findbyid(qh->id)==NULL) {
             printf("Delete %s\n", qh->id);
-            qhead_list_delete(*qhead, &p);
+            qhead_list_delete(*qhead, &qh);
         }
     }
     return MMP_ERR_OK;
