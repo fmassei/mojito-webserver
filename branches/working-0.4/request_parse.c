@@ -23,7 +23,7 @@
 /* parse the request first line */
 static int parse_first_line(t_request_s *req, const char *line)
 {
-    char *st, *st2;
+    const char *st, *st2;
     if (!memcmp(line, "GET ", 4))
         req->method = REQUEST_METHOD_GET;
     else if (!memcmp(line, "HEAD ", 5))
