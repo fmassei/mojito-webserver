@@ -26,12 +26,14 @@
 #include "request_parse.h"
 #include "defaults.h"
 #include "module_loader.h"
+#include "utils.h"
 
 t_socket srv_sock;
 
 ret_t sck_data(int slot, t_socket_unit_s *su)
 {
     t_request_parse_e rst;
+    DBG_PRINT(("sck_data: data on slot %d\n", slot));
     if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
 /*keep_request_alive:*/
         rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
@@ -40,12 +42,14 @@ ret_t sck_data(int slot, t_socket_unit_s *su)
             /* TODO: mark and close */
         case REQUEST_PARSE_CLOSECONN:
 kill_connection:
+            DBG_PRINT(("sck_data: closing on slot %d\n", slot));
             /* TODO: check for these errors! */
             (void)mmp_socket_close(&su->connect_list[slot], 1);
             (void)socket_unit_del_connection(su, slot);
-            printf("disconnected\n");
+            DBG_PRINT(("sck_data: disconnected on slot %d\n", slot));
             break;
         case REQUEST_PARSE_FINISH:
+            DBG_PRINT(("sck_data: finished parsing on slot %d\n", slot));
             su->socket_states[slot]=SOCKET_STATE_WRITERESPONSE;
             response_send(su->resps[slot], su->reqs[slot]);
             /*if (su->reqs[slot]->keeping_alive) {
@@ -55,6 +59,7 @@ kill_connection:
             goto kill_connection;
             break;
         case REQUEST_PARSE_CONTINUE:
+            DBG_PRINT(("sck_data: continue parsing on slot %d\n", slot));
             /* nothing */
             break;
         }
@@ -68,7 +73,7 @@ int main(/*const int argc, const char *argv[]*/)
     int done = 0;
     fprintf(stdout, "starting\n");
     if (config_manager_loadfile(DEFAULT_CONFIGFILE)!=MMP_ERR_OK) {
-        mmp_trace_print(stdout);
+        mmp_trace_print(mmp_trace_getInternalStdout());
         return EXIT_FAILURE;
     }
     if (mmp_socket_initSystem()!=MMP_ERR_OK) {
@@ -102,7 +107,7 @@ int main(/*const int argc, const char *argv[]*/)
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
-        printf("%s connected\n", nip);
+        DBG_PRINT(("main loop: %s connected\n", nip));
         socket_unit_add_connection(sock_unit, newsock);
         xfree(nip);
     }

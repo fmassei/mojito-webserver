@@ -17,6 +17,7 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "socket_unit_manager.h"
+#include "utils.h"
 
 static t_socket_unit_s **m_su = NULL;
 static t_mmp_thread *m_th = NULL;
@@ -25,6 +26,7 @@ static t_sckunit_fptr m_dcback = NULL;
 static void *su_thread(void *ptr)
 {
     t_socket_unit_s *su = (t_socket_unit_s*)ptr;
+    DBG_PRINT(("socket_unit_manager: thread started\n"));
     while (socket_unit_select_loop(su)==MMP_ERR_OK)
         ;
     return NULL;

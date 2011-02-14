@@ -70,7 +70,7 @@
 				LinkLibraryDependencies="true"
 				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName);..\..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)"
+				AdditionalLibraryDirectories="..\deps;&quot;..\..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)&quot;;&quot;..\..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)&quot;"
 				GenerateManifest="false"
 				EnableUAC="false"
 				IgnoreAllDefaultLibraries="false"
