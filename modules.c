@@ -203,7 +203,7 @@ t_module_s *module_add_static(t_get_module_f get_module)
 t_module_s *module_add_dynamic(char *fname)
 {
     t_get_module_f get_module;
-    void *fptr;
+    void (*fptr)(void);
     if ((fptr = mmp_dl_open_and_get_fnc(fname, "getmodule"))==NULL)
         return NULL;
 #ifdef _WIN32

@@ -199,4 +199,3 @@ t_request_parse_e request_parse_read(t_socket *sock, t_request_s *req)
     }
     return REQUEST_PARSE_ERROR; /* this should never happen */
 }
-

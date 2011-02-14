@@ -17,11 +17,13 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "socket_unit.h"
+#include "utils.h"
 
 t_socket_unit_s *socket_unit_create(int qsize)
 {
     t_socket_unit_s *ret;
     int i;
+    DBG_PRINT(("socket_unit: creating new socket unit.\n"));
     if ((ret = xmalloc(sizeof(*ret)))==NULL) {
         mmp_setError(MMP_ERR_ENOMEM);
         goto bad_exit;
@@ -76,6 +78,7 @@ bad_exit:
 void socket_unit_destroy(t_socket_unit_s **su)
 {
     int i;
+    DBG_PRINT(("socket_unit: destroying socket unit.\n"));
     if (su==NULL || *su==NULL) return;
     if ((*su)->connect_list!=NULL) xfree((*su)->connect_list);
     if ((*su)->socket_states!=NULL) xfree((*su)->socket_states);
@@ -117,6 +120,7 @@ static void build_select_list(t_socket_unit_s *su)
 int socket_unit_add_connection(t_socket_unit_s *su, t_socket socket)
 {
     int i, ret;
+    DBG_PRINT(("socket_unit: add connection\n"));
     if (su==NULL || socket==SOCKET_INVALID) {
         mmp_setError(MMP_ERR_PARAMS);
         return -1;
@@ -162,6 +166,7 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
     int i;
     t_socket socket;
 #endif
+    DBG_PRINT(("socket_unit: delete connection\n"));
     if (su==NULL || slot<0) {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;

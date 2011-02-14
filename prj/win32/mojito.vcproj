@@ -70,7 +70,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="mmp_base.lib disml.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName);..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)"
+				AdditionalLibraryDirectories="deps;&quot;..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)&quot;;&quot;..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)&quot;"
 				GenerateManifest="false"
 				EnableUAC="false"
 				IgnoreEmbeddedIDL="true"
@@ -103,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -194,7 +194,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\$(ConfigurationName)\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\$(ConfigurationName)\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -285,7 +285,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\Debug\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\Debug\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;"
+				CommandLine="xcopy /Y ..\..\..\..\..\libmmp\trunk\vc98\Debug\mmp_base.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;xcopy /Y ..\..\..\..\..\disml\trunk\disml\vc98\Debug\disml.dll &quot;$(SolutionDir)$(ConfigurationName)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -429,6 +429,10 @@
 			</File>
 			<File
 				RelativePath="..\..\types.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\utils.h"
 				>
 			</File>
 		</Filter>
