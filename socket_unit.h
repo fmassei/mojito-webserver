@@ -63,8 +63,7 @@ struct socket_unit_s {
     t_response_s **resps;               /* list of responses */
     t_socket_state_e *socket_states;    /* logical state of the sockets */
     t_socket_unit_state_e state;        /* state of the socket unit */
-    t_mmp_thr_evt sleep_evt;            /* sleeping event */
-    t_sckunit_fptr  newdata_cback;      /* data ready callback */
+    t_sckunit_fptr newdata_cback;       /* data ready callback */
 };
 
 t_socket_unit_s *socket_unit_create(int qsize);
