@@ -16,7 +16,7 @@ config
   # --- keepalive stuff ---
   keepalive_timeout = 5
   # --- base folder for files ---
-  http_root = "/home/ftm/mojitosite/"
+  http_root = "/var/www/public_html/default/"
   default_page = "index.html"
   # --- logging ---
   # main log file

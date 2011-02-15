@@ -98,17 +98,22 @@ int main(/*const int argc, const char *argv[]*/)
         t_socket newsock;
         t_socket_unit_s *sock_unit;
         char *nip;
+        DBG_PRINT(("main: before accept\n"));
         if (mmp_socket_server_accept(&srv_sock, &newsock, &nip)!=MMP_ERR_OK) {
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
+        DBG_PRINT(("main: after accept\n"));
         mmp_socket_set_nonblocking(&newsock);
         if ((sock_unit = socket_unit_management_getsu())==NULL) {
             mmp_trace_print(stdout);
             return EXIT_FAILURE;
         }
         DBG_PRINT(("main loop: %s connected\n", nip));
-        socket_unit_add_connection(sock_unit, newsock);
+        if (socket_unit_add_connection(sock_unit, newsock)<0) {
+            mmp_trace_print(stdout);
+            return EXIT_FAILURE;
+        }
         xfree(nip);
     }
     socket_unit_management_stop();
