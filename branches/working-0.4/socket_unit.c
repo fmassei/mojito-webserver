@@ -61,7 +61,7 @@ t_socket_unit_s *socket_unit_create(int qsize)
         ret->socket_states[i] = SOCKET_STATE_NOTPRESENT;
     }
     ret->nsockets = 0;
-    ret->to.tv_sec = 20;        /* move to config */
+    ret->to.tv_sec = 5;        /* move to config */
     ret->to.tv_usec = 0;
     ret->newdata_cback = NULL;
     ret->state = SOCKET_UNIT_STATE_RUNNING;
@@ -125,6 +125,7 @@ int socket_unit_add_connection(t_socket_unit_s *su, t_socket socket)
         mmp_setError(MMP_ERR_PARAMS);
         return -1;
     }
+    DBG_PRINT(("socket_unit_add_connection: mmp_thr_mtx_lock\n"));
     if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
@@ -146,13 +147,16 @@ int socket_unit_add_connection(t_socket_unit_s *su, t_socket socket)
     if (socket>su->highest_socket)
         su->highest_socket = socket;
 #endif
-    if (su->nsockets==1 && su->state==SOCKET_UNIT_STATE_SLEEPING) {
+    /*if (su->nsockets==1 && su->state==SOCKET_UNIT_STATE_SLEEPING) {*/
+        DBG_PRINT(("socket_unit_add_connection: mmp_thr_evt_signal\n"));
         if (mmp_thr_evt_signal(su->sleep_evt)!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_SYNC);
+            return -1;
         } else {
             su->state = SOCKET_UNIT_STATE_RUNNING;
         }
-    }
+    /*}*/
+    DBG_PRINT(("socket_unit_add_connection: mmp_thr_mtx_release\n"));
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return -1;
@@ -171,6 +175,7 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
     }
+    DBG_PRINT(("socket_unit_del_connection: mmp_thr_mtx_lock\n"));
     if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;
@@ -192,6 +197,7 @@ ret_t socket_unit_del_connection(t_socket_unit_s *su, int slot)
         }
     }
 #endif
+    DBG_PRINT(("socket_unit_del_connection: mmp_thr_mtx_release\n"));
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;
@@ -218,17 +224,22 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
     }
+    DBG_PRINT(("socket_unit_select_loop: mmp_thr_mtx_lock\n"));
     if (mmp_thr_mtx_lock(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;
     }
     build_select_list(su);
+    DBG_PRINT(("socket_unit_select_loop: nsockets %d\n", su->nsockets));
     if (su->nsockets<=0) {
+        DBG_PRINT(("socket_unit_select_loop: mmp_thr_mtx_release\n"));
         if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_SYNC);
             return MMP_ERR_SYNC;
         }
+        DBG_PRINT(("socket_unit_select_loop: mmp_thr_mtx_sleep\n"));
         su->state = SOCKET_UNIT_STATE_SLEEPING;
+        DBG_PRINT(("socket_unit_select_loop: mmp_thr_evt_wait\n"));
         if (mmp_thr_evt_wait(su->sleep_evt)!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_SYNC);
             return MMP_ERR_SYNC;
@@ -242,8 +253,11 @@ ret_t socket_unit_select_loop(t_socket_unit_s *su)
 #endif
 reselect:
     read_socks = mmp_socket_server_select(hs, &su->sockets, NULL,NULL, &su->to);
-    if (read_socks==-1 && errno==EINTR)
+    if (read_socks==-1 && errno==EINTR) {
+        DBG_PRINT(("socket_unit_select_loop: reselect\n"));
         goto reselect; /* interrupt */
+    }
+    DBG_PRINT(("socket_unit_select_loop: mmp_thr_mtx_release\n"));
     if (mmp_thr_mtx_release(su->mtx)!=MMP_ERR_OK) {
         mmp_setError(MMP_ERR_SYNC);
         return MMP_ERR_SYNC;

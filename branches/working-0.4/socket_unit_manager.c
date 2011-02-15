@@ -29,6 +29,8 @@ static void *su_thread(void *ptr)
     DBG_PRINT(("socket_unit_manager: thread started\n"));
     while (socket_unit_select_loop(su)==MMP_ERR_OK)
         ;
+    DBG_PRINT(("socket_unit_manager: su_thread error!\n"));
+    mmp_trace_print(stdout);
     return NULL;
 }
 
@@ -63,6 +65,7 @@ t_socket_unit_s *socket_unit_management_getsu(void)
                 return NULL;
             }
             m_su[i]->newdata_cback = m_dcback;
+            DBG_PRINT(("socket_unit_management_getsu: mmp_thread_create\n"));
             mmp_thread_create(su_thread, m_su[i], &m_th[i]);
             su_ptr = m_su[i];
             break;
