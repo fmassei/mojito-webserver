@@ -1,5 +1,5 @@
 /*
-    Copyright 2009 Francesco Massei
+    Copyright 2011 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,20 +16,13 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_CACHE_H
-#define H_CACHE_H
+#ifndef H_UTILS_H
+#define H_UTILS_H
 
-#define _BSD_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef NDEBUG
+#   define DBG_PRINT(_ARGS)
+#else
+#   define DBG_PRINT(_ARGS)    printf _ARGS
+#endif
 
-/* entry struct */
-struct cache_entry_s {
-    char *URI;
-    char *fname;
-    char *filter_id;
-    char *content_type;
-};
-
-#endif /* H_CACHE_H */
+#endif /* H_UTILS_H */

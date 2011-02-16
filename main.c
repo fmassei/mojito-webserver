@@ -1,5 +1,5 @@
 /*
-    Copyright 2009 Francesco Massei
+    Copyright 2010 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,121 +16,89 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <signal.h>
-#include <unistd.h>
-#include <getopt.h>
-#include "socket.h"
-#include "request.h"
-#include "fparams.h"
-#include "daemon.h"
-#include "logger.h"
-#include "response.h"
-#include "filter_manag.h"
+#include <disml/disml.h>
+#include <mmp/mmp_trace.h>
+#include <mmp/mmp_socket.h>
+#include <mmp/mmp_thread.h>
+#include "socket_unit.h"
+#include "socket_unit_manager.h"
+#include "config_manager.h"
+#include "request_parse.h"
+#include "defaults.h"
 #include "module_loader.h"
-#include "modules/modules.h"
+#include "utils.h"
 
-extern struct request_s req;
-struct fparam_s params;
-int keeping_alive;
+t_socket srv_sock;
 
-void clean_quit()
+ret_t sck_data(int slot, t_socket_unit_s *su)
 {
-    mod_fini();
-    logger_fini();
-}
-
-/* SIGTERM callback */
-void sig_term(int signal)
-{
-    logmsg(LOG_INFO, "caught SIGTERM(%d). Stopping", signal);
-    clean_quit();
-    exit(0);
-}
-
-int main(const int argc, char * const argv[])
-{
-    int cl_sock, i;
-    pid_t cpid;
-    int opt;
-    char *error;
-    char *in_ip;
-
-    while ((opt = getopt(argc, argv, "v"))!=-1) {
-        switch(opt) {
-        case 'v':
-            printf("Mojito 0.1\n");
-            exit(EXIT_SUCCESS);
+    t_request_parse_e rst;
+    DBG_PRINT(("sck_data: data on slot %d\n", slot));
+    if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
+/*keep_request_alive:*/
+        rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
+        switch (rst) {
+        case REQUEST_PARSE_ERROR:
+            /* TODO: mark and close */
+        case REQUEST_PARSE_CLOSECONN:
+kill_connection:
+            DBG_PRINT(("sck_data: closing on slot %d\n", slot));
+            /* TODO: check for these errors! */
+            (void)mmp_socket_close(&su->connect_list[slot], 1);
+            (void)socket_unit_del_connection(su, slot);
+            DBG_PRINT(("sck_data: disconnected on slot %d\n", slot));
             break;
-        default:
-            fprintf(stderr, "Usage %s [-v]\n", argv[0]);
-            exit(EXIT_FAILURE);
+        case REQUEST_PARSE_FINISH:
+            DBG_PRINT(("sck_data: finished parsing on slot %d\n", slot));
+            su->socket_states[slot]=SOCKET_STATE_WRITERESPONSE;
+            response_send(su->resps[slot], su->reqs[slot]);
+            /*if (su->reqs[slot]->keeping_alive) {
+                printf("keeping alive\n");
+                goto keep_request_alive;
+            }*/
+            goto kill_connection;
+            break;
+        case REQUEST_PARSE_CONTINUE:
+            DBG_PRINT(("sck_data: continue parsing on slot %d\n", slot));
+            /* nothing */
+            break;
         }
     }
+    return MMP_ERR_OK;
+}
 
-    if ((i = params_loadFromINIFile("config.ini", &params)<0)) {
-        if (i==-1)
-            perror("Error loading configuration");
-        return EXIT_FAILURE;
+int main(const int argc, const char *argv[])
+{
+    int done = 0;
+    fprintf(stdout, "starting\n");
+    if (    (config_manager_loadfile(DEFAULT_CONFIGFILE)!=MMP_ERR_OK) ||
+            (mmp_socket_initSystem()!=MMP_ERR_OK) ||
+            (module_loader_load(config_get())!=MMP_ERR_OK) ||
+            (mmp_socket_server_start(config_get()->server->listen_port,
+                                        config_get()->server->listen_queue,
+                                        &srv_sock)!=MMP_ERR_OK) )
+        goto bad_exit;
+    mmp_trace_reset();
+    while(!done) {
+        t_socket newsock;
+        t_socket_unit_s *su;
+        char *nip;
+        su = xmalloc(sizeof(*su));
+        socket_unit_init(su);
+        if (mmp_socket_server_accept(&srv_sock, &newsock, &nip)!=MMP_ERR_OK)
+            goto bad_exit;
+        mmp_socket_set_nonblocking(&newsock);
+        DBG_PRINT(("main loop: %s connected\n", nip));
+        request_parse_read(su);
+        xfree(nip);
     }
-    if (module_get(&params, &error)<0) {
-        fprintf(stderr, "Error loading dynamic modules: %s\n", error);
-        return EXIT_FAILURE;
-    }
-    if (fork_to_background(&params, sig_term)<0) {
-        fprintf(stderr, "Forking to background failed.\n");
-        return EXIT_FAILURE;
-    }
-    if (logger_set_params(&params)<0 || logger_init()!=0) {
-        fprintf(stderr, "Failed to start logger.\n");
-        return EXIT_FAILURE;
-    }
-    mod_init();
-    if (server_start(params.listen_port, params.listen_queue)<0) {
-        logmsg(LOG_ERR, "Error starting server");
-        return EXIT_FAILURE;
-    }
-    logmsg(LOG_INFO, "Server started");
-    logflush();
-    while (1) {
-        if ((cl_sock = server_accept(&in_ip))<0) {
-            perror("Error accepting connections");
-            exit(EXIT_FAILURE);
-        }
-        keeping_alive = 0;
-        cpid = fork();
-        if (cpid==-1) {
-            perror("Fork() failed!");
-            return EXIT_FAILURE;
-        }
-        if (cpid>0) {
-            close(cl_sock);
-            continue;
-        }
-        on_accept();
-child_life:
-        request_create(in_ip);
-        if (request_read(cl_sock)==1)
-            goto client_kill;
-        send_file(cl_sock, &req);
-        loghit(req.in_ip, req.method_str, req.uri);
-        if (keeping_alive!=0) {
-            DEBUG_LOG((LOG_DEBUG, "Keeping alive!"));
-            logflush();
-            if (request_waitonalive(cl_sock)>0)
-                goto child_life;
-        }
-client_kill:
-        DEBUG_LOG((LOG_DEBUG, "Killing process"));
-        shutdown(cl_sock, SHUT_RDWR);
-        close(cl_sock);
-        exit(0);
-    }
-    clean_quit();
-    return EXIT_FAILURE;    /* this is not the best exit point :) */
+    mmp_socket_close(&srv_sock, 1);
+    mmp_socket_finiSystem();
+    config_manager_freeall();
+    return EXIT_SUCCESS;
+
+bad_exit:
+    mmp_trace_print(stdout);
+    return EXIT_FAILURE;
 }
 

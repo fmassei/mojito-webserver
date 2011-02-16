@@ -1,5 +1,5 @@
 /*
-    Copyright 2009 Francesco Massei
+    Copyright 2010 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,24 +16,30 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef H_SOCKET_UNIT_H
+#define H_SOCKET_UNIT_H
 
-#ifndef H_PLIST_H
-#define H_PLIST_H
+#include <aio.h>
+#include <mmp/mmp_socket.h>
+#include "request.h"
+#include "response.h"
 
-#define _BSD_SOURCE
+typedef enum socket_state_e {
+    SOCKET_STATE_NOTPRESENT     = 0,
+    SOCKET_STATE_READREQUEST    = 1,
+} t_socket_state_e;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+typedef struct socket_unit_s t_socket_unit_s;
 
-struct plist_s {
-    char *key;
-    char *value;
-    struct plist_s *next;
+struct socket_unit_s {
+    t_socket socket;
+    t_socket_state_e state;
+    t_request_s req;
+    t_response_s res;
+    struct aiocb aio;
 };
 
-void plist_destroy(struct plist_s **plist);
-int plist_insert(struct plist_s **plist, char *key, char *value, int checkdup);
-char *plist_search(struct plist_s *plist, char *key);
+void socket_unit_init(t_socket_unit_s *su);
+void socket_unit_drop(t_socket_unit_s *su);
 
-#endif /* H_PLIST_H */
+#endif /* H_SOCKET_UNIT_H */

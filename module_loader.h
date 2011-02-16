@@ -17,14 +17,16 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef H_MODULE_H
-#define H_MODULE_H
+#ifndef H_MODULE_LOADER_H
+#define H_MODULE_LOADER_H
 
-#include "fparams.h"
-#include "plist.h"
-#include "logger.h"
-#include "modules/modules.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "modules.h"
+#include "config_type.h"
 
-int module_get(struct fparam_s *prm, char **error);
+#ifndef DISABLE_DYNAMIC
+ret_t module_loader_load(const t_config_s *params);
+#endif /* DISABLE_DYNAMIC */
 
-#endif /* H_MODULE_H */
+#endif /* H_MODULE_LOADER_H */

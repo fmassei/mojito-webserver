@@ -1,5 +1,5 @@
 /*
-    Copyright 2009 Francesco Massei
+    Copyright 2010 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,32 +16,21 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef H_LINEAR_ARRAY_H
-#define H_LINEAR_ARRAY_H
-
-#define _BSD_SOURCE
+#ifndef H_CONFIG_PARSE_H
+#define H_CONFIG_PARSE_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <limits.h>
+#include <mmp/mmp_list.h>
+#include <mmp/mmp_string.h>
+#include <mmp/mmp_memory.h>
+#include <disml/disml.h>
+#include "config_type.h"
 
-#include "../../logger.h"
+/* destroy a config object */
+void config_destroy(t_config_s **config);
+/* get a config object from a disobj object */
+t_config_s *disobj_to_config(t_disobj_s *obj);
 
-struct la_s {
-    unsigned char *addr;
-    unsigned int size:31;
-    unsigned int b:1;
-};
-
-/* standard hashtab operations: create/destroy/lookup/install */
-struct la_s *lacreate(unsigned int size);
-void ladestroy(struct la_s *la);
-void *laget(struct la_s *la);
-
-#endif /* H_LINEAR_ARRAY_H */
+#endif /* H_CONFIG_PARSE_H */

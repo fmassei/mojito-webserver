@@ -16,155 +16,58 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "module_loader.h"
 
-#ifdef DYNAMIC
-/* get the library full path given the basename and the libname */
-static char *getlibname(struct fparam_s *params, char *basename, char *libname)
+#ifndef DISABLE_DYNAMIC
+static char *get_module_filename(const char *name)
 {
-    char *lname;
-    size_t nlen;
-    nlen = strlen(params->module_basepath)+strlen(basename)+strlen(libname)+
-            strlen("/lib.so.1")+1;
-    if ((lname = malloc(nlen))==NULL)
+#ifdef _WIN32
+    static const char *ext = ".dll";
+    static const char *pre = "";
+#else
+    static const char *ext = ".so.1";
+    static const char *pre = "lib";
+#endif
+    char *ret;
+    if ((ret = xmalloc(strlen(pre)+strlen(name)+strlen(ext)+1))==NULL)
         return NULL;
-    sprintf(lname, "%s/lib%s%s.so.1", params->module_basepath,
-                                        basename,
-                                        libname);
-    return lname;
-}
-#endif /* DYNAMIC */
-
-#ifdef DYNAMIC_MODULE
-static int load_dynamic_module(struct fparam_s *prm,
-                    struct module_params_s *mpars, char *modname, char **error)
-{
-    struct module_s *mod;
-    struct plist_s *lpars;
-    char *buf;
-    *error = modname;
-    if ((buf = getlibname(prm, "", modname))==NULL) {
-        *error = "Couldn't get libname for module";
-        return -1;
-    }
-    if ((mod = module_add_dynamic(buf, error))==NULL) {
-        free(buf);
-        return -1;
-    }
-    if (buf!=NULL)
-        free(buf);
-    if (mod->set_params!=NULL) {
-        if (mpars==NULL) {
-            logmsg(LOG_WARNING, "No parameters found for %s", modname);
-            lpars = NULL;
-        } else {
-            lpars = mpars->params;
-        }
-        if (mod->set_params(lpars)<0) {
-            *error = "Failed passing parameters to module";
-            return -2;
-        }
-    }
-    return 0;
-}
-#else
-static int load_static_module(struct module_params_s *mpars,
-                    struct module_s*(*modfnc)(void), char *name, char **error)
-{
-    struct module_s *mod;
-    struct plist_s *lpars;
-    if ((mod = module_add_static(modfnc))==NULL) {
-        *error = "Error loading static module";
-        return -1;
-    }
-    if (mod->set_params!=NULL) {
-        if (mpars==NULL) {
-            logmsg(LOG_WARNING, "No parameters found for module %s", name);
-            lpars = NULL;
-        } else {
-            lpars = mpars->params;
-        }
-        if (mod->set_params(lpars)<0) {
-            *error = "Failed passing parameters to module";
-            return -2;
-        }
-    }
-    return 0;
-}
-#endif
-
-/* get the filter module(s) */
-int module_get(struct fparam_s *prm, char **error)
-{
-    struct module_params_s *mpars;
-    int err;
-#ifdef DYNAMIC_MODULE
-    char *modname;
-    int i;
-#else
-    extern struct module_s          
-#ifndef MOD_STRIPPED
-                                    *mod_stat_getmodule(void),
-                                    *mod_cacheshm_getmodule(void),
-                                    *mod_cgi_getmodule(void),
-/*                                    *mod_fcgi_getmodule(void),*/
-#endif
-                                    *mod_identity_getmodule(void),
-                                    *mod_gzip_getmodule(void),
-                                    *mod_deflate_getmodule(void);
-#endif
-    if ((mpars = params_getModuleParams(prm, "modules"))==NULL) {
-        *error = "section [modules] not found in config.ini";
-        return -1;
-    }
-#ifdef DYNAMIC_MODULE
-    if ((modname = plist_search(mpars->params, "module"))==NULL) {
-        *error = "value for \"module\" not found in section [modules]";
-        return -1;
-    }
-    while (*modname!='\0') {
-        while (*modname==' ') modname++;
-        /* TODO fix ugly ugly ugly */
-        for(i=0; (*(modname+i)>='a' && *(modname+i)<='z')||*(modname+i)=='_'; ++i) ;
-        *(modname+i) = '\0';
-        mpars = params_getModuleParams(prm, modname);
-        if ((err = load_dynamic_module(prm, mpars, modname, error))<0)
-            return err;
-        modname += i+1;
-    }
-#else
-    mpars = params_getModuleParams(prm, "mod_gzip");
-    if ((err = load_static_module(mpars, mod_gzip_getmodule,
-                                                "mod_gzip", error))<0)
-        return err;
-    mpars = params_getModuleParams(prm, "mod_deflate");
-    if ((err = load_static_module(mpars, mod_deflate_getmodule, 
-                                                "mod_deflate", error))<0)
-        return err;
-    mpars = params_getModuleParams(prm, "mod_identity");
-    if ((err = load_static_module(mpars, mod_identity_getmodule, 
-                                                "mod_identity", error))<0)
-        return err;
-#ifndef MOD_STRIPPED
-    mpars = params_getModuleParams(prm, "mod_stat");
-    if ((err = load_static_module(mpars, mod_stat_getmodule,
-                                                "mod_stat", error))<0)
-        return err;
-    mpars = params_getModuleParams(prm, "mod_cacheshm");
-    if ((err = load_static_module(mpars, mod_cacheshm_getmodule,
-                                                "mod_cacheshm", error))<0)
-        return err;
-    mpars = params_getModuleParams(prm, "mod_cgi");
-    if ((err = load_static_module(mpars, mod_cgi_getmodule,
-                                                "mod_cgi", error))<0)
-        return err;
-/*    mpars = params_getModuleParams(prm, "mod_fcgi");
-    if ((err = load_static_module(mpars, mod_fcgi_getmodule,
-                                                "mod_fcgi", error))<0)
-        return err;*/
-#endif
-#endif
-    return 0;
+    sprintf(ret, "%s%s%s", pre, name, ext);
+    return ret;
 }
 
+ret_t module_loader_load(const t_config_s *params)
+{
+    t_mmp_listelem_s *p;
+    t_module_s *mod;
+    t_config_module_s *mod_conf;
+    char *mod_filename;
+    if (params==NULL || params->modules==NULL) {
+        mmp_setError(MMP_ERR_PARAMS);
+        return MMP_ERR_PARAMS;
+    }
+    for (p=params->modules->head; p!=NULL; p=p->next) {
+        mod_conf = (t_config_module_s*)p->data;
+        if (mod_conf==NULL || mod_conf->name==NULL)
+            continue;
+        mmp_trace_reset();
+        printf("Loading module %s... ", mod_conf->name);
+        if ((mod_filename = get_module_filename(mod_conf->name))==NULL) {
+            printf("ENOMEM assigning name!?!\n");
+            continue;
+        }
+        mod = module_add_dynamic(mod_filename);
+        xfree(mod_filename);
+        if (mod==NULL) {
+            printf("ERR\n");
+            mmp_trace_print(stdout);
+            continue;
+        }
+        printf("Ok\n");
+        if (mod->set_params!=NULL)
+            mod->set_params(mod_conf);
+        if (mod->init!=NULL)
+            mod->init();
+    }
+    return MMP_ERR_OK;
+}
+#endif

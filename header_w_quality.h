@@ -19,20 +19,20 @@
 #ifndef HEADER_W_QUALITY
 #define HEADER_W_QUALITY
 
-#define _BSD_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <mmp/mmp_string.h>
+#include <mmp/mmp_trace.h>
+#include <mmp/mmp_memory.h>
+#include <mmp/mmp_list.h>
 
 /* I didn't want to write this. I swear. Anyway: extensions to the accept-like
  * headers, as in RFC2616-14.1 */
-struct extp_s {
+typedef struct extp_s {
     char *name;
     float quality;
-    struct extp_s *next;
-};
+} t_extp_s;
 
 /* a struct for the "quality header". This header is simply a list of comma
  * separated string, plus an optional quality value expressed as a float
@@ -40,20 +40,30 @@ struct extp_s {
  * (the exact syntax is commented in each function, referring to RFC2616-14.3).
  * All this stuff is totaly unuseful in my opinion, but the HTTP/1.1 compliance
  * requires it. */
-struct qhead_s {
+typedef struct qhead_s {
     char *id;
     float quality;
-    struct extp_s *extp;
-    struct qhead_s *next;
-};
+    t_mmp_list_s *extp_list;
+} t_qhead_s;
+
+typedef t_mmp_list_s t_qhead_list_s;
+
+/* create a qhead */
+t_qhead_s *qhead_create(const char *id);
+/* destroy a qhead */
+void qhead_destroy(t_qhead_s **qhead);
 
 /* insert on the top of the queue. Hack for inserting despite of parsing. */
-int qhead_insert(struct qhead_s **qhead, struct qhead_s *p);
+ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead);
 /* delete an entry */
-void qhead_delete(struct qhead_s **qhead, struct qhead_s *e2d);
+void qhead_list_delete(t_qhead_list_s *qhead_list, t_qhead_s **e2d);
 /* parse the "quality header" */
-struct qhead_s *qhead_parse(char *head);
+t_qhead_list_s *qhead_list_parse(const char *head);
 /* frees the memory of a qhead struct */
-void qhead_free(struct qhead_s *qhead);
+void qhead_list_destroy(t_qhead_list_s **qhead_list);
+
+#ifdef UNIT_TESTING
+ret_t test_qhead_unittest(t_mmp_tap_cycle_s *cycle);
+#endif /* UNIT_TESTING */
 
 #endif /* HEADER_W_QUALITY */

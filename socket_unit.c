@@ -1,5 +1,5 @@
 /*
-    Copyright 2009 Francesco Massei
+    Copyright 2010 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,15 +16,20 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "socket_unit.h"
+#include "utils.h"
 
-#ifndef H_MIME_H
-#define H_MIME_H
+void socket_unit_init(t_socket_unit_s *su)
+{
+    su->socket = INVALID_SOCKET;
+    su->state = SOCKET_STATE_NOTPRESENT;
+    request_init(&su->req);
+    response_init(&su->res);
+    bzero(&su->aio, sizeof(su->aio));
+}
 
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
+void socket_unit_drop(t_socket_unit_s *su)
+{
 
-/* get file mime type */
-char *mime_gettype(char *fname);
+}
 
-#endif /* H_MIME_H */
