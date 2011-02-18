@@ -30,43 +30,6 @@
 
 t_socket srv_sock;
 
-ret_t sck_data(int slot, t_socket_unit_s *su)
-{
-    t_request_parse_e rst;
-    DBG_PRINT(("sck_data: data on slot %d\n", slot));
-    if (su->socket_states[slot]==SOCKET_STATE_READREQUEST) {
-/*keep_request_alive:*/
-        rst = request_parse_read(&su->connect_list[slot], su->reqs[slot]);
-        switch (rst) {
-        case REQUEST_PARSE_ERROR:
-            /* TODO: mark and close */
-        case REQUEST_PARSE_CLOSECONN:
-kill_connection:
-            DBG_PRINT(("sck_data: closing on slot %d\n", slot));
-            /* TODO: check for these errors! */
-            (void)mmp_socket_close(&su->connect_list[slot], 1);
-            (void)socket_unit_del_connection(su, slot);
-            DBG_PRINT(("sck_data: disconnected on slot %d\n", slot));
-            break;
-        case REQUEST_PARSE_FINISH:
-            DBG_PRINT(("sck_data: finished parsing on slot %d\n", slot));
-            su->socket_states[slot]=SOCKET_STATE_WRITERESPONSE;
-            response_send(su->resps[slot], su->reqs[slot]);
-            /*if (su->reqs[slot]->keeping_alive) {
-                printf("keeping alive\n");
-                goto keep_request_alive;
-            }*/
-            goto kill_connection;
-            break;
-        case REQUEST_PARSE_CONTINUE:
-            DBG_PRINT(("sck_data: continue parsing on slot %d\n", slot));
-            /* nothing */
-            break;
-        }
-    }
-    return MMP_ERR_OK;
-}
-
 int main(const int argc, const char *argv[])
 {
     int done = 0;
@@ -83,11 +46,14 @@ int main(const int argc, const char *argv[])
         t_socket newsock;
         t_socket_unit_s *su;
         char *nip;
-        su = xmalloc(sizeof(*su));
+        if ((su = xmalloc(sizeof(*su)))==NULL) {
+            DBG_PRINT(("enomem\n"));
+            goto badexit;
+        }
         socket_unit_init(su);
-        if (mmp_socket_server_accept(&srv_sock, &newsock, &nip)!=MMP_ERR_OK)
+        if (mmp_socket_server_accept(&srv_sock, &su->socket, &nip)!=MMP_ERR_OK)
             goto bad_exit;
-        mmp_socket_set_nonblocking(&newsock);
+        mmp_socket_set_nonblocking(&su->socket);
         DBG_PRINT(("main loop: %s connected\n", nip));
         request_parse_read(su);
         xfree(nip);

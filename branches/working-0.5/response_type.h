@@ -16,21 +16,26 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "socket_unit.h"
-#include "utils.h"
+#ifndef H_RESPONSE_TYPE_H
+#define H_RESPONSE_TYPE_H
 
-void socket_unit_init(t_socket_unit_s *su)
-{
-    su->socket = INVALID_SOCKET;
-    su->state = SOCKET_STATE_NOTPRESENT;
-    request_init(&su->req);
-    response_init(&su->res);
-    bzero(&su->aio, sizeof(su->aio));
-}
+#include <mmp/mmp_socket.h>
+#include "modules.h"
+#include "types.h"
 
-void socket_unit_drop(t_socket_unit_s *su)
-{
-    request_drop(&su->req);
-    response_drop(&su->res);
-}
+typedef enum hresp_e {
+    HRESP_200   =   0,
+    HRESP_404   =   1,
+    HRESP_406   =   2,
+    HRESP_500   =   3,
+    HRESP_501   =   4
+} t_hresp_e;
 
+struct response_s {
+    char resbuf[0xff], tmpbuf[0xff];
+    t_socket sock;
+    t_module_s *ch_filter;      /**< selected filter for response */
+    int content_length_sent;    /**< has the content-length been sent? */
+};
+
+#endif /* H_RESPONSE_TYPE_H */
