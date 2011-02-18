@@ -1,5 +1,5 @@
 /*
-    Copyright 2010 Francesco Massei
+    Copyright 2009 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,21 +16,17 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "socket_unit.h"
-#include "utils.h"
 
-void socket_unit_init(t_socket_unit_s *su)
-{
-    su->socket = INVALID_SOCKET;
-    su->state = SOCKET_STATE_NOTPRESENT;
-    request_init(&su->req);
-    response_init(&su->res);
-    bzero(&su->aio, sizeof(su->aio));
-}
+#ifndef H_FILTER_MANAGER_H
+#define H_FILTER_MANAGER_H
 
-void socket_unit_drop(t_socket_unit_s *su)
-{
-    request_drop(&su->req);
-    response_drop(&su->res);
-}
+#include <stdio.h>
+#include <stdlib.h>
+#include "modules.h"
+#include "header_w_quality.h"
+#include "types.h"
 
+ret_t filter_sanitize_queue(t_qhead_list_s **qhead);
+t_module_s *filter_findfilter(t_qhead_list_s *qlist);
+
+#endif /* H_FILTER_MANAGER_H */

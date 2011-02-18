@@ -1,5 +1,5 @@
 /*
-    Copyright 2010 Francesco Massei
+    Copyright 2009 Francesco Massei
 
     This file is part of mojito webserver.
 
@@ -16,21 +16,24 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "socket_unit.h"
-#include "utils.h"
+#ifndef H_RESPONSE_H
+#define H_RESPONSE_H
 
-void socket_unit_init(t_socket_unit_s *su)
-{
-    su->socket = INVALID_SOCKET;
-    su->state = SOCKET_STATE_NOTPRESENT;
-    request_init(&su->req);
-    response_init(&su->res);
-    bzero(&su->aio, sizeof(su->aio));
-}
+#include <stdio.h>
+#include <stdlib.h>
+#include <mmp/mmp_memory.h>
+#include <mmp/mmp_trace.h>
+#include <mmp/mmp_socket.h>
+#include <mmp/mmp_mmap.h>
+#include "request.h"
+#include "response_type.h"
+#include "resp_headers.h"
+#include "modules.h"
+#include "mime.h"
+#include "filter_manager.h"
 
-void socket_unit_drop(t_socket_unit_s *su)
-{
-    request_drop(&su->req);
-    response_drop(&su->res);
-}
+void response_init(t_response_s *res);
+void response_drop(t_response_s *res);
+void response_send(t_socket_unit_s *su);
 
+#endif /* H_RESPONSE_H */
