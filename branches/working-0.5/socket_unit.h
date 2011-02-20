@@ -19,24 +19,22 @@
 #ifndef H_SOCKET_UNIT_H
 #define H_SOCKET_UNIT_H
 
-#include <aio.h>
 #include <mmp/mmp_socket.h>
-#include "request.h"
+#include "types.h"
 #include "response.h"
+#include "request.h"
 
 typedef enum socket_state_e {
     SOCKET_STATE_NOTPRESENT     = 0,
     SOCKET_STATE_READREQUEST    = 1,
+    SOCKET_STATE_WRITERESPONSE  = 2,
 } t_socket_state_e;
-
-typedef struct socket_unit_s t_socket_unit_s;
 
 struct socket_unit_s {
     t_socket socket;
     t_socket_state_e state;
     t_request_s req;
     t_response_s res;
-    struct aiocb aio;
 };
 
 void socket_unit_init(t_socket_unit_s *su);

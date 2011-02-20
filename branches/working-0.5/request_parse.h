@@ -35,6 +35,6 @@ typedef enum request_parse_e {
     REQUEST_PARSE_ERROR     = 3
 } t_request_parse_e;
 
-void request_parse_read(t_socket_unit_s *su);
+t_request_parse_e request_parse_read(t_socket_unit_s *su);
 
 #endif /* H_REQUEST_PARSE_H */

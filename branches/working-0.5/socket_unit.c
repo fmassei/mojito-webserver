@@ -21,11 +21,9 @@
 
 void socket_unit_init(t_socket_unit_s *su)
 {
-    su->socket = INVALID_SOCKET;
-    su->state = SOCKET_STATE_NOTPRESENT;
+    su->state = SOCKET_STATE_READREQUEST;
     request_init(&su->req);
     response_init(&su->res);
-    bzero(&su->aio, sizeof(su->aio));
 }
 
 void socket_unit_drop(t_socket_unit_s *su)

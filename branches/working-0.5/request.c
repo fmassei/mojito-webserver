@@ -17,10 +17,10 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "request.h"
+#include <mmp/mmp_files.h>
 
-void request_create(t_request_s *req)
+void request_init(t_request_s *req)
 {
-    request_parse_init(&ret->parse);
     req->parse.buf = req->parse.cur_head = NULL;
     req->parse.status = REQUEST_PARSE_STATUS_HEAD;
     req->method = REQUEST_METHOD_UNKNOWN;
@@ -34,7 +34,7 @@ void request_create(t_request_s *req)
 
 void request_drop(t_request_s *req)
 {
-    if (request==NULL) return;
+    if (req==NULL) return;
     if (req->accept_encoding!=NULL)
         qhead_list_destroy(&req->accept_encoding);
 }

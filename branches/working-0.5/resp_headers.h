@@ -24,6 +24,7 @@
 #include <string.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_date.h>
+#include "types.h"
 #include "config_manager.h"
 #include "response_type.h"
 #include "request.h"

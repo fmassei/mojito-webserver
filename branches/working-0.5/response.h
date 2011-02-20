@@ -21,16 +21,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mmp/mmp_memory.h>
-#include <mmp/mmp_trace.h>
-#include <mmp/mmp_socket.h>
-#include <mmp/mmp_mmap.h>
-#include "request.h"
+#include "types.h"
 #include "response_type.h"
 #include "resp_headers.h"
 #include "modules.h"
 #include "mime.h"
 #include "filter_manager.h"
+#include "socket_unit.h"
 
 void response_init(t_response_s *res);
 void response_drop(t_response_s *res);
