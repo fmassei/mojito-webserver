@@ -11,10 +11,9 @@ FINAME = mojito
 TSTNAME = unittests
 
 OBJS = main.o config_parse.o config_manager.o socket_unit.o \
-		socket_unit_manager.o request.o request_parse.o header_w_quality.o \
+		request.o request_parse.o header_w_quality.o \
 		modules.o mime.o response.o resp_headers.o filter_manager.o \
-        module_loader.o \
-        unittest.o
+        module_loader.o scheduler.o
 OBJWD = echo $(OBJDIR)/$(OBJS) | sed 's/\ /\ \.\//g'
 
 base: all modules_all

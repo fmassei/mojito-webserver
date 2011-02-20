@@ -18,6 +18,7 @@
 */
 
 #include "response.h"
+#include <mmp/mmp_mmap.h>
 
 void response_init(t_response_s *res)
 {
@@ -25,7 +26,6 @@ void response_init(t_response_s *res)
     res->sock = SOCKET_INVALID;
     res->ch_filter = NULL;
     res->content_length_sent = 0;
-    return ret;
 }
 
 void response_drop(t_response_s *resp)
@@ -99,6 +99,7 @@ void response_send(t_socket_unit_s *su)
     t_request_s *req;
     req = &su->req;
     res = &su->res;
+    res->sock = su->socket;
 
     config = config_get();
     if (check_method(req)!=0) {

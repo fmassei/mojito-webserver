@@ -119,97 +119,87 @@ static int parse_option(t_request_s *req, char *line)
         return parse_header_line(req, line);
 }
 
-void request_parse_read(t_socket_unit_s *su)
+t_request_parse_e request_parse_read(t_socket_unit_s *su)
 {
-    su->req.parse.len = SOCKBUFSIZE;
-    su->req.parse.pos = 0;
-    su->req.parse.buf = xmalloc(SOCKBUFSIZE);
-    su->req.parse.cur_head = su->req.parse.buf;
-    su->req.parse.status = REQUEST_PARSE_STATUS_HEAD;
-    bzero(&su->aiost, sizeof(su->aiost));
-    su->aiost.aio_fildes = fd;
-    su->aiost.aio_buf = su->req.parse.buf;
-    su->aiost.aio_nbytes = su->req.parse.len;
-    su->aiost.aio_offset = 0;
-    su->aiost.aio_sigevent.sigev_notify = SIGEV_CALLBACK;
-    su->aiost.aio_sigevent.notify_function = aio_request_read_cback;
-    su->aiost.aio_sigevent.notify_attributes = NULL;
-    su->aiost.aio_sigevent.sigev_value.sival_ptr = su;
-    aio_read(&su->aiost);
-}
-void aio_request_read_cback(sigval_t sigval)
-{
-    t_socket_unit_s *su;
-    su = (t_socket_unit_s*)sigval.sival_ptr;
-    if (aio_error!=0) {
-    }
-    su->req.parse.rb = aio_return(&su->aiost);
-    if (su->req.parse.rb<=0) {
-        mmp_socket_close(su->socket);
-        xfree(su);
-        DBG_PRINT(("aio_request_read_cback: request closed\n"));
-    } else {
+    t_socket *sock;
+    t_request_s *req;
+    sock = &su->socket;
+    req = &su->req;
+    req->parse.len = req->parse.pos = 0;
+#ifdef _WIN32
+#   pragma warning(push)
+#   pragma warning(disable:4127)
+#endif
+    while(1) {
+#ifdef _WIN32
+#   pragma warning(pop)
+#endif
+        req->parse.mr = SOCKBUFSIZE + req->parse.pos;
+        if (req->parse.len<req->parse.mr) {
+            req->parse.reline =(int)(req->parse.cur_head)-(int)(req->parse.buf);
+            req->parse.buf = xrealloc(req->parse.buf, req->parse.mr);
+            req->parse.cur_head =(char*)((int)req->parse.buf+req->parse.reline);
+            req->parse.len = req->parse.mr;
+        }
+        req->parse.rb =
+            mmp_socket_read(sock, req->parse.buf+req->parse.pos, SOCKBUFSIZE);
+        if (req->parse.rb==SOCKET_ERROR) {
+            if (mmp_socket_is_block_last_error())
+                return REQUEST_PARSE_CONTINUE;
+            return REQUEST_PARSE_ERROR;
+        }
+        if (req->parse.rb==0) {
+            return REQUEST_PARSE_CLOSECONN;
+        }
         /* BOA-like loop. An insane mess, but pretty clear after two or three
          * hours spent on reading this twenty lines. Good luck. */
-        while(su->req.parse.rb-->0) {
-            su->req.parse.c = *(su->req.parse.buf+su->req.parse.pos);
-            if (su->req.parse.c=='\0')
+        while(req->parse.rb-->0) {
+            req->parse.c = *(req->parse.buf+req->parse.pos);
+            if (req->parse.c=='\0')
                 continue;
-            switch(su->req.parse.status) {
+            switch(req->parse.status) {
             case REQUEST_PARSE_STATUS_HEAD:
-                if (su->req.parse.c=='\r')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_CR1;
-                else if (su->req.parse.c=='\n')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_LF1;
+                if (req->parse.c=='\r')
+                    req->parse.status = REQUEST_PARSE_STATUS_CR1;
+                else if (req->parse.c=='\n')
+                    req->parse.status = REQUEST_PARSE_STATUS_LF1;
                 break;
             case REQUEST_PARSE_STATUS_CR1:
-                if (su->req.parse.c=='\n')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_LF1;
+                if (req->parse.c=='\n')
+                    req->parse.status = REQUEST_PARSE_STATUS_LF1;
                 else if (req->parse.c=='\r')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_HEAD;
+                    req->parse.status = REQUEST_PARSE_STATUS_HEAD;
                 break;
             case REQUEST_PARSE_STATUS_LF1:
-                if (su->req.parse.c=='\r')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_CR2;
-                else if (su->req.parse.c=='\n')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_BODY;
+                if (req->parse.c=='\r')
+                    req->parse.status = REQUEST_PARSE_STATUS_CR2;
+                else if (req->parse.c=='\n')
+                    req->parse.status = REQUEST_PARSE_STATUS_BODY;
                 else
-                    su->req.parse.status = REQUEST_PARSE_STATUS_HEAD;
+                    req->parse.status = REQUEST_PARSE_STATUS_HEAD;
                 break;
             case REQUEST_PARSE_STATUS_CR2:
-                if (su->req.parse.c=='\n')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_BODY;
-                else if (su->req.parse.c=='\r')
-                    su->req.parse.status = REQUEST_PARSE_STATUS_HEAD;
+                if (req->parse.c=='\n')
+                    req->parse.status = REQUEST_PARSE_STATUS_BODY;
+                else if (req->parse.c=='\r')
+                    req->parse.status = REQUEST_PARSE_STATUS_HEAD;
                 break;
             default:
                 /* nothing */
                 break;
             }
-            ++su->req.parse.pos;
-            if (su->req.parse.status==REQUEST_PARSE_STATUS_LF1) {
+            ++req->parse.pos;
+            if (req->parse.status==REQUEST_PARSE_STATUS_LF1) {
                 /* header found */
-                su->req.parse.buf[su->req.parse.pos-2] = '\0';
-                parse_option(&su->req, su->req.parse.cur_head);
-                su->req.parse.cur_head = su->req.parse.buf+su->req.parse.pos;
-            } else if (su->req.parse.status==REQUEST_PARSE_STATUS_BODY) {
-                filter_sanitize_queue(&su->req.accept_encoding);
-                if (su->req.content_length<=0 &&
-                            su->req.method!=REQUEST_METHOD_POST)
-                    response_send(su);
+                req->parse.buf[req->parse.pos-2] = '\0';
+                parse_option(req, req->parse.cur_head);
+                req->parse.cur_head = req->parse.buf+req->parse.pos;
+            } else if (req->parse.status==REQUEST_PARSE_STATUS_BODY) {
+                filter_sanitize_queue(&req->accept_encoding);
+                if (req->content_length<=0 && req->method!=REQUEST_METHOD_POST)
+                    return REQUEST_PARSE_FINISH;
             }
         }
-        su->req.parse.mr = SOCKBUFSIZE + su->req.parse.pos;
-        if (su->req.parse.len<su->req.parse.mr) {
-            su->req.parse.reline = 
-                    (int)(su->req.parse.cur_head - su->req.parse.buf);
-            su->req.parse.buf = xrealloc(su->req.parse.buf, su->req.parse.mr);
-            su->req.parse.cur_head =
-                    (char*)((int)su->req.parse.buf+su->req.parse.reline);
-            su->req.parse.len = su->req.parse.mr;
-        }
-        su->aiost.aio_nbytes = su->req.parse.len;
-        su->aiost.aio_offset = su->req.parse.pos;
-        aio_read(&su->aiost);
     }
+    return REQUEST_PARSE_ERROR; /* this should never happen */
 }

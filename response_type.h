@@ -20,7 +20,6 @@
 #define H_RESPONSE_TYPE_H
 
 #include <mmp/mmp_socket.h>
-#include "modules.h"
 #include "types.h"
 
 typedef enum hresp_e {

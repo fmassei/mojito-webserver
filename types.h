@@ -20,10 +20,15 @@
 #ifndef H_TYPES_H
 #define H_TYPES_H
 
+#include <mmp/mmp_list.h>
+
 typedef struct module_s t_module_s;
 typedef t_mmp_list_s t_module_list_s;
 
 typedef struct response_s t_response_s;
+typedef struct request_s t_request_s;
+
+typedef struct socket_unit_s t_socket_unit_s;
 
 #endif /* H_TYPES_H */
 
