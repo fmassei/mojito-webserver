@@ -33,7 +33,7 @@ config
  modules
   mod_identity
   #mod_gzip
-  #mod_deflate
+  mod_deflate
   #mod_cgi
   #mod_fcgi
   #mod_stat

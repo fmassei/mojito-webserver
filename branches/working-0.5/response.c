@@ -28,6 +28,7 @@ void response_init(t_response_s *res)
     res->content_length_sent = 0;
     res->rstate.fd = -1;
     res->rstate.sent = 0;
+    res->rstate.mod_res.data = NULL;
 }
 
 void response_drop(t_response_s *resp)
