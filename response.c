@@ -26,6 +26,8 @@ void response_init(t_response_s *res)
     res->sock = SOCKET_INVALID;
     res->ch_filter = NULL;
     res->content_length_sent = 0;
+    res->rstate.fd = -1;
+    res->rstate.sent = 0;
 }
 
 void response_drop(t_response_s *resp)
@@ -51,7 +53,7 @@ static void strip_uri(t_request_s *req)
     }
 }
 
-static t_hresp_e find_file(t_request_s *req)
+static t_hresp_e find_file(t_request_s *req, t_response_s *res)
 {
     const t_config_s *config;
     config = config_get();
@@ -61,10 +63,10 @@ static t_hresp_e find_file(t_request_s *req)
     }    
     sprintf(req->abs_filename, "%s%s", config->server->http_root, req->page);
 redo:
-    memset(&req->file_stat, 0, sizeof(req->file_stat));
-    mmp_stat(req->abs_filename, &req->file_stat);
-    if ((req->file_stat.st_mode&S_IFMT)!=S_IFREG) {
-        if ((req->file_stat.st_mode&S_IFMT)==S_IFDIR) {
+    memset(&res->rstate.sb, 0, sizeof(res->rstate.sb));
+    mmp_stat(req->abs_filename, &res->rstate.sb);
+    if ((res->rstate.sb.st_mode&S_IFMT)!=S_IFREG) {
+        if ((res->rstate.sb.st_mode&S_IFMT)==S_IFDIR) {
             if ((req->abs_filename = xrealloc(req->abs_filename,
                                         strlen(req->abs_filename)+
                                         strlen(config->server->default_page)+1))==NULL) {
@@ -90,61 +92,69 @@ static int check_method(t_request_s *req)
 }
 
 /* send the response */
-void response_send(t_socket_unit_s *su)
+t_response_send_e response_send(t_socket_unit_s *su)
 {
-    const t_config_s *config;
-    t_mmp_mmap_s *filemap;
-    int fd, find_ret;
-    t_response_s *res;
-    t_request_s *req;
-    req = &su->req;
-    res = &su->res;
+    int find_ret;
+    t_modret_e send_ret;
+    t_request_s *req = &su->req;
+    t_response_s *res = &su->res;
+
+    if (res->rstate.fd>=0)
+        goto just_continue;
+
     res->sock = su->socket;
 
-    config = config_get();
     if (check_method(req)!=0) {
         header_kill_w_code(res, HRESP_501, req->protocol);
-        return;
+        return RESPONSE_SEND_FINISH;
     }
     strip_uri(req);
-    find_ret = find_file(req);
+    find_ret = find_file(req, res);
     /* find_ret can be an error, but maybe we're dealing with a "special" file.
      * We run can_run() and on_presend() to see if there is at least one module
      * that can process the request */
-    if (can_run(req)!=0)
-        return;
-    if (on_presend(res->sock, req)!=0)
-        return;
+    if (can_run(req)!=MODRET_OK)
+        return RESPONSE_SEND_FINISH;
+    if (on_presend(res->sock, req)!=MODRET_OK)
+        return RESPONSE_SEND_FINISH;
     if (find_ret!=0) {
         header_kill_w_code(res, find_ret, req->protocol);
-        return;
+        return RESPONSE_SEND_FINISH;
     }
     if ((res->ch_filter = filter_findfilter(req->accept_encoding))==NULL) {
         header_kill_w_code(res, HRESP_406, req->protocol);
-        return;
-    }
-    if ((fd = mmp_open(req->abs_filename, O_RDONLY, 0))<=0) {
-        header_kill_w_code(res, HRESP_404, req->protocol);
-        return;
+        return RESPONSE_SEND_FINISH;
     }
     header_push_code(res, HRESP_200, req->protocol);
     header_push_contenttype(res, mime_gettype(req->abs_filename));
-    if (on_prehead(&req->file_stat, res)!=0)
-        return;
+    if (on_prehead(res)!=MODRET_OK) {
+        return RESPONSE_SEND_FINISH;
+    }
     /* no length? no party. We can't keep the connection alive 
      * FIXME this is very ugly. Move this check somewhere else */
     if (req->keeping_alive==1 && res->content_length_sent==0)
         req->keeping_alive = 0;
     header_send(res);
-    if (req->method==REQUEST_METHOD_HEAD)
-        return;
-    filemap = mmp_mmap(NULL, req->file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (on_send(filemap->ptr, &req->file_stat, res)!=0) {
-        mmp_munmap(&filemap);
-        return;
+    if (req->method==REQUEST_METHOD_HEAD) {
+        return RESPONSE_SEND_FINISH;
     }
-    if (on_postsend(req, mime_gettype(req->abs_filename), filemap->ptr, &req->file_stat)!=0) {
-        mmp_munmap(&filemap);
-        return;
+    if ((res->rstate.fd = mmp_open(req->abs_filename, O_RDONLY, 0))<=0) {
+        header_kill_w_code(res, HRESP_404, req->protocol);
+        return RESPONSE_SEND_FINISH;
     }
+just_continue:
+    send_ret = on_send(res);
+    if (send_ret==MODRET_CONTINUE)
+        return RESPONSE_SEND_CONTINUE;
+    if (send_ret==MODRET_ERR) {
+        mmp_trace_print(stdout);
+        mmp_close(res->rstate.fd);
+        return RESPONSE_SEND_ERROR;
+    }
+    if (on_postsend(req, res)!=MODRET_OK) {
+        mmp_close(res->rstate.fd);
+        return RESPONSE_SEND_ERROR;
+    }
+    mmp_close(res->rstate.fd);
+    return RESPONSE_SEND_FINISH;
 }

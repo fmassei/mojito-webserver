@@ -30,54 +30,105 @@
 
 #define SCHEDULER_LEN   10000 /* TODO move to config */
 
-t_socket srv_sock;
-t_sched_id sched_id;
-t_socket_unit_s su[SCHEDULER_LEN];
+static t_socket s_srv_sock;
+static t_sched_id s_sched_id;
+static t_socket_unit_s s_sockunits[SCHEDULER_LEN];
 
-void someone_calling(t_socket sock)
+/* TODO: wrap the accept calls */
+static ret_t accept_client(void)
 {
-    if (sock==srv_sock) {
-        t_socket cl_sock;
-        char *nip;
-        if (mmp_socket_server_accept(&srv_sock, &cl_sock, &nip)!=MMP_ERR_OK) {
-            DBG_PRINT(("WHOAH! error on accept.\n"));
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    t_socket cl_sock;
+#ifdef _GNU_SOURCE
+    cl_sock = accept4(s_srv_sock, (struct sockaddr *)&addr, &addrlen,
+                        SOCK_NONBLOCK);
+#else
+    cl_sock = accept(s_srv_sock, (struct sockaddr *)&addr, &addrlen);
+#endif
+    if (cl_sock<0) {
+        if (errno==EMFILE) {
+            DBG_PRINT(("fd limit reached. :(\n"));
+            return MMP_ERR_OK;
+        }
+        perror("accept");
+        return MMP_ERR_SOCKET;
+    }
+    if (cl_sock>=SCHEDULER_LEN) { /* TODO remove */
+        DBG_PRINT(("socket_unit overbound.. C'mon man, fix that!\n"));
+        mmp_setError(MMP_ERR_GENERIC);
+        return MMP_ERR_GENERIC;
+    }
+    socket_unit_init(&s_sockunits[cl_sock]);
+    s_sockunits[cl_sock].socket = cl_sock;
+#ifndef _GNU_SOURCE /* already done with accept4() */
+    mmp_socket_set_nonblocking(&cl_sock);
+#endif
+    scheduler_add_client_socket(s_sched_id, cl_sock);
+    DBG_PRINT(("main loop: accepted %s\n", inet_ntoa(addr.sin_addr)));
+    return MMP_ERR_OK;
+}
+
+static void kill_client(t_socket sock)
+{
+    DBG_PRINT(("closing on slot %d\n", sock));
+    (void)mmp_socket_close(&sock, 1);
+    scheduler_del_socket(s_sched_id, sock);
+}
+
+static ret_t client_action(t_socket sock)
+{
+    t_request_parse_e rreq;
+    t_response_send_e rres;
+    DBG_PRINT(("data on slot %d\n", sock));
+    if (s_sockunits[sock].state==SOCKET_STATE_READREQUEST) {
+        rreq = request_parse_read(&s_sockunits[sock]);
+        switch(rreq) {
+        case REQUEST_PARSE_ERROR:
+        case REQUEST_PARSE_CLOSECONN:
+            kill_client(sock);
+            break;
+        case REQUEST_PARSE_FINISH:
+            DBG_PRINT(("finished parsing on slot %d\n", sock));
+            rres = response_send(&s_sockunits[sock]);
+            if (rres!=RESPONSE_SEND_CONTINUE) {
+                /* error, or it's already finished */
+                kill_client(sock);
+            } else {
+                s_sockunits[sock].state = SOCKET_STATE_WRITERESPONSE;
+            }
+            break;
+        case REQUEST_PARSE_CONTINUE:
+            DBG_PRINT(("continue parsing on slot %d\n", sock));
+            break;
+        } 
+    } else if (s_sockunits[sock].state==SOCKET_STATE_WRITERESPONSE) {
+        rres = response_send(&s_sockunits[sock]);
+        switch(rres) {
+        case RESPONSE_SEND_CLOSECONN:
+        case RESPONSE_SEND_ERROR:
+        case RESPONSE_SEND_FINISH:
+            kill_client(sock);
+            break;
+        case RESPONSE_SEND_CONTINUE:
+            DBG_PRINT(("continue sending on slot %d\n", sock));
+            break;
+        }
+    }
+    return MMP_ERR_OK;
+}
+
+static void someone_calling(t_socket sock)
+{
+    if (sock==s_srv_sock) {
+        if (accept_client()!=MMP_ERR_OK) {
             mmp_trace_print(stdout);
             exit(EXIT_FAILURE);
         }
-        if (cl_sock>=SCHEDULER_LEN) { /* TODO remove */
-            DBG_PRINT(("socket_unit overbound.. C'mon man, fix that!\n"));
-            mmp_trace_print(stdout);
-            exit(EXIT_FAILURE);
-        }
-        socket_unit_init(&su[cl_sock]);
-        su[cl_sock].socket = cl_sock;
-        mmp_socket_set_nonblocking(&cl_sock);
-        DBG_PRINT(("main loop: %s connected\n", nip));
-        scheduler_add_client_socket(sched_id, cl_sock);
-        xfree(nip);
     } else {
-        t_request_parse_e rst;
-        DBG_PRINT(("data on slot %d\n", sock));
-        if (su[sock].state==SOCKET_STATE_READREQUEST) {
-            rst = request_parse_read(&su[sock]);
-            switch(rst) {
-            case REQUEST_PARSE_ERROR:
-            case REQUEST_PARSE_CLOSECONN:
-kill_connection:
-                DBG_PRINT(("closing on slot %d\n", sock));
-                (void)mmp_socket_close(&sock, 1);
-                scheduler_del_socket(sched_id, sock);
-                break;
-            case REQUEST_PARSE_FINISH:
-                DBG_PRINT(("finished parsing on slot %d\n", sock));
-                su[sock].state = SOCKET_STATE_WRITERESPONSE;
-                response_send(&su[sock]);
-                goto kill_connection;
-                break;
-            case REQUEST_PARSE_CONTINUE:
-                DBG_PRINT(("continue parsing on slot %d\n", sock));
-                break;
-            } 
+        if (client_action(sock)!=MMP_ERR_OK) {
+            mmp_trace_print(stdout);
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -89,21 +140,21 @@ int main(/*const int argc, const char *argv[]*/)
     if (    (config_manager_loadfile(DEFAULT_CONFIGFILE)!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
-            ((sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
+            ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
             (mmp_socket_server_start(config_get()->server->listen_port,
                                         config_get()->server->listen_queue,
-                                        &srv_sock)!=MMP_ERR_OK) ||
-            (scheduler_add_listen_socket(sched_id, srv_sock)!=MMP_ERR_OK) )
+                                        &s_srv_sock)!=MMP_ERR_OK) ||
+            (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
     mmp_trace_reset();
     while(!done) {
-        if (scheduler_loop(sched_id, someone_calling)!=MMP_ERR_OK) {
+        if (scheduler_loop(s_sched_id, someone_calling)!=MMP_ERR_OK) {
             DBG_PRINT(("scheduler_loop\n"));
             goto bad_exit;
         }
     }
-    mmp_socket_close(&srv_sock, 1);
-    scheduler_destroy(sched_id);
+    mmp_socket_close(&s_srv_sock, 1);
+    scheduler_destroy(s_sched_id);
     mmp_socket_finiSystem();
     config_manager_freeall();
     return EXIT_SUCCESS;
