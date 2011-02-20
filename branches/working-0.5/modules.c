@@ -49,7 +49,7 @@ static void dropmod(t_module_list_s *list, t_module_s **todrop)
         case MOD_NOHOOK: \
             break; \
         case MOD_CORE_CRIT: \
-            return -1;
+            return MODRET_ERR;
 #define MOD_LOOP_CASE_CRIT \
         case MOD_CRIT: \
             dropmod(s_modules, &p); \
@@ -60,10 +60,13 @@ static void dropmod(t_module_list_s *list, t_module_s **todrop)
             break;
 #define MOD_LOOP_CASE_PROCDONE \
         case MOD_PROCDONE: \
-            return 0;
+            return MODRET_OK;
 #define MOD_LOOP_CASE_ALLDONE \
         case MOD_ALLDONE: \
-            return 1;
+            return MODRET_ALLDONE;
+#define MOD_LOOP_CASE_CONTINUE \
+        case MOD_AGAIN: \
+            return MODRET_CONTINUE;
 #define MOD_LOOP_END \
         default: \
             break; \
@@ -73,13 +76,14 @@ static void dropmod(t_module_list_s *list, t_module_s **todrop)
 #define MOD_LOOP_NORMFLOW \
     MOD_LOOP_SKIP_STOPPED \
     MOD_LOOP_SWITCH \
-    MOD_LOOP_CASE_CRIT \
-    MOD_LOOP_CASE_ERR \
+    MOD_LOOP_CASE_CONTINUE \
     MOD_LOOP_CASE_PROCDONE \
     MOD_LOOP_CASE_ALLDONE \
+    MOD_LOOP_CASE_CRIT \
+    MOD_LOOP_CASE_ERR \
     MOD_LOOP_END
  
-int mod_set_params(t_config_module_s *params)
+t_modret_e mod_set_params(t_config_module_s *params)
 {
     MOD_LOOP_HEAD
         ret = (p->set_params!=NULL) ? p->set_params(params) : MOD_NOHOOK;
@@ -87,10 +91,10 @@ int mod_set_params(t_config_module_s *params)
     MOD_LOOP_CASE_CRIT
     MOD_LOOP_CASE_ERR
     MOD_LOOP_END
-    return 0;
+    return MODRET_OK;
 }
 
-int mod_init(void)
+t_modret_e mod_init(void)
 {
     MOD_LOOP_HEAD
         ret = (p->init!=NULL) ? p->init() : MOD_NOHOOK;
@@ -98,10 +102,10 @@ int mod_init(void)
     MOD_LOOP_CASE_CRIT
     MOD_LOOP_CASE_ERR
     MOD_LOOP_END
-    return 0;
+    return MODRET_OK;
 }
 
-int mod_fini(void)
+t_modret_e mod_fini(void)
 {
     MOD_LOOP_HEAD
         ret = (p->fini!=NULL) ? p->fini() : MOD_NOHOOK;
@@ -109,63 +113,63 @@ int mod_fini(void)
     MOD_LOOP_CASE_CRIT
     MOD_LOOP_CASE_ERR
     MOD_LOOP_END
-    return 0;
+    return MODRET_OK;
 }
 
-int can_run(t_request_s *req)
+t_modret_e can_run(t_request_s *req)
 {
     MOD_LOOP_HEAD
         ret = (p->can_run!=NULL) ? p->can_run(req) : MOD_NOHOOK;
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
-int on_accept(void)
+t_modret_e on_accept(void)
 {
     MOD_LOOP_HEAD
         ret = (p->on_accept!=NULL) ? p->on_accept() : MOD_NOHOOK;
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
-int on_presend(t_socket sock, t_request_s *req)
+t_modret_e on_presend(t_socket sock, t_request_s *req)
 {
     MOD_LOOP_HEAD
         ret = (p->on_presend!=NULL) ? p->on_presend(sock, req) : MOD_NOHOOK;
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
-int on_prehead(t_mmp_stat_s *sb, t_response_s *res)
+t_modret_e on_prehead(t_response_s *res)
 {
     MOD_LOOP_HEAD
         if ((p->category==MODCAT_FILTER) && (p!=res->ch_filter)) {
             ret = MOD_NOHOOK;
         } else {
-            ret = (p->on_prehead!=NULL) ? p->on_prehead(sb, res) : MOD_NOHOOK;
+            ret = (p->on_prehead!=NULL) ? p->on_prehead(res) : MOD_NOHOOK;
         }
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
-int on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
+t_modret_e on_send(t_response_s *res)
 {
     MOD_LOOP_HEAD
         if ((p->category==MODCAT_FILTER) && (p!=res->ch_filter)) {
             ret = MOD_NOHOOK;
         } else {
-            ret = (p->on_send!=NULL) ? p->on_send(addr, sb, res) : MOD_NOHOOK;
+            ret = (p->on_send!=NULL) ? p->on_send(res) : MOD_NOHOOK;
         }
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
-int on_postsend(t_request_s *req, char *mime, void *addr, t_mmp_stat_s *sb)
+t_modret_e on_postsend(t_request_s *req, t_response_s *res)
 {
     MOD_LOOP_HEAD
-        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, mime, addr, sb) : MOD_NOHOOK;
+        ret = (p->on_postsend!=NULL) ? p->on_postsend(req, res) : MOD_NOHOOK;
     MOD_LOOP_NORMFLOW
-    return 0;
+    return MODRET_OK;
 }
 
 /* loaders */

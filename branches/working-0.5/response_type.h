@@ -20,7 +20,15 @@
 #define H_RESPONSE_TYPE_H
 
 #include <mmp/mmp_socket.h>
+#include <mmp/mmp_files.h>
 #include "types.h"
+
+typedef enum response_send_e {
+    RESPONSE_SEND_CLOSECONN = 0,
+    RESPONSE_SEND_FINISH    = 1,
+    RESPONSE_SEND_CONTINUE  = 2,
+    RESPONSE_SEND_ERROR     = 3
+} t_response_send_e;
 
 typedef enum hresp_e {
     HRESP_200   =   0,
@@ -30,11 +38,18 @@ typedef enum hresp_e {
     HRESP_501   =   4
 } t_hresp_e;
 
+typedef struct response_state_s {
+    int fd;
+    t_mmp_stat_s sb;
+    size_t sent;
+} t_response_state_s;
+
 struct response_s {
     char resbuf[0xff], tmpbuf[0xff];
     t_socket sock;
     t_module_s *ch_filter;      /**< selected filter for response */
     int content_length_sent;    /**< has the content-length been sent? */
+    t_response_state_s rstate;
 };
 
 #endif /* H_RESPONSE_TYPE_H */

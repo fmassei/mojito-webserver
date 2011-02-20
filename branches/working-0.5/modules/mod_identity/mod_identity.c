@@ -24,6 +24,8 @@
 #include <mmp/mmp_socket.h>
 #include "../../modules.h"
 
+#include <sys/sendfile.h>
+
 /* TODO: missing parameter checks! */
 
 #ifdef _WIN32
@@ -31,13 +33,6 @@
 #else
 #   define OUTLINK
 #endif
-
-static int _compress(unsigned char *addr, int fd, int len)
-{
-    if (mmp_write(fd, addr, (unsigned int)len)!=len)
-        return -1;
-    return 0;
-}
 
 static int _prelen(t_mmp_stat_s *sb)
 {
@@ -84,20 +79,32 @@ static t_hpcefptr _gethpce(void)
 #endif
 }
 
-static int _on_prehead(t_mmp_stat_s *sb, t_response_s *res)
+static int _on_prehead(t_response_s *res)
 {
     long len;
-    if ((len = _prelen(sb))>=0)
+    if ((len = _prelen(&res->rstate.sb))>=0)
         (*_gethpcl())(res, len);
     (*_gethpce())(res, "identity");
     return MOD_PROCDONE;
 }
 
-static int _on_send(void *addr, t_mmp_stat_s *sb, t_response_s *res)
+static int _on_send(t_response_s *res)
 {
-    if (_compress(addr, res->sock, sb->st_size)!=0)
-        return MOD_CRIT;
-    return MOD_PROCDONE;
+    ssize_t ret;
+    printf("sendfile in\n");
+    ret = sendfile(res->sock, res->rstate.fd, NULL,
+                            res->rstate.sb.st_size-res->rstate.sent);
+    printf("sendfile out %d\n", ret);
+    if (ret<0) {
+        if (errno==EAGAIN)
+            return MOD_AGAIN;
+        else
+            return MOD_ERR;
+    }
+    res->rstate.sent += ret;
+    if (res->rstate.sent>=res->rstate.sb.st_size)
+        return MOD_PROCDONE;
+    return MOD_AGAIN;
 }
 
 #ifdef MODULE_STATIC

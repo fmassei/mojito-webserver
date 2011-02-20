@@ -31,6 +31,6 @@
 
 void response_init(t_response_s *res);
 void response_drop(t_response_s *res);
-void response_send(t_socket_unit_s *su);
+t_response_send_e response_send(t_socket_unit_s *su);
 
 #endif /* H_RESPONSE_H */
