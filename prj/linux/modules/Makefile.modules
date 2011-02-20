@@ -1,5 +1,7 @@
 modules_all:
 	@(make -f mod_identity.makefile)
+	@(make -f mod_deflate.makefile)
 
 modules_clean:
 	@(make -f mod_identity.makefile clean)
+	@(make -f mod_deflate.makefile clean)

@@ -41,7 +41,7 @@ static int _prelen(t_mmp_stat_s *sb)
     return -1;
 }
 
-static int _can_run(t_request_s *req)
+static t_module_ret_e _can_run(t_request_s *req)
 {
     t_mmp_listelem_s *el;
     t_qhead_s *p;
@@ -79,7 +79,7 @@ static t_hpcefptr _gethpce(void)
 #endif
 }
 
-static int _on_prehead(t_response_s *res)
+static t_module_ret_e _on_prehead(t_response_s *res)
 {
     long len;
     if ((len = _prelen(&res->rstate.sb))>=0)
@@ -88,7 +88,7 @@ static int _on_prehead(t_response_s *res)
     return MOD_PROCDONE;
 }
 
-static int _on_send(t_response_s *res)
+static t_module_ret_e _on_send(t_response_s *res)
 {
     ssize_t ret;
     printf("sendfile in\n");

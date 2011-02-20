@@ -42,6 +42,10 @@ typedef struct response_state_s {
     int fd;
     t_mmp_stat_s sb;
     size_t sent;
+    struct mod_res_s {  /* module's reserved space */
+        void *data;
+        size_t data_len;
+    } mod_res;
 } t_response_state_s;
 
 struct response_s {
