@@ -264,38 +264,3 @@ prs_error:
     return NULL;
 }
 
-#ifdef UNIT_TESTING
-static t_mmp_tap_result_e test_qhead_parse(void)
-{
-    t_qhead_list_s *ql;
-    t_mmp_listelem_s *p;
-    t_qhead_s *qh;
-    char *tt[] = { "deflate", "gzip" };
-    int i;
-    if ((ql = qhead_list_parse("gzip,deflate"))==NULL)
-        return MMP_TAP_FAILED;
-    for (i=0, p=ql->head; p!=NULL; p=p->next, ++i) {
-        qh = (t_qhead_s*)p->data;
-        if (qh==NULL || qh->id==NULL)
-            return MMP_TAP_FAILED;
-        if (strcmp(qh->id, tt[i])!=0)
-            return MMP_TAP_FAILED;
-    }
-    qhead_list_destroy(&ql);
-    if (ql!=NULL)
-        return MMP_TAP_FAILED;
-    return MMP_TAP_PASSED;
-}
-
-ret_t test_qhead_unittest(t_mmp_tap_cycle_s *cycle)
-{
-    ret_t ret;
-    if (
-            ((ret=mmp_tap_test(cycle, "qhead_parse", NULL,
-                                        test_qhead_parse()))!=MMP_ERR_OK)
-
-       )
-        return ret;
-    return MMP_ERR_OK;
-}
-#endif /* UNIT_TESTING */

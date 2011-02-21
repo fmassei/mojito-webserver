@@ -140,7 +140,6 @@ static t_module_ret_e _on_send(t_response_s *res)
         do {
             ret = mmp_read(res->rstate.fd, state->in, CHUNK_LEN);
             state->flush = (ret==0) ? Z_FINISH : Z_NO_FLUSH;
-                return MOD_PROCDONE;
             state->strm.next_in = state->in;
             state->strm.avail_in = ret;
             do {
@@ -168,7 +167,6 @@ static t_module_ret_e _on_send(t_response_s *res)
         do {
             ret = mmp_read(res->rstate.fd, state->in, CHUNK_LEN);
             state->flush = (ret==0) ? Z_FINISH : Z_NO_FLUSH;
-                return MOD_PROCDONE;
             state->strm.next_in = state->in;
             state->strm.avail_in = ret;
             do {

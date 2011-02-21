@@ -62,8 +62,4 @@ t_qhead_list_s *qhead_list_parse(const char *head);
 /* frees the memory of a qhead struct */
 void qhead_list_destroy(t_qhead_list_s **qhead_list);
 
-#ifdef UNIT_TESTING
-ret_t test_qhead_unittest(t_mmp_tap_cycle_s *cycle);
-#endif /* UNIT_TESTING */
-
 #endif /* HEADER_W_QUALITY */
