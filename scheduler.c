@@ -75,19 +75,22 @@ ret_t scheduler_del_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_OK;
 }
 
-ret_t scheduler_loop(t_sched_id sched_id, void(*cback_fp)(t_socket))
+t_sched_ret_e scheduler_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp)
 {
-    int nfds, n;
+    int nfds, n, cback_err = 0;
 repoll:
     if ((nfds = epoll_wait(sched_id, s_events, s_pool_size, -1))==-1) {
 #ifndef NDEBUG
         if (errno==EINTR) goto repoll; /* FIXME: remove this */
 #endif
         mmp_setError(MMP_ERR_GENERIC);
-        return MMP_ERR_GENERIC;
+        return SCHEDRET_ERR;
     }
     for (n=0; n<nfds; ++n)
-        cback_fp(s_events[n].data.fd);
-    return MMP_ERR_OK;
+        if (cback_fp(s_events[n].data.fd)!=SCHEDFNCRET_OK) {
+            mmp_setError(MMP_ERR_GENERIC);
+            cback_err = 1;
+        } 
+    return (cback_err) ? SCHEDRET_CBACKERR : SCHEDRET_OK;
 }
 

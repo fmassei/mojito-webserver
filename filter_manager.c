@@ -53,7 +53,7 @@ static t_qhead_s *qhead_create_and_add(t_qhead_list_s *list, const char *id,
 
 /* for filter queues we have a few rules:
  * - identity filter (if not present) has to be considered present. We choose
- *   quality = 1.000
+ *   quality = 0.100
  * - if a '*' is present, it marks all the available filters (identity too)
  *
  * TODO This sanitize function is a cpu-cycle eater! Too much cycles!
@@ -67,11 +67,21 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
     float rq;
     t_qhead_s *qh, *qh2;
     filters = module_getfilterlist();
-    /* check for identity */
-    qh = NULL;
+    /* if no list, create one */
     if (*qhead==NULL) {
         *qhead = mmp_list_create();
     }
+    /* drop all the filters that we can't handle */
+    for (p=(*qhead)->head; p!=NULL; p=q) {
+        q = p->next;
+        qh = (t_qhead_s*)p->data;
+        if (qh==NULL) continue;
+        if (filter_findbyid(qh->id)==NULL) {
+            qhead_list_delete(*qhead, &qh);
+        }
+    }
+    /* check for identity */
+    qh = NULL;
     for (p=(*qhead)->head; p!=NULL; p=p->next) {
         qh = (t_qhead_s*)p;
         if (qh==NULL) continue;
@@ -81,7 +91,7 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
     }
     /* no identity? add it */
     if (qh==NULL) {
-        if ((qh = qhead_create_and_add(*qhead, "identity", 1.0f))==NULL) {
+        if ((qh = qhead_create_and_add(*qhead, "identity", .1f))==NULL) {
             mmp_setError(MMP_ERR_GENERIC);
             return MMP_ERR_GENERIC;
         }
@@ -107,22 +117,13 @@ ret_t filter_sanitize_queue(t_qhead_list_s **qhead)
                 qh2 = NULL;
             }
             if (qh2==NULL) {
-                if ((qh2 = qhead_create_and_add(*qhead, filt->name, rq))==NULL) {
+                if ((qh2 = qhead_create_and_add(*qhead, filt->name, rq))==NULL){
                     mmp_setError(MMP_ERR_GENERIC);
                     return MMP_ERR_GENERIC;
                 }
             }
         }
         break;
-    }
-    /* drop all the filters that we can't handle */
-    for (p=(*qhead)->head; p!=NULL; p=q) {
-        q = p->next;
-        qh = (t_qhead_s*)p->data;
-        if (qh==NULL) continue;
-        if (filter_findbyid(qh->id)==NULL) {
-            qhead_list_delete(*qhead, &qh);
-        }
     }
     return MMP_ERR_OK;
 }

@@ -118,19 +118,20 @@ static ret_t client_action(t_socket sock)
     return MMP_ERR_OK;
 }
 
-static void someone_calling(t_socket sock)
+static t_schedfnc_ret_e someone_calling(t_socket sock)
 {
     if (sock==s_srv_sock) {
         if (accept_client()!=MMP_ERR_OK) {
-            mmp_trace_print(stdout);
-            exit(EXIT_FAILURE);
+            mmp_setError(MMP_ERR_GENERIC);
+            return SCHEDRET_CBACKERR;
         }
     } else {
         if (client_action(sock)!=MMP_ERR_OK) {
-            mmp_trace_print(stdout);
-            exit(EXIT_FAILURE);
+            mmp_setError(MMP_ERR_GENERIC);
+            return SCHEDRET_CBACKERR;
         }
     }
+    return SCHEDFNCRET_OK;
 }
 
 int main(/*const int argc, const char *argv[]*/)
@@ -148,8 +149,8 @@ int main(/*const int argc, const char *argv[]*/)
         goto bad_exit;
     mmp_trace_reset();
     while(!done) {
-        if (scheduler_loop(s_sched_id, someone_calling)!=MMP_ERR_OK) {
-            DBG_PRINT(("scheduler_loop\n"));
+        if (scheduler_loop(s_sched_id, someone_calling)!=SCHEDRET_OK) {
+            mmp_trace_print(stdout);
             goto bad_exit;
         }
     }
