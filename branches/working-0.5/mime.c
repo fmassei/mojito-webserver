@@ -20,7 +20,7 @@
 #include "mime.h"
 
 /* return the mime type based on file extension */
-char *mime_gettype(char *fname)
+const char *mime_gettype(const char *fname)
 {
     char *ext;
     if ((ext = strrchr(fname, '.'))==NULL)
