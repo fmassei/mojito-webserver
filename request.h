@@ -68,6 +68,7 @@ struct request_s {
     t_qhead_list_s *accept_encoding;
     /* filled by response */
     char *page, *query_string, *abs_filename;
+    const char *mime_type;
 };
 
 void request_init(t_request_s *req);

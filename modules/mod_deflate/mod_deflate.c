@@ -22,10 +22,16 @@
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
+#include <mmp/mmp_list.h>
 #include "../../modules.h"
 #include <zlib.h>
 
 #include <sys/sendfile.h>
+
+#define DEFAULT_CHUNK_LEN (16*1024)
+
+static size_t s_chunk_length = DEFAULT_CHUNK_LEN;
+static t_mmp_list_s *s_use_on_mimes;
 
 /* TODO: missing parameter checks! */
 
@@ -42,11 +48,80 @@ static int _prelen(t_mmp_stat_s *sb)
     return -1;
 }
 
+static int is_mime_processable(char *mime)
+{
+    t_mmp_listelem_s *el;
+    char *p;
+    for (el=s_use_on_mimes->head; el!=NULL; el=el->next) {
+        p = (char*)el->data;
+        if (p==NULL) continue;
+        if (!strcmp(p, mime))
+            return 1;
+    }
+    return 0;
+}
+
+static t_module_ret_e _init(void)
+{
+    if ((s_use_on_mimes = mmp_list_create())==NULL)
+        return MOD_ERR;
+    return MOD_OK;
+}
+
+static void freestr(char **str) {
+    if (str==NULL || *str==NULL) return;
+    XFREE_AND_NULL(*str);
+}
+static void freestr_v(void **ptr) { freestr((char**)ptr); }
+static t_module_ret_t _fini(void)
+{
+    if (s_use_on_mimes!=NULL)
+        mmp_list_delete_withdata(&s_use_on_mimes, freestr_v);
+    return MOD_OK;
+}
+
+static t_module_ret_e _set_params(t_config_module_s *cfg_mod)
+{
+    size_t tmpl;
+    t_mmp_listelem_s *el;
+    t_config_module_setting_s *set;
+    MMP_CHECK_OR_RETURN((cfg_mod!=NULL && cfg_mod->settings!=NULL), MOD_OK);
+    for (el=cfg_mod->settings->head; el!=NULL; el=el->next) {
+        set = (t_config_module_setting_s*)el->data;
+        if (!strcmp(set->key, "chunk_length")) {
+            char *endptr;
+            tmpl = strtol(set->val, &endptr, 10);
+            if ((errno==ERANGE
+                        && (tmpl==LONG_MAX || tmpl==LONG_MIN))
+                    || (errno!=0 && tmpl==0) || (endptr==set->val))
+                printf("Invalid setting %s = %s\n", set->key, set->val);
+            else
+                s_chunk_length = tmpl;
+            printf("chunk_length set to %d\n", s_chunk_length);
+        } else if (!strcmp(set->key, "use_on_mime")) {
+            char *copyval;
+            if (set->val==NULL) continue;
+            if ((copyval = xstrdup(set->val))==NULL) {
+                printf("could not set mime %s\n", set->val);
+                continue;
+            }
+            if (mmp_list_add_data(s_use_on_mimes, copyval)!=MMP_ERR_OK) {
+                printf("could not set mime %s\n", set->val);
+                xfree(copyval);
+                continue;
+            }
+        }
+    }
+    return MOD_OK;
+}
+
 static t_module_ret_e _can_run(t_request_s *req)
 {
     t_mmp_listelem_s *el;
     t_qhead_s *p;
     if (req==NULL || req->accept_encoding==NULL)
+        return MOD_ERR;
+    if (!is_mime_processable(req->mime_type))
         return MOD_ERR;
     for (el=req->accept_encoding->head; el!=NULL; el=el->next) {
         p = (t_qhead_s*)(el->data);
@@ -89,8 +164,6 @@ static t_module_ret_e _on_prehead(t_response_s *res)
     return MOD_PROCDONE;
 }
 
-#define CHUNK_LEN (16*1024)  /* TODO move to config (see notes) */
-
 typedef struct deflate_state_s {
     z_stream strm;
     unsigned char *in, *out;
@@ -110,13 +183,13 @@ static t_deflate_state_s *state_create(t_response_s *res)
     t_deflate_state_s *ret;
     MMP_XMALLOC_OR_RETURN(ret, NULL);
     ret->in = ret->out = NULL;
-    if (    ((ret->in = xmalloc(CHUNK_LEN))==NULL) ||
-            ((ret->out = xmalloc(CHUNK_LEN))==NULL) ) {
+    if (    ((ret->in = xmalloc(s_chunk_length))==NULL) ||
+            ((ret->out = xmalloc(s_chunk_length))==NULL) ) {
         state_destroy(&ret);
         return NULL;
     }
     res->rstate.mod_res.data = ret;
-    res->rstate.mod_res.data_len = sizeof(*ret)+CHUNK_LEN*2;
+    res->rstate.mod_res.data_len = sizeof(*ret)+s_chunk_length*2;
     return ret;
 }
 static t_deflate_state_s *state_get(t_response_s *res)
@@ -138,15 +211,15 @@ static t_module_ret_e _on_send(t_response_s *res)
         if ((ret = deflateInit(&state->strm, Z_DEFAULT_COMPRESSION))!=Z_OK)
             return MOD_ERR;
         do {
-            ret = mmp_read(res->rstate.fd, state->in, CHUNK_LEN);
+            ret = mmp_read(res->rstate.fd, state->in, s_chunk_length);
             state->flush = (ret==0) ? Z_FINISH : Z_NO_FLUSH;
             state->strm.next_in = state->in;
             state->strm.avail_in = ret;
             do {
-                state->strm.avail_out = CHUNK_LEN;
+                state->strm.avail_out = s_chunk_length;
                 state->strm.next_out = state->out;
                 deflate(&state->strm, state->flush);
-                have = CHUNK_LEN - state->strm.avail_out;
+                have = s_chunk_length - state->strm.avail_out;
                 written = mmp_write(res->sock, state->out, have);
                 if (written!=have) {
                     state->out_written = (written>0) ? written : 0;
@@ -156,7 +229,7 @@ static t_module_ret_e _on_send(t_response_s *res)
         } while (state->flush!=Z_FINISH);
     } else {
         state = state_get(res);
-        have = CHUNK_LEN - state->out_written;
+        have = s_chunk_length - state->out_written;
         if (have>0) {
             written = mmp_write(res->sock, state->out+state->out_written, have);
             if (written!=have) {
@@ -165,15 +238,15 @@ static t_module_ret_e _on_send(t_response_s *res)
             }
         }
         do {
-            ret = mmp_read(res->rstate.fd, state->in, CHUNK_LEN);
+            ret = mmp_read(res->rstate.fd, state->in, s_chunk_length);
             state->flush = (ret==0) ? Z_FINISH : Z_NO_FLUSH;
             state->strm.next_in = state->in;
             state->strm.avail_in = ret;
             do {
-                state->strm.avail_out = CHUNK_LEN;
+                state->strm.avail_out = s_chunk_length;
                 state->strm.next_out = state->out;
                 deflate(&state->strm, state->flush);
-                have = CHUNK_LEN - state->strm.avail_out;
+                have = s_chunk_length - state->strm.avail_out;
                 written = mmp_write(res->sock, state->out, have);
                 if (written!=have) {
                     state->out_written = (written>0) ? written : 0;
@@ -199,9 +272,9 @@ OUTLINK t_module_s *getmodule(void)
         return NULL;
     }
     ret->name = "deflate";
-    ret->set_params = NULL;
-    ret->init = NULL;
-    ret->fini = NULL;
+    ret->set_params = _set_params;
+    ret->init = _init;
+    ret->fini = _fini;
     ret->can_run = _can_run;
     ret->on_accept = NULL;
     ret->on_presend = NULL;

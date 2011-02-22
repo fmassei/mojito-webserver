@@ -34,6 +34,10 @@ config
   mod_identity
   #mod_gzip
   mod_deflate
+   chunk_length = 8192
+   use_on_mime = "text/html"
+   use_on_mime = "text/plain"
+   use_on_mime = "text/css"
   #mod_cgi
   #mod_fcgi
   #mod_stat

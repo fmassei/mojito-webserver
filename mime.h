@@ -24,6 +24,6 @@
 #include <mmp/mmp_string.h>
 
 /* get file mime type */
-char *mime_gettype(char *fname);
+const char *mime_gettype(const char *fname);
 
 #endif /* H_MIME_H */

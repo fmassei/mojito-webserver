@@ -79,6 +79,7 @@ redo:
         }
         return HRESP_404;
     }
+    req->mime_type = mime_gettype(req->abs_filename);
     return HRESP_200;
 }
 
@@ -127,7 +128,7 @@ t_response_send_e response_send(t_socket_unit_s *su)
         return RESPONSE_SEND_FINISH;
     }
     header_push_code(res, HRESP_200, req->protocol);
-    header_push_contenttype(res, mime_gettype(req->abs_filename));
+    header_push_contenttype(res, req->mime_type);
     if (on_prehead(res)!=MODRET_OK) {
         return RESPONSE_SEND_FINISH;
     }
