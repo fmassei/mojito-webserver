@@ -63,10 +63,10 @@ ret_t module_loader_load(const t_config_s *params)
             continue;
         }
         printf("Ok\n");
-        if (mod->set_params!=NULL)
-            mod->set_params(mod_conf);
         if (mod->init!=NULL)
             mod->init();
+        if (mod->set_params!=NULL)
+            mod->set_params(mod_conf);
     }
     return MMP_ERR_OK;
 }
