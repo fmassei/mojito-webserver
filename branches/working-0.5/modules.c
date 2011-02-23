@@ -120,6 +120,8 @@ t_modret_e can_run(t_request_s *req)
 {
     MOD_LOOP_HEAD
         ret = (p->can_run!=NULL) ? p->can_run(req) : MOD_NOHOOK;
+        if (ret==MOD_OK)
+            p->will_run = 1;
     MOD_LOOP_NORMFLOW
     return MODRET_OK;
 }

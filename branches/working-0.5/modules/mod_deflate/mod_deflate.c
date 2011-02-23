@@ -48,7 +48,7 @@ static int _prelen(t_mmp_stat_s *sb)
     return -1;
 }
 
-static int is_mime_processable(char *mime)
+static int is_mime_processable(const char *mime)
 {
     t_mmp_listelem_s *el;
     char *p;
@@ -70,10 +70,10 @@ static t_module_ret_e _init(void)
 
 static void freestr(char **str) {
     if (str==NULL || *str==NULL) return;
-    XFREE_AND_NULL(*str);
+    MMP_XFREE_AND_NULL(*str);
 }
 static void freestr_v(void **ptr) { freestr((char**)ptr); }
-static t_module_ret_t _fini(void)
+static t_module_ret_e _fini(void)
 {
     if (s_use_on_mimes!=NULL)
         mmp_list_delete_withdata(&s_use_on_mimes, freestr_v);
@@ -203,8 +203,12 @@ static t_module_ret_e _on_send(t_response_s *res)
     int ret;
     size_t written, have;
     state = state_get(res);
+    printf("deflate on send.\n");
     if (state==NULL) {
-        state = state_create(res);
+        if ((state = state_create(res))==NULL) {
+            printf("Could not create deflate state\n");
+            return MOD_ERR;
+        }
         state->strm.zalloc = Z_NULL;
         state->strm.zfree = Z_NULL;
         state->strm.opaque = Z_NULL;
