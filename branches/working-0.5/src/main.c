@@ -20,6 +20,7 @@
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
 #include <mmp/mmp_thread.h>
+#include <mmp/mmp_getopt.h>
 #include "socket_unit.h"
 #include "config_manager.h"
 #include "request_parse.h"
@@ -134,11 +135,29 @@ static t_schedfnc_ret_e someone_calling(t_socket sock)
     return SCHEDFNCRET_OK;
 }
 
-int main(/*const int argc, const char *argv[]*/)
+int main(const int argc, const char *argv[])
 {
-    int done = 0;
+    char *conffile = NULL;
+    int done = 0, opt;
     fprintf(stdout, "starting\n");
-    if (    (config_manager_loadfile(DEFAULT_CONFIGFILE)!=MMP_ERR_OK) ||
+    if ((conffile = xstrdup(DEFAULT_CONFIGFILE))==NULL)
+        goto bad_exit;
+    while ((opt = xgetopt(argc, argv, "c:"))>=0) {
+        switch (opt) {
+        case 'c':
+            MMP_XFREE_AND_NULL(conffile);
+            if ((conffile = xstrdup(optarg))==NULL) {
+                mmp_setError(MMP_ERR_GENERIC);
+                goto bad_exit;
+            }
+            break;
+        default:
+            printf("unknown option.\n");
+            return EXIT_FAILURE;
+        }
+    }
+    printf("Using config file '%s'\n", conffile);
+    if (    (config_manager_loadfile(conffile)!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
             ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
@@ -147,6 +166,7 @@ int main(/*const int argc, const char *argv[]*/)
                                         &s_srv_sock)!=MMP_ERR_OK) ||
             (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
+    if (conffile!=NULL) MMP_XFREE_AND_NULL(conffile);
     mmp_trace_reset();
     while(!done) {
         if (scheduler_loop(s_sched_id, someone_calling)!=SCHEDRET_OK) {
@@ -161,6 +181,7 @@ int main(/*const int argc, const char *argv[]*/)
     return EXIT_SUCCESS;
 
 bad_exit:
+    if (conffile!=NULL) MMP_XFREE_AND_NULL(conffile);
     mmp_trace_print(stdout);
     return EXIT_FAILURE;
 }
