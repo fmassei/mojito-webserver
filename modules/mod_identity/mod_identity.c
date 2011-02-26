@@ -22,7 +22,7 @@
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
-#include "../../modules.h"
+#include "../../src/modules.h"
 
 #include <sys/sendfile.h>
 

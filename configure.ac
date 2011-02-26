@@ -2,6 +2,7 @@ AC_INIT([mojito-webserver], [0.5], [fmassei@gmail.com])
 AC_CONFIG_AUX_DIR([autotools])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
+LT_INIT([shared static])
 AC_CONFIG_HEADERS([config.h])
 
 ###############################################################################
@@ -33,5 +34,8 @@ AC_SUBST([AM_LDFLAGS])
 AC_CONFIG_FILES([
                  Makefile
                  src/Makefile
+                 modules/Makefile
+                 modules/mod_identity/Makefile
+                 modules/mod_deflate/Makefile
                  ])
 AC_OUTPUT
