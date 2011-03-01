@@ -46,7 +46,6 @@ static void header_send_hl(t_response_s *resp, char *h, long l)
 void header_push_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version)
 {
-    extern struct fparam_s params;
     char datebuf[30];
     const t_config_s *config;
     resp->resbuf[0] = '\0';

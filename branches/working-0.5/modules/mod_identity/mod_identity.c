@@ -65,7 +65,7 @@ typedef void(*t_hpclfptr)(t_response_s*,long);
 typedef void(*t_hpcefptr)(t_response_s*,char*);
 static t_hpclfptr _gethpcl(void)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     return header_push_contentlength;
 #else
     return (t_hpclfptr)GetProcAddress(GetModuleHandle(NULL),
@@ -74,7 +74,7 @@ static t_hpclfptr _gethpcl(void)
 }
 static t_hpcefptr _gethpce(void)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     return header_push_contentencoding;
 #else
     return (t_hpcefptr)GetProcAddress(GetModuleHandle(NULL),

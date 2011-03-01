@@ -2,7 +2,7 @@ AC_INIT([mojito-webserver], [0.5], [fmassei@gmail.com])
 AC_CONFIG_AUX_DIR([autotools])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
-LT_INIT([shared static])
+LT_INIT([shared win32-dll])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for libraries.
