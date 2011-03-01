@@ -19,6 +19,10 @@
 #ifndef H_SCHEDULER_H
 #define H_SCHEDULER_H
 
+#ifdef HAVE_CONFIG_H
+#   include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <mmp/mmp_error.h>
 #include <mmp/mmp_socket.h>
