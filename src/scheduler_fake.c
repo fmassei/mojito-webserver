@@ -21,6 +21,7 @@
 
 t_sched_id scheduler_fake_create(size_t pool_size)
 {
+    mmp_trace_reset();
     mmp_setError_ext(MMP_ERR_GENERIC, "Could not work with fake scheduler!");
     return -1;
 }
