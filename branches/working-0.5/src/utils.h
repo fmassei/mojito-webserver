@@ -19,6 +19,10 @@
 #ifndef H_UTILS_H
 #define H_UTILS_H
 
+#ifdef HAVE_CONFIG_H
+#   include <config.h>
+#endif
+
 #ifdef NDEBUG
 #   define DBG_PRINT(_ARGS)
 #else

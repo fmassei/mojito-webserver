@@ -26,8 +26,6 @@
 #include "../src/modules.h"
 #include <zlib.h>
 
-#include <sys/sendfile.h>
-
 #define DEFAULT_CHUNK_LEN (16*1024)
 
 static size_t s_chunk_length = DEFAULT_CHUNK_LEN;

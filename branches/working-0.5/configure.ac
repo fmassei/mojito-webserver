@@ -12,9 +12,12 @@ AC_CHECK_LIB([disml], [dis_parse_file])
 AC_CHECK_LIB([mmp_base], [mmp_trace_print])
 
 # Checks for header files.
-AC_CHECK_HEADERS([mmp/mmp_files.h disml/dis_parse.h stdlib.h string.h sys/socket.h])
+AC_CHECK_HEADERS([mmp/mmp_files.h disml/dis_parse.h stdlib.h string.h])
+AC_CHECK_HEADERS([sys/socket.h sys/sendfile.h])
 AC_CHECK_HEADERS([sys/epoll.h])
 
+#Checks for functions
+AC_CHECK_FUNCS([sendfile])
 ###############################################################################
 # debug compilation support
 ###############################################################################
