@@ -16,18 +16,15 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "scheduler.h"
+#include "scheduler_epoll.h"
+#ifdef BUILD_EPOLL_SCHEDULER
 
-#ifdef HAVE_SYS_EPOLL_H
-#   include <sys/epoll.h>
-#else
-#   error Could not continue!
-#endif
+#include <sys/epoll.h>
 
 static struct epoll_event *s_events;
 static size_t s_pool_size;
 
-t_sched_id scheduler_create(size_t pool_size)
+t_sched_id scheduler_epoll_create(size_t pool_size)
 {
     t_sched_id epollfd;
     s_pool_size = pool_size;
@@ -42,11 +39,11 @@ t_sched_id scheduler_create(size_t pool_size)
     return epollfd;
 }
 
-void scheduler_destroy(t_sched_id sched_id)
+void scheduler_epoll_destroy(t_sched_id sched_id)
 {
 }
 
-ret_t scheduler_add_listen_socket(t_sched_id sched_id, t_socket sock)
+ret_t scheduler_epoll_add_listen_socket(t_sched_id sched_id, t_socket sock)
 {
     struct epoll_event ev;
     ev.events = EPOLLIN;
@@ -58,7 +55,7 @@ ret_t scheduler_add_listen_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_OK;
 }
 
-ret_t scheduler_add_client_socket(t_sched_id sched_id, t_socket sock)
+ret_t scheduler_epoll_add_client_socket(t_sched_id sched_id, t_socket sock)
 {
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -70,7 +67,7 @@ ret_t scheduler_add_client_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_OK;
 }
 
-ret_t scheduler_del_socket(t_sched_id sched_id, t_socket sock)
+ret_t scheduler_epoll_del_socket(t_sched_id sched_id, t_socket sock)
 {
     struct epoll_event ev;
     if (epoll_ctl(sched_id, EPOLL_CTL_DEL, sock, &ev)!=-1) {
@@ -80,7 +77,7 @@ ret_t scheduler_del_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_OK;
 }
 
-t_sched_ret_e scheduler_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp)
+t_sched_ret_e scheduler_epoll_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp)
 {
     int nfds, n, cback_err = 0;
 repoll:
@@ -98,4 +95,6 @@ repoll:
         } 
     return (cback_err) ? SCHEDRET_CBACKERR : SCHEDRET_OK;
 }
+
+#endif /* BUILD_EPOLL_SCHEDULER */
 

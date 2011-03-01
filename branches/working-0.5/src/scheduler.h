@@ -40,12 +40,25 @@ typedef enum schedfnc_ret_e {
 } t_schedfnc_ret_e;
 typedef t_schedfnc_ret_e(*t_schedfnc_fp)(t_socket);
 
-t_sched_id scheduler_create(size_t pool_size);
-void scheduler_destroy(t_sched_id sched_id);
-ret_t scheduler_add_listen_socket(t_sched_id sched_id, t_socket sock);
-ret_t scheduler_add_client_socket(t_sched_id sched_id, t_socket sock);
-ret_t scheduler_del_socket(t_sched_id sched_id, t_socket sock);
-t_sched_ret_e scheduler_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp);
+#ifdef HAVE_SYS_EPOLL_H
+#   define BUILD_EPOLL_SCHEDULER
+#   include "scheduler_epoll.h"
+#   define scheduler_create             scheduler_epoll_create
+#   define scheduler_destroy            scheduler_epoll_destroy
+#   define scheduler_add_listen_socket  scheduler_epoll_add_listen_socket
+#   define scheduler_add_client_socket  scheduler_epoll_add_client_socket
+#   define scheduler_del_socket         scheduler_epoll_del_socket
+#   define scheduler_loop               scheduler_epoll_loop
+#else
+#   define BUILD_FAKE_SCHEDULER
+#   include "scheduler_fake.h"
+#   define scheduler_create             scheduler_fake_create
+#   define scheduler_destroy            scheduler_fake_destroy
+#   define scheduler_add_listen_socket  scheduler_fake_add_listen_socket
+#   define scheduler_add_client_socket  scheduler_fake_add_client_socket
+#   define scheduler_del_socket         scheduler_fake_del_socket
+#   define scheduler_loop               scheduler_fake_loop
+#endif
 
 #endif /* H_SCHEDULER_H */
 
