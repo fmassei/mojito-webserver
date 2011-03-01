@@ -23,8 +23,11 @@
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
 #include "../../src/modules.h"
+#include "../../src/utils.h"
 
-#include <sys/sendfile.h>
+#ifdef HAVE_SYS_SENDFILE_H
+#   include <sys/sendfile.h>
+#endif /* HAVE_SYS_SENDFILE_H */
 
 /* TODO: missing parameter checks! */
 
@@ -91,10 +94,14 @@ static t_module_ret_e _on_prehead(t_response_s *res)
 static t_module_ret_e _on_send(t_response_s *res)
 {
     ssize_t ret;
+#ifdef HAVE_SENDFILE
     printf("sendfile in\n");
     ret = sendfile(res->sock, res->rstate.fd, NULL,
                             res->rstate.sb.st_size-res->rstate.sent);
     printf("sendfile out %d\n", ret);
+#else
+    /* TODO: missing sendfile alternative */
+#endif
     if (ret<0) {
         if (errno==EAGAIN)
             return MOD_AGAIN;
