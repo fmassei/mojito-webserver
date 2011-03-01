@@ -180,6 +180,7 @@ int main(const int argc, const char *argv[])
     return EXIT_SUCCESS;
 
 bad_exit:
+    printf("Fatal error!\n");
     if (conffile!=NULL) MMP_XFREE_AND_NULL(conffile);
     mmp_trace_print(stdout);
     return EXIT_FAILURE;
