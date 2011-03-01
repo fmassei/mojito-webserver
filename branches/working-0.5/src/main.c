@@ -19,7 +19,6 @@
 #include <disml/disml.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
-#include <mmp/mmp_thread.h>
 #include <mmp/mmp_getopt.h>
 #include "socket_unit.h"
 #include "config_manager.h"

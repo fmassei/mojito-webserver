@@ -17,7 +17,12 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "scheduler.h"
-#include <sys/epoll.h>
+
+#ifdef HAVE_SYS_EPOLL_H
+#   include <sys/epoll.h>
+#else
+#   error Could not continue!
+#endif
 
 static struct epoll_event *s_events;
 static size_t s_pool_size;

@@ -5,6 +5,16 @@ AC_PROG_CC
 LT_INIT([shared static])
 AC_CONFIG_HEADERS([config.h])
 
+# Checks for libraries.
+# Replace `main' with a function in `-ldl':
+AC_CHECK_LIB([disml], [dis_parse_file])
+# Replace `main' with a function in `-lrt':
+AC_CHECK_LIB([mmp_base], [mmp_trace_print])
+
+# Checks for header files.
+AC_CHECK_HEADERS([mmp/mmp_files.h disml/dis_parse.h stdlib.h string.h sys/socket.h])
+AC_CHECK_HEADERS([sys/epoll.h])
+
 ###############################################################################
 # debug compilation support
 ###############################################################################
