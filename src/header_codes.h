@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_RESP_HEADERS_H
-#define H_RESP_HEADERS_H
+#ifndef H_HEADER_CODES_H
+#define H_HEADER_CODES_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,25 +29,12 @@
 #include "response_type.h"
 #include "request.h"
 
-/* these functions are used in modules DLLs too, so in win32 we need to export
- * them. */
-#ifdef WIN32
-#   define EXPRT    __declspec(dllexport)
-#else
-#   define EXPRT
-#endif
-
-EXPRT void header_push_code(t_response_s *resp, t_hresp_e code,
+void header_push_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version);
 
-EXPRT void header_push_contentlength(t_response_s *resp, long len);
-EXPRT void header_push_contenttype(t_response_s *resp, char *name);
-EXPRT void header_push_contentencoding(t_response_s *resp, char *name);
+void header_send(t_response_s *resp);
 
-EXPRT void header_part_send(t_response_s *resp);
-EXPRT void header_send(t_response_s *resp);
-
-EXPRT void header_kill_w_code(t_response_s *resp, t_hresp_e code,
+void header_kill_w_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version);
 
-#endif /* H_RESP_HEADERS_H */
+#endif /* H_HEADER_CODES_H */

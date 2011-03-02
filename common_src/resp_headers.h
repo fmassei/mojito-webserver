@@ -16,21 +16,20 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_RESPONSE_H
-#define H_RESPONSE_H
+#ifndef H_RESP_HEADERS_H
+#define H_RESP_HEADERS_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "types.h"
-#include "response_type.h"
-#include "header_codes.h"
-#include "modules.h"
-#include "mime.h"
-#include "filter_manager.h"
-#include "socket_unit.h"
+#include <string.h>
+#include "../src/types.h"
+#include "../src/response_type.h"
 
-void response_init(t_response_s *res);
-void response_drop(t_response_s *res);
-t_response_send_e response_send(t_socket_unit_s *su);
+void header_send_hs(t_response_s *resp, char *h, char *s);
+void header_send_hl(t_response_s *resp, char *h, long l);
 
-#endif /* H_RESPONSE_H */
+void header_push_contentlength(t_response_s *resp, long len);
+void header_push_contenttype(t_response_s *resp, char *name);
+void header_push_contentencoding(t_response_s *resp, char *name);
+
+#endif /* H_RESP_HEADERS_H */

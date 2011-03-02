@@ -24,15 +24,21 @@ static char *get_module_filename(const char *name)
 #ifdef _WIN32
     static const char *ext = ".dll";
     static const char *pre = "";
+#   define SLASH "\\"
 #else
-    static const char *ext = ".so.1";
-    static const char *pre = "lib";
+    static const char *ext = ".so";
+    static const char *pre = "";
+#   define SLASH "/"
 #endif
+    const t_config_s *cfg = config_get();
     char *ret;
-    if ((ret = xmalloc(strlen(pre)+strlen(name)+strlen(ext)+1))==NULL)
+    if ((ret = xmalloc(strlen(cfg->server->modules_basepath)+1+
+            strlen(pre)+strlen(name)+strlen(ext)+1))==NULL)
         return NULL;
-    sprintf(ret, "%s%s%s", pre, name, ext);
+    sprintf(ret, "%s%s%s%s%s", cfg->server->modules_basepath, SLASH,
+        pre, name, ext);
     return ret;
+#undef SLASH
 }
 
 ret_t module_loader_load(const t_config_s *params)

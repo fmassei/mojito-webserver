@@ -16,7 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "resp_headers.h"
+#include "header_codes.h"
+#include "../common_src/resp_headers.h"
 
 /* protocol strings */
 static const char HTTP10[] = "HTTP/1.0 ";
@@ -30,18 +31,6 @@ static const char *RESP[] = {
         "500 Internal Server Error\r\n",
         "501 Not Implemented\r\n"
     };
-
-static void header_send_hs(t_response_s *resp, char *h, char *s)
-{
-    sprintf(resp->tmpbuf, "%s: %s\r\n", h, s);
-    strcat(resp->resbuf, resp->tmpbuf);
-}
-
-static void header_send_hl(t_response_s *resp, char *h, long l)
-{
-    sprintf(resp->tmpbuf, "%s: %lu\r\n", h, l);
-    strcat(resp->resbuf, resp->tmpbuf);
-}
 
 void header_push_code(t_response_s *resp, t_hresp_e code,
                                         t_request_protocol_e proto_version)
@@ -60,29 +49,6 @@ void header_push_code(t_response_s *resp, t_hresp_e code,
     if ((config = config_get())!=NULL && config->server->server_meta!=NULL) {
         header_send_hs(resp, "Server", config->server->server_meta);
     }
-}
-
-void header_push_contentlength(t_response_s *resp, long len)
-{
-    header_send_hl(resp, "Content-Length", len);
-    resp->content_length_sent = 1;
-}
-
-void header_push_contenttype(t_response_s *resp, char *name)
-{
-    header_send_hs(resp, "Content-Type", name);
-}
-
-void header_push_contentencoding(t_response_s *resp, char *name)
-{
-    if (!strcmp(name, "identity"))
-        return;
-    header_send_hs(resp, "Content-Encoding", name);
-}
-
-void header_part_send(t_response_s *resp)
-{
-    mmp_socket_write(&resp->sock, resp->resbuf, strlen(resp->resbuf));
 }
 
 void header_send(t_response_s *resp)

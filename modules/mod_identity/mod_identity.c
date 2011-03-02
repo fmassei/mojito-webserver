@@ -22,6 +22,7 @@
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
+#include "../../common_src/resp_headers.h"
 #include "../../src/modules.h"
 #include "../../src/utils.h"
 
@@ -61,33 +62,12 @@ static t_module_ret_e _can_run(t_request_s *req)
     return MOD_ERR;
 }
 
-typedef void(*t_hpclfptr)(t_response_s*,long);
-typedef void(*t_hpcefptr)(t_response_s*,char*);
-static t_hpclfptr _gethpcl(void)
-{
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-    return header_push_contentlength;
-#else
-    return (t_hpclfptr)GetProcAddress(GetModuleHandle(NULL),
-                                        "header_push_contentlength");
-#endif
-}
-static t_hpcefptr _gethpce(void)
-{
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-    return header_push_contentencoding;
-#else
-    return (t_hpcefptr)GetProcAddress(GetModuleHandle(NULL),
-                                        "header_push_contentencoding");
-#endif
-}
-
 static t_module_ret_e _on_prehead(t_response_s *res)
 {
     long len;
     if ((len = _prelen(&res->rstate.sb))>=0)
-        (*_gethpcl())(res, len);
-    (*_gethpce())(res, "identity");
+        header_push_contentlength(res, len);
+    header_push_contentencoding(res, "identity");
     return MOD_PROCDONE;
 }
 
