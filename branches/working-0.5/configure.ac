@@ -47,6 +47,7 @@ AC_SUBST([AM_LDFLAGS])
 AC_CONFIG_FILES([
                  Makefile
                  src/Makefile
+                 common_src/Makefile
                  modules/Makefile
                  modules/mod_identity/Makefile
                  modules/mod_deflate/Makefile

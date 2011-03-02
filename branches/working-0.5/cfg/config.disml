@@ -29,7 +29,7 @@ config
   num_socket_units = 64
   num_socket_units_fds = 64
   # --- module base path --- 
-  modules_basepath = "mojitomodules/"
+  modules_basepath = "/usr/local/lib/mojito-webserver"
  modules
   mod_identity
   #mod_gzip
