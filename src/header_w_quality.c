@@ -34,17 +34,17 @@ void qhead_list_destroy(t_qhead_list_s **qhead_list)
 }
 
 /* qhead comparer functions */
-static int qhead_compare(const t_qhead_s *q1, const t_qhead_s *q2)
+static int qhead_compare_rev(const t_qhead_s *q1, const t_qhead_s *q2)
 {
     if (q1->quality > q2->quality)
-        return -1;
-    else if (q1->quality < q2->quality)
         return 1;
+    else if (q1->quality < q2->quality)
+        return -1;
     return 0;
 }
-static int qhead_compare_v(const void *p1, const void *p2)
+static int qhead_compare_rev_v(const void *p1, const void *p2)
 {
-    return qhead_compare((t_qhead_s*)p1, (t_qhead_s*)p2);
+    return qhead_compare_rev((t_qhead_s*)p1, (t_qhead_s*)p2);
 }
 
 /* insert into a struct qhead_s list. We are keeping the list ordered too.
@@ -58,7 +58,7 @@ ret_t qhead_list_insert(t_qhead_list_s *qhead_list, t_qhead_s *qhead)
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
     }
-    return mmp_list_add_data_sorted(qhead_list, qhead, qhead_compare_v);
+    return mmp_list_add_data_sorted(qhead_list, qhead, qhead_compare_rev_v);
 }
 
 /* drop an entry. */

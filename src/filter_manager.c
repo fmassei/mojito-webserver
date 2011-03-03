@@ -134,6 +134,12 @@ t_module_s *filter_findfilter(t_qhead_list_s *qlist)
     t_qhead_s *qh;
     t_module_s *mod;
     if (qlist==NULL) return NULL;
+    printf("filter_findfilter\n");
+    for (p=qlist->head; p!=NULL; p=p->next) {
+        qh = (t_qhead_s*)p->data;
+        printf("%s %f\n", qh->id, qh->quality);
+    }
+    printf("filter_findfilter end\n");
     for (p=qlist->head; p!=NULL; p=p->next) {
         qh = (t_qhead_s*)p->data;
         if (qh==NULL) continue;
