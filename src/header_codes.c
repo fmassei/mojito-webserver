@@ -64,3 +64,4 @@ void header_kill_w_code(t_response_s *resp, t_hresp_e code,
     header_push_contentlength(resp, 0);
     header_send(resp);
 }
+
