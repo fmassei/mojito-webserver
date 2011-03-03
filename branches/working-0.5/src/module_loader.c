@@ -21,8 +21,8 @@
 #ifndef DISABLE_DYNAMIC
 static char *get_module_filename(const char *name)
 {
-#ifdef _WIN32
-    static const char *ext = ".dll";
+#if defined(_WIN32) || defined(__CYGWIN__)
+    static const char *ext = "-0.dll";
     static const char *pre = "";
 #   define SLASH "\\"
 #else
