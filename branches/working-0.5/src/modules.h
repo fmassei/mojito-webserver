@@ -20,9 +20,9 @@
 #ifndef H_MODULES_H
 #define H_MODULES_H
 
-#ifndef DISABLE_DYNAMIC
+#ifndef DISABLE_DYNAMIC_MODULES
 #include <mmp/mmp_dl.h>
-#endif
+#endif /* DISABLE_DYNAMIC_MODULES */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -100,9 +100,9 @@ t_modret_e on_postsend(t_request_s *, t_response_s *);
 typedef t_module_s *(*t_get_module_f)(void);
 
 t_module_s *module_add_static(t_get_module_f get_module);
-#ifndef DISABLE_DYNAMIC
+#ifndef DISABLE_DYNAMIC_MODULES
 t_module_s *module_add_dynamic(char *fname);
-#endif /* DISABLE_DYNAMIC */
+#endif /* DISABLE_DYNAMIC_MODULES */
 
 t_module_list_s *module_getfilterlist(void);
 

@@ -25,8 +25,6 @@
 #include "modules.h"
 #include "config_type.h"
 
-#ifndef DISABLE_DYNAMIC
 ret_t module_loader_load(const t_config_s *params);
-#endif /* DISABLE_DYNAMIC */
 
 #endif /* H_MODULE_LOADER_H */

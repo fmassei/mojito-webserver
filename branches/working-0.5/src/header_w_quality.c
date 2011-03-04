@@ -177,14 +177,7 @@ t_qhead_list_s *qhead_list_parse(const char *head)
         goto prs_error;
     }
     q->extp_list = NULL;
-#ifdef _WIN32
-#pragma warning(push)
-#pragma warning(disable:4127)
     while(1) {
-#pragma warning(pop)
-#else
-    while(1) {
-#endif
         while(((*st==' ') || (*st=='\t')) && (*st!='\0')) ++st;
         switch(*st) {
         case ';':

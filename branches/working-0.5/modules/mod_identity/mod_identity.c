@@ -94,7 +94,7 @@ static t_module_ret_e _on_send(t_response_s *res)
     return MOD_AGAIN;
 }
 
-#ifdef MODULE_STATIC
+#ifdef MOD_IDENTITY_STATIC
 t_module_s *mod_identity_getmodule(void)
 #else
 OUTLINK t_module_s *getmodule(void)
