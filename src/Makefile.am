@@ -5,3 +5,9 @@ mojito_SOURCES =    config_manager.c main.c request.c \
                     header_w_quality.c modules.c response.c \
 					scheduler_epoll.c scheduler_fake.c
 mojito_LDADD = ../common_src/libcommon_src.la
+if MOD_IDENTITY_STATIC
+mojito_LDADD += ../modules/mod_identity/mod_identity.la
+endif
+if MOD_DEFLATE_STATIC
+mojito_LDADD += ../modules/mod_deflate/mod_deflate.la
+endif

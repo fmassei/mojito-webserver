@@ -1,2 +1,2 @@
-SUBDIRS = common_src src modules
+SUBDIRS = common_src modules src
 dist_doc_DATA = README

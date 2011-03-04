@@ -205,24 +205,17 @@ t_module_s *module_add_static(t_get_module_f get_module)
     return p;
 }
 
-#ifndef DISABLE_DYNAMIC
+#ifndef DISABLE_DYNAMIC_MODULES
 t_module_s *module_add_dynamic(char *fname)
 {
     t_get_module_f get_module;
     void (*fptr)(void);
     if ((fptr = mmp_dl_open_and_get_fnc(fname, "getmodule"))==NULL)
         return NULL;
-#ifdef _WIN32
-#   pragma warning(push)
-#   pragma warning(disable:4055)   /* disable cast warning */
-#endif
     get_module = (t_get_module_f)fptr;
-#ifdef _WIN32
-#   pragma warning(pop)
-#endif
     return module_add_static(get_module);
 }
-#endif /* DISABLE_DYNAMIC */
+#endif /* DISABLE_DYNAMIC_MODULES */
 
 t_module_list_s *module_getfilterlist(void)
 {

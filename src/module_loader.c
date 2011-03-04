@@ -18,7 +18,30 @@
 */
 #include "module_loader.h"
 
-#ifndef DISABLE_DYNAMIC
+typedef struct static_mod_def_s {
+    const char *name;
+    t_get_module_f fnc;
+} t_static_mod_def_s;
+
+#ifdef MOD_IDENTITY_STATIC
+extern t_module_s mod_identity_getmodule(void);
+#endif
+#ifdef MOD_DEFLATE_STATIC
+extern t_module_s mod_deflate_getmodule(void);
+#endif
+
+static t_static_mod_def_s s_static_mod_defs[] = {
+    #ifdef MOD_IDENTITY_STATIC
+        { "mod_identity", mod_identity_getmodule },
+    #endif 
+    #ifdef MOD_DEFLATE_STATIC
+        { "mod_deflate", mod_deflate_getmodule },
+    #endif
+};
+#define N_STATIC_MOD_DEFS \
+            (sizeof(s_static_mod_defs)/sizeof(s_static_mod_defs[0]))
+
+#ifndef DISABLE_DYNAMIC_MODULES
 static char *get_module_filename(const char *name)
 {
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -40,6 +63,7 @@ static char *get_module_filename(const char *name)
     return ret;
 #undef SLASH
 }
+#endif /* DISABLE_DYNAMIC_MODULES */
 
 ret_t module_loader_load(const t_config_s *params)
 {
@@ -47,6 +71,7 @@ ret_t module_loader_load(const t_config_s *params)
     t_module_s *mod;
     t_config_module_s *mod_conf;
     char *mod_filename;
+    int i;
     if (params==NULL || params->modules==NULL) {
         mmp_setError(MMP_ERR_PARAMS);
         return MMP_ERR_PARAMS;
@@ -57,6 +82,19 @@ ret_t module_loader_load(const t_config_s *params)
             continue;
         mmp_trace_reset();
         printf("Loading module %s... ", mod_conf->name);
+        for (i=0; i<N_STATIC_MOD_DEFS; ++i) {
+            if (!strcmp(s_static_mod_defs[i].name, mod_conf->name)) {
+                mod = module_add_static(s_static_mod_defs[i].fnc);
+                if (mod==NULL) {
+                    printf("ERR\n");
+                    mmp_trace_print(stdout);
+                    continue;
+                }
+                printf("Ok (static)\n");
+                goto got_it;
+            }
+        }
+#ifndef DISABLE_DYNAMIC_MODULES
         if ((mod_filename = get_module_filename(mod_conf->name))==NULL) {
             printf("ENOMEM assigning name!?!\n");
             continue;
@@ -68,7 +106,12 @@ ret_t module_loader_load(const t_config_s *params)
             mmp_trace_print(stdout);
             continue;
         }
-        printf("Ok\n");
+        printf("Ok (dynamic)\n");
+#else /* DISABLE_DYNAMIC_MODULES */
+        printf("Not found\n");
+        continue;
+#endif /* DISABLE_DYNAMIC_MODULES */
+got_it:
         if (mod->init!=NULL)
             mod->init();
         if (mod->set_params!=NULL)
@@ -76,4 +119,4 @@ ret_t module_loader_load(const t_config_s *params)
     }
     return MMP_ERR_OK;
 }
-#endif
+

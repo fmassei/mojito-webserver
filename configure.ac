@@ -18,6 +18,11 @@ AC_CHECK_HEADERS([sys/epoll.h])
 
 #Checks for functions
 AC_CHECK_FUNCS([sendfile])
+
+# libmmp dependency
+AM_LDFLAGS="$AM_LDFLAGS -lmmp_base -ldisml"
+AC_SUBST([AM_LDFLAGS])
+
 ###############################################################################
 # debug compilation support
 ###############################################################################
@@ -40,9 +45,48 @@ fi
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([AM_CFLAGS])
 
-# libmmp dependency
-AM_LDFLAGS="$AM_LDFLAGS -lmmp_base -ldisml"
-AC_SUBST([AM_LDFLAGS])
+###############################################################################
+# generic dynamic support
+###############################################################################
+AC_MSG_CHECKING([whether to be able to load dynamic modules])
+AC_ARG_ENABLE([dynamicmods],
+              [AS_HELP_STRING([--enable-dynamic],
+                              [enable dynamic modules (def=yes)])],
+              [dynamicmodit="$enableval"],
+              [dynamicmodit=yes])
+AC_MSG_RESULT([$dynamicmodit])
+AM_CONDITIONAL([DISABLE_DYNAMIC_MODULES], [test x"$dynamicmodit" = x"yes"])
+if test x"$dynamicmodit" != x"yes"; then
+    AC_DEFINE([DISABLE_DYNAMIC_MODULES],[],[dynamic modules])
+fi
+
+###############################################################################
+# specific modules
+###############################################################################
+# mod_identity
+AC_MSG_CHECKING([whether to build mod_identity as dynamic])
+AC_ARG_ENABLE([mod_identity_dyn],
+              [AS_HELP_STRING([--enable-mod_identity-dynamic],
+                              [dynamic mod_identity (def=no)])],
+              [mod_identity_dynit="$enableval"],
+              [mod_identity_dynit=no])
+AC_MSG_RESULT([$mod_identity_dynit])
+AM_CONDITIONAL([MOD_IDENTITY_STATIC], [test x"$mod_identity_dynit" != x"yes"])
+if test x"$mod_identity_dynit" != x"yes"; then
+    AC_DEFINE([MOD_IDENTITY_STATIC],[],[dynamic mod_identity])
+fi
+# mod_deflate
+AC_MSG_CHECKING([whether to build mod_deflate as dynamic])
+AC_ARG_ENABLE([mod_deflate_dyn],
+              [AS_HELP_STRING([--enable-mod_deflate-dynamic],
+                              [dynamic mod_deflate (def=no)])],
+              [mod_deflate_dynit="$enableval"],
+              [mod_deflate_dynit=no])
+AC_MSG_RESULT([$mod_deflate_dynit])
+AM_CONDITIONAL([MOD_DEFLATE_STATIC], [test x"$mod_deflate_dynit" != x"yes"])
+if test x"$mod_deflate_dynit" != x"yes"; then
+    AC_DEFINE([MOD_DEFLATE_STATIC],[],[dynamic mod_deflate])
+fi
 
 AC_CONFIG_FILES([
                  Makefile
