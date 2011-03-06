@@ -263,7 +263,6 @@ OUTLINK t_module_s *getmodule(void)
     ret->on_prehead = _on_prehead;
     ret->on_send = _on_send;
     ret->on_postsend = NULL;
-    ret->will_run = 1;
     ret->category = MODCAT_FILTER;
     return ret;
 }

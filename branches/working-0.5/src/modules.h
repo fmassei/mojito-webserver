@@ -81,19 +81,15 @@ struct module_s {
     t_module_ret_e (*on_prehead)(t_response_s *);
     t_module_ret_e (*on_send)(t_response_s *);
     t_module_ret_e (*on_postsend)(t_request_s *, t_response_s *);
-    int will_run;
     int category;
 };
 
 /* wrappers */
-t_modret_e mod_set_params(t_config_module_s *params);
-t_modret_e mod_init(void);
-t_modret_e mod_fini(void);
-t_modret_e can_run(t_request_s *req);
-t_modret_e on_accept(void);
-t_modret_e on_presend(t_socket sock, t_request_s *req);
+t_modret_e can_run(t_request_s *req, t_response_s *res);
+t_modret_e on_accept(t_request_s *req, t_response_s *res);
+t_modret_e on_presend(t_socket sock, t_request_s *req, t_response_s *res);
 t_modret_e on_prehead(t_response_s *res);
-t_modret_e on_send(t_response_s *res);
+t_modret_e filter_on_send(t_module_s *filter, t_response_s *res);
 t_modret_e on_postsend(t_request_s *, t_response_s *);
 
 /* loaders */
@@ -105,5 +101,8 @@ t_module_s *module_add_dynamic(char *fname);
 #endif /* DISABLE_DYNAMIC_MODULES */
 
 t_module_list_s *module_getfilterlist(void);
+t_module_list_s *module_getunspecslist(void);
+
+ret_t module_fill_response_vector(t_response_s *resp);
 
 #endif /* H_MODULES_H */

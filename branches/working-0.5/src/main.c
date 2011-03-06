@@ -134,7 +134,7 @@ static t_schedfnc_ret_e someone_calling(t_socket sock)
     return SCHEDFNCRET_OK;
 }
 
-int main(const int argc, const char *argv[])
+int main(const int argc, char * const *argv)
 {
     char *conffile = NULL;
     int done = 0, opt;
