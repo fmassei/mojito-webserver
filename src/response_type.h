@@ -52,6 +52,7 @@ struct response_s {
     char resbuf[0xff], tmpbuf[0xff];
     t_socket sock;
     t_module_s *ch_filter;      /**< selected filter for response */
+    t_module_s *mods2run[20];   /* FIXME: max 20 modules */
     int content_length_sent;    /**< has the content-length been sent? */
     t_response_state_s rstate;
 };

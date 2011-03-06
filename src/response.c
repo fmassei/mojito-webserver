@@ -29,6 +29,7 @@ void response_init(t_response_s *res)
     res->rstate.fd = -1;
     res->rstate.sent = 0;
     res->rstate.mod_res.data = NULL;
+    module_fill_response_vector(res);
 }
 
 void response_drop(t_response_s *resp)
@@ -115,9 +116,9 @@ t_response_send_e response_send(t_socket_unit_s *su)
     /* find_ret can be an error, but maybe we're dealing with a "special" file.
      * We run can_run() and on_presend() to see if there is at least one module
      * that can process the request */
-    if (can_run(req)!=MODRET_OK)
+    if (can_run(req, res)!=MODRET_OK)
         return RESPONSE_SEND_FINISH;
-    if (on_presend(res->sock, req)!=MODRET_OK)
+    if (on_presend(res->sock, req, res)!=MODRET_OK)
         return RESPONSE_SEND_FINISH;
     if (find_ret!=0) {
         header_kill_w_code(res, find_ret, req->protocol);
@@ -129,6 +130,7 @@ t_response_send_e response_send(t_socket_unit_s *su)
     }
     header_push_code(res, HRESP_200, req->protocol);
     header_push_contenttype(res, req->mime_type);
+    res->ch_filter->on_prehead(res);
     if (on_prehead(res)!=MODRET_OK) {
         return RESPONSE_SEND_FINISH;
     }
@@ -145,7 +147,7 @@ t_response_send_e response_send(t_socket_unit_s *su)
         return RESPONSE_SEND_FINISH;
     }
 just_continue:
-    send_ret = on_send(res);
+    send_ret = filter_on_send(res->ch_filter, res);
     if (send_ret==MODRET_CONTINUE)
         return RESPONSE_SEND_CONTINUE;
     if (send_ret==MODRET_ERR) {
