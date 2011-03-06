@@ -1,1 +1,1 @@
-SUBDIRS = mod_identity mod_deflate
+SUBDIRS = mod_identity mod_deflate mod_gzip
