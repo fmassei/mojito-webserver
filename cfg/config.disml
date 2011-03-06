@@ -6,6 +6,8 @@ config
   # --- ports ---
   listen_port = 8080
   listen_queue = 100
+  # --- interface (remove to bind on any) ---
+  interface = "127.0.0.1"
   # --- temporary dir ---
   tmp_dir = "/tmp/"
   # --- pid file ---

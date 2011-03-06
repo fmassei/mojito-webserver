@@ -33,6 +33,9 @@ static ret_t check_config(void)
 {
     if (s_config==NULL || s_config->server==NULL)
         return MMP_ERR_GENERIC;
+    if (s_config->server->interface==NULL) {
+        printf("config_manager: binding on any port.\n");
+    }
     if (s_config->server->listen_port==0) {
         printf("config_manager: missing listen_port, defaulting to %d\n",
             DEFAULT_LISTEN_PORT);

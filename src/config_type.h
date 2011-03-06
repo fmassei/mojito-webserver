@@ -25,6 +25,7 @@
 typedef struct config_server_s {
     int listen_port;
     int listen_queue;
+    char *interface;
     char *tmp_dir;
     char *pid_file;
     int uid, gid;

@@ -79,6 +79,7 @@ static void config_module_destroy_v(void **ptr)
 static void config_server_destroy(t_config_server_s **srv)
 {
     if (srv==NULL || *srv==NULL) return;
+    if ((*srv)->interface!=NULL) xfree((*srv)->interface);
     if ((*srv)->tmp_dir!=NULL) xfree((*srv)->tmp_dir);
     if ((*srv)->pid_file!=NULL) xfree((*srv)->pid_file);
     if ((*srv)->http_root!=NULL) xfree((*srv)->http_root);
@@ -111,6 +112,8 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, t_diskv_s *kv)
         return copy_or_die_int(&(csrv->listen_port), kv->val);
     if (!strcmp(kv->key, "listen_queue"))
         return copy_or_die_int(&(csrv->listen_queue), kv->val);
+    if (!strcmp(kv->key, "interface"))
+        return copy_or_die_str(&(csrv->interface), kv->val);
     if (!strcmp(kv->key, "tmp_dir"))
         return copy_or_die_str(&(csrv->tmp_dir), kv->val);
     if (!strcmp(kv->key, "pid_file"))

@@ -170,8 +170,9 @@ int main(const int argc, char * const *argv)
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
             ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
-            (mmp_socket_server_start(config_get()->server->listen_port,
+            (mmp_socket_server_start_bind(config_get()->server->listen_port,
                                         config_get()->server->listen_queue,
+                                        config_get()->server->interface,
                                         &s_srv_sock)!=MMP_ERR_OK) ||
             (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
