@@ -32,8 +32,12 @@ config
   modules_basepath = "/usr/local/lib/mojito-webserver"
  modules
   mod_identity
-  #mod_gzip
   mod_deflate
+   chunk_length = 8192
+   use_on_mime = "text/html"
+   use_on_mime = "text/plain"
+   use_on_mime = "text/css"
+  mod_gzip
    chunk_length = 8192
    use_on_mime = "text/html"
    use_on_mime = "text/plain"

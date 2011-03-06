@@ -87,6 +87,18 @@ AM_CONDITIONAL([MOD_DEFLATE_STATIC], [test x"$mod_deflate_dynit" != x"yes"])
 if test x"$mod_deflate_dynit" != x"yes"; then
     AC_DEFINE([MOD_DEFLATE_STATIC],[],[dynamic mod_deflate])
 fi
+# mod_gzip
+AC_MSG_CHECKING([whether to build mod_gzip as dynamic])
+AC_ARG_ENABLE([mod_gzip_dyn],
+              [AS_HELP_STRING([--enable-mod_gzip-dynamic],
+                              [dynamic mod_gzip (def=no)])],
+              [mod_gzip_dynit="$enableval"],
+              [mod_gzip_dynit=no])
+AC_MSG_RESULT([$mod_gzip_dynit])
+AM_CONDITIONAL([MOD_GZIP_STATIC], [test x"$mod_gzip_dynit" != x"yes"])
+if test x"$mod_gzip_dynit" != x"yes"; then
+    AC_DEFINE([MOD_GZIP_STATIC],[],[dynamic mod_gzip])
+fi
 
 AC_CONFIG_FILES([
                  Makefile
@@ -95,5 +107,6 @@ AC_CONFIG_FILES([
                  modules/Makefile
                  modules/mod_identity/Makefile
                  modules/mod_deflate/Makefile
+                 modules/mod_gzip/Makefile
                  ])
 AC_OUTPUT
