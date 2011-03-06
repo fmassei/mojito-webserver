@@ -12,12 +12,13 @@ AC_CHECK_LIB([disml], [dis_parse_file])
 AC_CHECK_LIB([mmp_base], [mmp_trace_print])
 
 # Checks for header files.
-AC_CHECK_HEADERS([mmp/mmp_files.h disml/dis_parse.h stdlib.h string.h])
+AC_CHECK_HEADERS([mmp/mmp_files.h mmp/mmp_socket.h])
+AC_CHECK_HEADERS([disml/dis_parse.h stdlib.h string.h])
 AC_CHECK_HEADERS([sys/socket.h sys/sendfile.h])
 AC_CHECK_HEADERS([sys/epoll.h])
 
 #Checks for functions
-AC_CHECK_FUNCS([sendfile])
+AC_CHECK_FUNCS([sendfile accept4])
 
 # libmmp dependency
 AM_LDFLAGS="$AM_LDFLAGS -lmmp_base -ldisml"
@@ -35,8 +36,8 @@ AC_ARG_ENABLE([debug],
 AC_MSG_RESULT([$debugit])
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([DEBUG],[],[Debug Mode])
-    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -O0"
-    AM_CFLAGS="$AM_CFLAGS -g -Wall -Werror -O0"
+    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -O0"
+    AM_CFLAGS="$AM_CFLAGS -g -Wall -O0"
 else
     AC_DEFINE([NDEBUG],[],[No-debug Mode])
     AM_CXXFLAGS="$AM_CXXFLAGS -O3"
@@ -99,6 +100,18 @@ AM_CONDITIONAL([MOD_GZIP_STATIC], [test x"$mod_gzip_dynit" != x"yes"])
 if test x"$mod_gzip_dynit" != x"yes"; then
     AC_DEFINE([MOD_GZIP_STATIC],[],[dynamic mod_gzip])
 fi
+# mod_cgi
+AC_MSG_CHECKING([whether to build mod_cgi as dynamic])
+AC_ARG_ENABLE([mod_cgi_dyn],
+              [AS_HELP_STRING([--enable-mod_cgi-dynamic],
+                              [dynamic mod_cgi (def=no)])],
+              [mod_cgi_dynit="$enableval"],
+              [mod_cgi_dynit=no])
+AC_MSG_RESULT([$mod_cgi_dynit])
+AM_CONDITIONAL([MOD_CGI_STATIC], [test x"$mod_cgi_dynit" != x"yes"])
+if test x"$mod_cgi_dynit" != x"yes"; then
+    AC_DEFINE([MOD_CGI_STATIC],[],[dynamic mod_cgi])
+fi
 
 AC_CONFIG_FILES([
                  Makefile
@@ -108,5 +121,6 @@ AC_CONFIG_FILES([
                  modules/mod_identity/Makefile
                  modules/mod_deflate/Makefile
                  modules/mod_gzip/Makefile
+                 modules/mod_cgi/Makefile
                  ])
 AC_OUTPUT

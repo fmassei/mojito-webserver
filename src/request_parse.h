@@ -29,10 +29,11 @@
 #include "filter_manager.h"
 
 typedef enum request_parse_e {
-    REQUEST_PARSE_CLOSECONN = 0,
-    REQUEST_PARSE_FINISH    = 1,
-    REQUEST_PARSE_CONTINUE  = 2,
-    REQUEST_PARSE_ERROR     = 3
+    REQUEST_PARSE_CLOSECONN     = 0,
+    REQUEST_PARSE_FINISH        = 1,
+    REQUEST_PARSE_CONTINUE      = 2,
+    REQUEST_PARSE_CONTINUE_POST = 3,
+    REQUEST_PARSE_ERROR         = 4
 } t_request_parse_e;
 
 t_request_parse_e request_parse_read(t_socket_unit_s *su);

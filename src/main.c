@@ -40,7 +40,7 @@ static ret_t accept_client(void)
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     t_socket cl_sock;
-#ifdef _GNU_SOURCE
+#ifdef HAVE_ACCEPT4
     cl_sock = accept4(s_srv_sock, (struct sockaddr *)&addr, &addrlen,
                         SOCK_NONBLOCK);
 #else
@@ -61,7 +61,7 @@ static ret_t accept_client(void)
     }
     socket_unit_init(&s_sockunits[cl_sock]);
     s_sockunits[cl_sock].socket = cl_sock;
-#ifndef _GNU_SOURCE /* already done with accept4() */
+#ifndef HAVE_ACCEPT4 /* already done with accept4() */
     mmp_socket_set_nonblocking(&cl_sock);
 #endif
     scheduler_add_client_socket(s_sched_id, cl_sock);
@@ -69,10 +69,13 @@ static ret_t accept_client(void)
     return MMP_ERR_OK;
 }
 
-static void kill_client(t_socket sock)
+static void kill_client(t_socket sock, int shut)
 {
-    DBG_PRINT(("closing on slot %d\n", sock));
-    (void)mmp_socket_close(&sock, 1);
+    if (shut)
+        DBG_PRINT(("shutting slot %d\n", sock));
+    else
+        DBG_PRINT(("closing on slot %d\n", sock));
+    (void)mmp_socket_close(&sock, shut);
     scheduler_del_socket(s_sched_id, sock);
 }
 
@@ -86,14 +89,18 @@ static ret_t client_action(t_socket sock)
         switch(rreq) {
         case REQUEST_PARSE_ERROR:
         case REQUEST_PARSE_CLOSECONN:
-            kill_client(sock);
+            kill_client(sock, 1);
             break;
         case REQUEST_PARSE_FINISH:
             DBG_PRINT(("finished parsing on slot %d\n", sock));
             rres = response_send(&s_sockunits[sock]);
-            if (rres!=RESPONSE_SEND_CONTINUE) {
+            if (rres==RESPONSE_SEND_MODDONE) {
+                /* done by module */
+                DBG_PRINT(("done by module\n"));
+                kill_client(sock, 0);
+            } else if (rres!=RESPONSE_SEND_CONTINUE) {
                 /* error, or it's already finished */
-                kill_client(sock);
+                kill_client(sock, 1);
             } else {
                 s_sockunits[sock].state = SOCKET_STATE_WRITERESPONSE;
             }
@@ -108,7 +115,10 @@ static ret_t client_action(t_socket sock)
         case RESPONSE_SEND_CLOSECONN:
         case RESPONSE_SEND_ERROR:
         case RESPONSE_SEND_FINISH:
-            kill_client(sock);
+            kill_client(sock, 1);
+            break;
+        case RESPONSE_SEND_MODDONE:
+            kill_client(sock, 0);
             break;
         case RESPONSE_SEND_CONTINUE:
             DBG_PRINT(("continue sending on slot %d\n", sock));

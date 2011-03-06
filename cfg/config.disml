@@ -42,7 +42,7 @@ config
    use_on_mime = "text/html"
    use_on_mime = "text/plain"
    use_on_mime = "text/css"
-  #mod_cgi
+  mod_cgi
   #mod_fcgi
   #mod_stat
   #mod_cacheshm

@@ -16,23 +16,15 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef H_RESP_HEADERS_H
-#define H_RESP_HEADERS_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../src/types.h"
-#include "../src/response_type.h"
-#include "../src/request.h"
+#ifndef H_CGI_RUN_H
+#define H_CGI_RUN_H
 
-void header_send_hs(t_response_s *resp, char *h, char *s);
-void header_send_hl(t_response_s *resp, char *h, long l);
+#include <mmp/mmp_socket.h>
+#include "../../src/request.h"
+#include "../../src/response.h"
 
-void header_push_contentlength(t_response_s *resp, long len);
-void header_push_contenttype(t_response_s *resp, char *name);
-void header_push_contentencoding(t_response_s *resp, char *name);
+/* run a cgi instance */
+int cgi_run(t_request_s *req, t_response_s *res);
 
-const char *request_method_string(t_request_method_e method);
-
-#endif /* H_RESP_HEADERS_H */
+#endif /* H_CGI_RUN_H */

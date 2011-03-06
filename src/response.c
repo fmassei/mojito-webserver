@@ -98,7 +98,7 @@ static int check_method(t_request_s *req)
 t_response_send_e response_send(t_socket_unit_s *su)
 {
     int find_ret;
-    t_modret_e send_ret;
+    t_modret_e mod_ret;
     t_request_s *req = &su->req;
     t_response_s *res = &su->res;
 
@@ -118,7 +118,10 @@ t_response_send_e response_send(t_socket_unit_s *su)
      * that can process the request */
     if (can_run(req, res)!=MODRET_OK)
         return RESPONSE_SEND_FINISH;
-    if (on_presend(res->sock, req, res)!=MODRET_OK)
+    mod_ret = on_presend(req, res);
+    if (mod_ret==MODRET_ALLDONE)
+        return RESPONSE_SEND_MODDONE;
+    else if (mod_ret!=MODRET_OK)
         return RESPONSE_SEND_FINISH;
     if (find_ret!=0) {
         header_kill_w_code(res, find_ret, req->protocol);
@@ -131,7 +134,7 @@ t_response_send_e response_send(t_socket_unit_s *su)
     header_push_code(res, HRESP_200, req->protocol);
     header_push_contenttype(res, req->mime_type);
     res->ch_filter->on_prehead(res);
-    if (on_prehead(res)!=MODRET_OK) {
+    if ((mod_ret = on_prehead(res))!=MODRET_OK) {
         return RESPONSE_SEND_FINISH;
     }
     /* no length? no party. We can't keep the connection alive 
@@ -147,10 +150,10 @@ t_response_send_e response_send(t_socket_unit_s *su)
         return RESPONSE_SEND_FINISH;
     }
 just_continue:
-    send_ret = filter_on_send(res->ch_filter, res);
-    if (send_ret==MODRET_CONTINUE)
+    mod_ret = filter_on_send(res->ch_filter, res);
+    if (mod_ret==MODRET_CONTINUE)
         return RESPONSE_SEND_CONTINUE;
-    if (send_ret==MODRET_ERR) {
+    if (mod_ret==MODRET_ERR) {
         mmp_trace_print(stdout);
         mmp_close(res->rstate.fd);
         return RESPONSE_SEND_ERROR;

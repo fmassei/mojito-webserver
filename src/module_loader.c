@@ -32,6 +32,9 @@ extern t_module_s *mod_deflate_getmodule(void);
 #ifdef MOD_GZIP_STATIC
 extern t_module_s *mod_gzip_getmodule(void);
 #endif
+#ifdef MOD_CGI_STATIC
+extern t_module_s *mod_cgi_getmodule(void);
+#endif
 
 static t_static_mod_def_s s_static_mod_defs[] = {
     #ifdef MOD_IDENTITY_STATIC
@@ -42,6 +45,9 @@ static t_static_mod_def_s s_static_mod_defs[] = {
     #endif
     #ifdef MOD_GZIP_STATIC
         { "mod_gzip", mod_gzip_getmodule },
+    #endif
+    #ifdef MOD_CGI_STATIC
+        { "mod_cgi", mod_cgi_getmodule },
     #endif
 };
 #define N_STATIC_MOD_DEFS \

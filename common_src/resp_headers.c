@@ -48,3 +48,18 @@ void header_push_contentencoding(t_response_s *resp, char *name)
     header_send_hs(resp, "Content-Encoding", name);
 }
 
+const char *request_method_string(t_request_method_e method)
+{
+    switch(method) {
+    case REQUEST_METHOD_GET:
+        return "GET";
+    case REQUEST_METHOD_HEAD:
+        return "HEAD";
+    case REQUEST_METHOD_POST:
+        return "POST";
+    case REQUEST_METHOD_UNKNOWN:
+    default:
+        return "UNKNOWN";
+    }
+}
+

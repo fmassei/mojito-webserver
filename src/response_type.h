@@ -27,7 +27,8 @@ typedef enum response_send_e {
     RESPONSE_SEND_CLOSECONN = 0,
     RESPONSE_SEND_FINISH    = 1,
     RESPONSE_SEND_CONTINUE  = 2,
-    RESPONSE_SEND_ERROR     = 3
+    RESPONSE_SEND_ERROR     = 3,
+    RESPONSE_SEND_MODDONE   = 4,
 } t_response_send_e;
 
 typedef enum hresp_e {

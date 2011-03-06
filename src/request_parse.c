@@ -119,6 +119,29 @@ static int parse_option(t_request_s *req, char *line)
         return parse_header_line(req, line);
 }
 
+/* ok - let's the kernel do its job :-) For post-data we create a temporary 
+ * file to pass to cgi apps. We rely on two very important features: buffering
+ * and delayed unlink. As long as I know every unix-like kernel behave the
+ * same way in our conditions. */
+static int create_post_file(void)
+{
+    const t_config_s *cfg = config_get();
+    static char tmp_file[2049];
+    int fd;
+    snprintf(tmp_file, 2049, "%s/mojito-temp.XXXXXX", cfg->server->tmp_dir);
+    if ((fd = mkstemp(tmp_file))==-1) { /* FIXME: check for mkstemp */
+        mmp_setError(MMP_ERR_FILE);
+        return -1;
+    }
+    if (unlink(tmp_file)==-1) { /* FIXME: check for unlink */
+        close(fd);
+        mmp_setError(MMP_ERR_FILE);
+        return -1; /* FIXME: Think about just returning 501. */
+    }
+    return fd;
+}
+
+
 t_request_parse_e request_parse_read(t_socket_unit_s *su)
 {
     t_socket *sock;
@@ -191,6 +214,26 @@ t_request_parse_e request_parse_read(t_socket_unit_s *su)
                 filter_sanitize_queue(&req->accept_encoding);
                 if (req->content_length<=0 && req->method!=REQUEST_METHOD_POST)
                     return REQUEST_PARSE_FINISH;
+                /* TODO: check the post stuff... */
+                req->parse.post_data = req->parse.buf+req->parse.pos;
+                if (req->content_length > req->parse.rb) {
+                    req->parse.buf = xrealloc(req->parse.buf,
+                            req->parse.mr-req->parse.rb+req->content_length);
+                    do {
+                        req->parse.len = req->content_length - req->parse.rb;
+                        req->parse.rb =
+                                mmp_socket_read(sock, 
+                                                req->parse.buf+req->parse.pos,
+                                                req->parse.len);
+                        req->parse.len -= req->parse.rb;
+                        req->parse.pos += req->parse.rb;
+                    } while(req->parse.len>0);
+                }
+                /* write to file */
+                if ((req->post_fd = create_post_file())==-1)
+                    return REQUEST_PARSE_ERROR;
+                mmp_write(req->post_fd, req->parse.post_data,
+                    req->content_length);
             }
         }
     }

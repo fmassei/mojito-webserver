@@ -14,3 +14,6 @@ endif
 if MOD_GZIP_STATIC
 mojito_LDADD += ../modules/mod_gzip/mod_gzip.la
 endif
+if MOD_CGI_STATIC
+mojito_LDADD += ../modules/mod_cgi/mod_cgi.la
+endif
