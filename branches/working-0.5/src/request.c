@@ -30,6 +30,7 @@ void request_init(t_request_s *req)
     req->content_length = 0;
     req->content_type = NULL;
     req->accept_encoding = NULL;
+    req->post_fd = -1;
 }
 
 void request_drop(t_request_s *req)

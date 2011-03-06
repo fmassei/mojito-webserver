@@ -20,6 +20,7 @@
 
 static t_module_list_s *s_all_modules = NULL;
 static t_module_list_s *s_filters = NULL;
+static t_module_list_s *s_dynamics = NULL;
 static t_module_list_s *s_unspecs = NULL;
 
 /* delete a module from the queue.
@@ -101,7 +102,7 @@ t_modret_e on_accept(t_request_s *req, t_response_s *res)
     return MODRET_OK;
 }
 
-t_modret_e on_presend(t_socket sock, t_request_s *req, t_response_s *res)
+t_modret_e on_presend(t_request_s *req, t_response_s *res)
 {
     t_module_s *p;
     t_module_ret_e ret;
@@ -110,7 +111,7 @@ t_modret_e on_presend(t_socket sock, t_request_s *req, t_response_s *res)
     for (i=0; i<mx; ++i) {
         if ((p = res->mods2run[i])==NULL)
             continue;
-        ret = (p->on_presend!=NULL) ? p->on_presend(sock, req)
+        ret = (p->on_presend!=NULL) ? p->on_presend(req, res)
                                     : MOD_NOHOOK;
         switch(ret) {
         case MOD_NOHOOK:
@@ -261,6 +262,17 @@ t_module_s *module_add_static(t_get_module_f get_module)
             mmp_setError(MMP_ERR_GENERIC);
             return NULL;
         }
+    } else if (p->category==MODCAT_DYNAMIC) {
+        if (s_dynamics==NULL) {
+            if ((s_dynamics = mmp_list_create())==NULL) {
+                mmp_setError(MMP_ERR_GENERIC);
+                return NULL;
+            }
+        }
+        if (mmp_list_add_data(s_dynamics, p)!=MMP_ERR_OK) {
+            mmp_setError(MMP_ERR_GENERIC);
+            return NULL;
+        }
     }
     return p;
 }
@@ -287,13 +299,23 @@ t_module_list_s *module_getunspecslist(void)
     return s_unspecs;
 }
 
+t_module_list_s *module_getdynamicslist(void)
+{
+    return s_dynamics;
+}
+
 ret_t module_fill_response_vector(t_response_s *resp)
 {
     t_mmp_listelem_s *el;
-    int i, mx;
+    int i=0, mx;
     mx = sizeof(resp->mods2run)/sizeof(resp->mods2run[0]);
     if (s_unspecs!=NULL) {
-        for (i=0, el=s_unspecs->head; el!=NULL && i<mx; el=el->next, ++i) {
+        for (el=s_unspecs->head; el!=NULL && i<mx; el=el->next, ++i) {
+            resp->mods2run[i] = (t_module_s*)el->data;
+        }
+    }
+    if (s_dynamics!=NULL) {
+        for (el=s_dynamics->head; el!=NULL && i<mx; el=el->next, ++i) {
             resp->mods2run[i] = (t_module_s*)el->data;
         }
     }

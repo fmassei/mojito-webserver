@@ -53,6 +53,7 @@ typedef struct request_parse_s {
     int reline;
     int rb, mr, len, pos;
     char c, *buf, *cur_head;
+    char *post_data;
     t_request_parse_status_e status;
 } t_request_parse_s;
 
@@ -66,6 +67,7 @@ struct request_s {
     size_t content_length;
     char *content_type;
     t_qhead_list_s *accept_encoding;
+    int post_fd;
     /* filled by response */
     char *page, *query_string, *abs_filename;
     const char *mime_type;
