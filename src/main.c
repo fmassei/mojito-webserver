@@ -30,9 +30,12 @@
 
 #define SCHEDULER_LEN   10000 /* TODO move to config */
 
-static t_socket s_srv_sock;
-static t_sched_id s_sched_id;
-static t_socket_unit_s s_sockunits[SCHEDULER_LEN];
+/* very very static global stuff.. */
+static t_socket s_srv_sock;                         /* listener socket */
+static t_sched_id s_sched_id;                       /* scheduler id */
+static t_socket_unit_s s_sockunits[SCHEDULER_LEN];  /* socket units */
+/* options from command line */
+static char *s_conffile = NULL;                     /* custom config file */
 
 /* TODO: wrap the accept calls */
 static ret_t accept_client(void)
@@ -144,29 +147,54 @@ static t_schedfnc_ret_e someone_calling(t_socket sock)
     return SCHEDFNCRET_OK;
 }
 
-int main(const int argc, char * const *argv)
+static void usage(void)
 {
-    char *conffile = NULL;
-    int done = 0, opt;
-    fprintf(stdout, "starting\n");
-    if ((conffile = xstrdup(DEFAULT_CONFIGFILE))==NULL)
-        goto bad_exit;
-    while ((opt = xgetopt(argc, argv, "c:"))>=0) {
+    printf(PACKAGE " Ver:" VERSION "\n\n");
+    printf("options:\n");
+    printf("\t-c <filename>   use filename as the config file\n");
+    printf("\t-v              print the version\n");
+    printf("\t-h              print this help screen\n");
+    printf("\n");
+    printf("Copyright 2011 Francesco Massei\n");
+    printf("Report bugs to <" PACKAGE_BUGREPORT ">\n");
+}
+
+static ret_t parse_command_line(const int argc, char * const *argv)
+{
+    int opt;
+    while ((opt = xgetopt(argc, argv, "c:vh"))>=0) {
         switch (opt) {
         case 'c':
-            MMP_XFREE_AND_NULL(conffile);
-            if ((conffile = xstrdup(optarg))==NULL) {
-                mmp_setError(MMP_ERR_GENERIC);
-                goto bad_exit;
+            MMP_XFREE_AND_NULL(s_conffile);
+            if ((s_conffile = xstrdup(optarg))==NULL) {
+                mmp_setError(MMP_ERR_ENOMEM);
+                return MMP_ERR_ENOMEM;
             }
             break;
+        case 'v':
+            printf(PACKAGE" ver:"VERSION"\n");
+            exit(EXIT_SUCCESS);
+        case 'h':
+            usage();
+            exit(EXIT_SUCCESS);
         default:
-            printf("unknown option.\n");
-            return EXIT_FAILURE;
+            printf("use -h to see the options\n");
+            exit(EXIT_FAILURE);
         }
     }
-    printf("Using config file '%s'\n", conffile);
-    if (    (config_manager_loadfile(conffile)!=MMP_ERR_OK) ||
+    return MMP_ERR_OK;
+}
+
+int main(const int argc, char * const *argv)
+{
+    int done = 0;
+    if ((s_conffile = xstrdup(DEFAULT_CONFIGFILE))==NULL)
+        goto bad_exit;
+    if (parse_command_line(argc, argv)!=MMP_ERR_OK)
+        goto bad_exit;
+    printf(PACKAGE" starting\n");
+    printf("using config file '%s'\n", s_conffile);
+    if (    (config_manager_loadfile(s_conffile)!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
             ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
@@ -176,7 +204,8 @@ int main(const int argc, char * const *argv)
                                         &s_srv_sock)!=MMP_ERR_OK) ||
             (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
-    if (conffile!=NULL) MMP_XFREE_AND_NULL(conffile);
+    if (s_conffile!=NULL)
+        MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_reset();
     while(!done) {
         if (scheduler_loop(s_sched_id, someone_calling)!=SCHEDRET_OK) {
@@ -191,8 +220,9 @@ int main(const int argc, char * const *argv)
     return EXIT_SUCCESS;
 
 bad_exit:
-    printf("Fatal error!\n");
-    if (conffile!=NULL) MMP_XFREE_AND_NULL(conffile);
+    printf("fatal error!\n");
+    if (s_conffile!=NULL)
+        MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_print(stdout);
     return EXIT_FAILURE;
 }
