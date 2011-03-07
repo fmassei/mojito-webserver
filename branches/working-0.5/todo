@@ -1,0 +1,20 @@
+2- mod_proxy (pre: 8)
+3- load balancer (pre: 8)
+4- mod_fastcgi (pre: 6,5)
+5- mod_cgi (to clean/to test)
+6- prendere post (to test)
+7- caching?
+8- binding su una interfaccia (to test)
+9- benchmark
+10- merge su trunk
+11- controllo host
+12- virtual hosts (pre: 11)
+13- controllo dei log
+14- log delle hit (pre: 13)
+15- include condizionati da configure.ac
+16- fix per check mime-type su mod_deflate
+17- ipv6
+18- personalized error pages
+19- strings in one file only
+20- cfg for installation
+22- signal trap for interruptions
