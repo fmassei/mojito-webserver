@@ -18,13 +18,13 @@
 */
 #include "resp_headers.h"
 
-void header_send_hs(t_response_s *resp, char *h, char *s)
+void header_send_hs(t_response_s *resp, const char *h, const char *s)
 {
     sprintf(resp->tmpbuf, "%s: %s\r\n", h, s);
     strcat(resp->resbuf, resp->tmpbuf);
 }
 
-void header_send_hl(t_response_s *resp, char *h, long l)
+void header_send_hl(t_response_s *resp, const char *h, long l)
 {
     sprintf(resp->tmpbuf, "%s: %lu\r\n", h, l);
     strcat(resp->resbuf, resp->tmpbuf);
@@ -36,12 +36,12 @@ void header_push_contentlength(t_response_s *resp, long len)
     resp->content_length_sent = 1;
 }
 
-void header_push_contenttype(t_response_s *resp, char *name)
+void header_push_contenttype(t_response_s *resp, const char *name)
 {
     header_send_hs(resp, "Content-Type", name);
 }
 
-void header_push_contentencoding(t_response_s *resp, char *name)
+void header_push_contentencoding(t_response_s *resp, const char *name)
 {
     if (!strcmp(name, "identity"))
         return;

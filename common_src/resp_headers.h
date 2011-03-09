@@ -26,12 +26,12 @@
 #include "../src/response_type.h"
 #include "../src/request.h"
 
-void header_send_hs(t_response_s *resp, char *h, char *s);
-void header_send_hl(t_response_s *resp, char *h, long l);
+void header_send_hs(t_response_s *resp, const char *h, const char *s);
+void header_send_hl(t_response_s *resp, const char *h, long l);
 
 void header_push_contentlength(t_response_s *resp, long len);
-void header_push_contenttype(t_response_s *resp, char *name);
-void header_push_contentencoding(t_response_s *resp, char *name);
+void header_push_contenttype(t_response_s *resp, const char *name);
+void header_push_contentencoding(t_response_s *resp, const char *name);
 
 const char *request_method_string(t_request_method_e method);
 

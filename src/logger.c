@@ -30,6 +30,7 @@ static const char *logtype2str(t_logtype_e type)
     case LOGTYPE_ERR: return "error";
     case LOGTYPE_FATAL: return "fatal";
     }
+    return "";
 }
 
 ret_t log_init(void)

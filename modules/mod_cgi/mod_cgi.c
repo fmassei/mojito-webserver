@@ -37,7 +37,7 @@ static t_module_ret_e _on_presend(t_request_s *req, t_response_s *res)
 {
     if (access(req->abs_filename, X_OK)==0) {
         if (cgi_run(req, res)!=0) {
-            printf("cgi_run critical.\n");
+            DBG_PRINT(("[mod_cgi] cgi_run critical.\n"));
             mmp_trace_print(stdout);
             return MOD_CRIT;
         }

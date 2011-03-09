@@ -20,6 +20,7 @@
 #include "cgi_run.h"
 #include "../../common_src/resp_headers.h"
 #include "../../common_src/env_setter.h"
+#include "../../src/utils.h"
 
 static char **nuenv = NULL;
 static int nenv = 0;
@@ -58,7 +59,7 @@ static ret_t prepare_env(t_request_s *req)
 int cgi_run(t_request_s *req, t_response_s *res)
 {
     pid_t pid;
-    printf("cgi run %s\n", req->abs_filename);
+    DBG_PRINT(("[mod_cgi] cgi run %s\n", req->abs_filename));
     pid = fork();
     if (pid==-1) {
         mmp_setError_ext(MMP_ERR_GENERIC, "could not fork!");
@@ -87,11 +88,12 @@ int cgi_run(t_request_s *req, t_response_s *res)
         /* FIXME: check for basename */
         execle(req->abs_filename, basename(req->abs_filename), (char*)0, nuenv);
         /* should not happen */
-        printf("Error execle!\n");
+        DBG_PRINT(("[mod_cgi] Error execle!\n"));
         mmp_setError(MMP_ERR_FILE);
         return -1;
     } else {
         /* the child will take care of the rest */
+        /* FIXME TODO XXX remove the wait! */
         int status;
         wait(&status);
     }

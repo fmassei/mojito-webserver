@@ -22,7 +22,7 @@
 #include "utils.h"
 #include <mmp/mmp_error.h>
 #include "request.h"
-#include "response_type.h"
+#include "response.h"
 
 typedef enum logtype_e {
     LOGTYPE_INFO,

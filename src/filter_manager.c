@@ -17,6 +17,7 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "filter_manager.h"
+#include "utils.h"
 
 /* find a filter by its id */
 static t_module_s *filter_findbyid(char *id)
@@ -134,12 +135,12 @@ t_module_s *filter_findfilter(t_qhead_list_s *qlist)
     t_qhead_s *qh;
     t_module_s *mod;
     if (qlist==NULL) return NULL;
-    printf("filter_findfilter\n");
+    DBG_PRINT(("filter_findfilter\n"));
     for (p=qlist->head; p!=NULL; p=p->next) {
         qh = (t_qhead_s*)p->data;
-        printf("%s %f\n", qh->id, qh->quality);
+        DBG_PRINT(("%s %f\n", qh->id, qh->quality));
     }
-    printf("filter_findfilter end\n");
+    DBG_PRINT(("filter_findfilter end\n"));
     for (p=qlist->head; p!=NULL; p=p->next) {
         qh = (t_qhead_s*)p->data;
         if (qh==NULL) continue;

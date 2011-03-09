@@ -17,6 +17,7 @@
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "module_loader.h"
+#include "logger.h"
 
 typedef struct static_mod_def_s {
     const char *name;
@@ -93,34 +94,39 @@ ret_t module_loader_load(const t_config_s *params)
         if (mod_conf==NULL || mod_conf->name==NULL)
             continue;
         mmp_trace_reset();
-        printf("Loading module %s... ", mod_conf->name);
         for (i=0; i<N_STATIC_MOD_DEFS; ++i) {
             if (!strcmp(s_static_mod_defs[i].name, mod_conf->name)) {
                 mod = module_add_static(s_static_mod_defs[i].fnc);
                 if (mod==NULL) {
-                    printf("ERR\n");
+                    log_err(LOGTYPE_ERR, "Error loading module %s [static]",
+                        mod_conf->name);
                     mmp_trace_print(stdout);
                     continue;
                 }
-                printf("Ok (static)\n");
+                log_err(LOGTYPE_INFO, "Loaded module %s [static]",
+                        mod_conf->name);
                 goto got_it;
             }
         }
 #ifndef DISABLE_DYNAMIC_MODULES
         if ((mod_filename = get_module_filename(mod_conf->name))==NULL) {
-            printf("ENOMEM assigning name!?!\n");
+            log_err(LOGTYPE_ERR, "Error loading module %s [dynamic]",
+                    mod_conf->name);
             continue;
         }
         mod = module_add_dynamic(mod_filename);
         xfree(mod_filename);
         if (mod==NULL) {
-            printf("ERR\n");
+            log_err(LOGTYPE_ERR, "Error loading module %s [dynamic]",
+                    mod_conf->name);
             mmp_trace_print(stdout);
             continue;
         }
-        printf("Ok (dynamic)\n");
+        log_err(LOGTYPE_INFO, "Loaded module %s [dynamic]",
+                mod_conf->name);
 #else /* DISABLE_DYNAMIC_MODULES */
-        printf("Not found\n");
+        log_err(LOGTYPE_ERR, "Module %s not found [dynamic]",
+                mod_conf->name);
         continue;
 #endif /* DISABLE_DYNAMIC_MODULES */
 got_it:
