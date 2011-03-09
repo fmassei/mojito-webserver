@@ -48,6 +48,7 @@ t_modret_e can_run(t_request_s *req, t_response_s *res)
         ret = (p->can_run!=NULL) ? p->can_run(req) : MOD_NOHOOK;
         switch(ret) {
         case MOD_NOHOOK:
+        case MOD_OK:
             continue;
         case MOD_CORE_CRIT:
             return MODRET_ERR;
@@ -80,6 +81,7 @@ t_modret_e on_accept(t_request_s *req, t_response_s *res)
             continue;
         ret = (p->on_accept!=NULL) ? p->on_accept() : MOD_NOHOOK;
         switch(ret) {
+        case MOD_OK:
         case MOD_NOHOOK:
             continue;
         case MOD_CORE_CRIT:
@@ -114,6 +116,7 @@ t_modret_e on_presend(t_request_s *req, t_response_s *res)
         ret = (p->on_presend!=NULL) ? p->on_presend(req, res)
                                     : MOD_NOHOOK;
         switch(ret) {
+        case MOD_OK:
         case MOD_NOHOOK:
             continue;
         case MOD_CORE_CRIT:
@@ -148,6 +151,7 @@ t_modret_e on_prehead(t_response_s *res)
         ret = (p->on_prehead!=NULL) ? p->on_prehead(res)
                                     : MOD_NOHOOK;
         switch(ret) {
+        case MOD_OK:
         case MOD_NOHOOK:
             continue;
         case MOD_CORE_CRIT:
@@ -175,6 +179,7 @@ t_modret_e filter_on_send(t_module_s *filter, t_response_s *res)
     t_module_ret_e ret;
     ret = filter->on_send(res);
     switch(ret) {
+    case MOD_OK:
     case MOD_NOHOOK:
         return MODRET_OK;
     case MOD_CRIT:
@@ -202,6 +207,7 @@ t_modret_e on_postsend(t_request_s *req, t_response_s *res)
         ret = (p->on_postsend!=NULL) ? p->on_postsend(req, res)
                                      : MOD_NOHOOK;
         switch(ret) {
+        case MOD_OK:
         case MOD_NOHOOK:
             continue;
         case MOD_CORE_CRIT:

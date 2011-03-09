@@ -25,6 +25,7 @@
 #include <mmp/mmp_list.h>
 #include "../common_src/resp_headers.h"
 #include "../src/modules.h"
+#include "../src/utils.h"
 #include <zlib.h>
 
 #define DEFAULT_CHUNK_LEN (16*1024)
@@ -93,19 +94,21 @@ static t_module_ret_e _set_params(t_config_module_s *cfg_mod)
             if ((errno==ERANGE
                         && (tmpl==LONG_MAX || tmpl==LONG_MIN))
                     || (errno!=0 && tmpl==0) || (endptr==set->val))
-                printf("Invalid setting %s = %s\n", set->key, set->val);
+                DBG_PRINT(("[mod_deflate] Invalid setting %s = %s\n",
+                            set->key, set->val));
             else
                 s_chunk_length = tmpl;
-            printf("chunk_length set to %d\n", s_chunk_length);
+            DBG_PRINT(("[mod_deflate] chunk_length set to %d\n",
+                            s_chunk_length));
         } else if (!strcmp(set->key, "use_on_mime")) {
             char *copyval;
             if (set->val==NULL) continue;
             if ((copyval = xstrdup(set->val))==NULL) {
-                printf("could not set mime %s\n", set->val);
+                DBG_PRINT(("[mod_deflate] could not set mime %s\n", set->val));
                 continue;
             }
             if (mmp_list_add_data(s_use_on_mimes, copyval)!=MMP_ERR_OK) {
-                printf("could not set mime %s\n", set->val);
+                DBG_PRINT(("[mod_deflate] could not set mime %s\n", set->val));
                 xfree(copyval);
                 continue;
             }
@@ -181,10 +184,10 @@ static t_module_ret_e _on_send(t_response_s *res)
     int ret;
     size_t written, have;
     state = state_get(res);
-    printf("deflate on send.\n");
+    DBG_PRINT(("[mod_deflate] deflate on send.\n"));
     if (state==NULL) {
         if ((state = state_create(res))==NULL) {
-            printf("Could not create deflate state\n");
+            DBG_PRINT(("[mod_deflate] Could not create deflate state\n"));
             return MOD_ERR;
         }
         state->strm.zalloc = Z_NULL;

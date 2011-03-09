@@ -75,12 +75,13 @@ static t_module_ret_e _on_send(t_response_s *res)
 {
     ssize_t ret;
 #ifdef HAVE_SENDFILE
-    printf("sendfile in\n");
+    DBG_PRINT(("[mod_identity] sendfile in\n"));
     ret = sendfile(res->sock, res->rstate.fd, NULL,
                             res->rstate.sb.st_size-res->rstate.sent);
-    printf("sendfile out %d\n", ret);
+    DBG_PRINT(("[mod_identity] sendfile out %d\n", ret));
 #else
     /* TODO: missing sendfile alternative */
+    ret = -1;
 #endif
     if (ret<0) {
         if (errno==EAGAIN)

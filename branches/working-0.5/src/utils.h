@@ -26,7 +26,10 @@
 #ifdef NDEBUG
 #   define DBG_PRINT(_ARGS)
 #else
-#   define DBG_PRINT(_ARGS)    printf _ARGS
+#   define DBG_PRINT(_ARGS)    do { \
+            printf("[DBG] "); \
+            printf _ARGS ;\
+        } while(0)
 #endif
 
 #endif /* H_UTILS_H */

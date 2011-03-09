@@ -19,6 +19,7 @@
 
 #include "response.h"
 #include <mmp/mmp_mmap.h>
+#include "../common_src/resp_headers.h"
 
 int hresp2int(t_hresp_e resp)
 {
@@ -29,6 +30,7 @@ int hresp2int(t_hresp_e resp)
     case HRESP_500: return 500;
     case HRESP_501: return 501;
     }
+    return 0;
 }
 
 void response_init(t_response_s *res)
@@ -40,6 +42,7 @@ void response_init(t_response_s *res)
     res->rstate.fd = -1;
     res->rstate.sent = 0;
     res->rstate.mod_res.data = NULL;
+    res->final_data_sent = 0;
     module_fill_response_vector(res);
 }
 

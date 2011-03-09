@@ -77,7 +77,7 @@ static char *head_to_upper(char *str)
     char *st = str;
     while (*str) {
         if (*str=='-') *str = '_';
-        else *str = (char)toupper(*str);
+        else *str = (char)toupper(((int)*str));
         ++str;
     }
     return st;
