@@ -64,11 +64,7 @@ static ret_t accept_client(void)
         return MMP_ERR_GENERIC;
     }
     socket_unit_init(&s_sockunits[cl_sock]);
-    s_sockunits[cl_sock].req.IPaddr = xstrdup(inet_ntoa(addr.sin_addr));
-    if (s_sockunits[cl_sock].req.IPaddr==NULL) {
-        mmp_setError(MMP_ERR_ENOMEM);
-        return MMP_ERR_ENOMEM;
-    }
+    strcpy(s_sockunits[cl_sock].req.IPaddr, inet_ntoa(addr.sin_addr));
     s_sockunits[cl_sock].socket = cl_sock;
 #ifndef HAVE_ACCEPT4 /* already done with accept4() */
     mmp_socket_set_nonblocking(&cl_sock);
