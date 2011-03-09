@@ -33,4 +33,6 @@ void response_init(t_response_s *res);
 void response_drop(t_response_s *res);
 t_response_send_e response_send(t_socket_unit_s *su);
 
+int hresp2int(t_hresp_e resp);
+
 #endif /* H_RESPONSE_H */

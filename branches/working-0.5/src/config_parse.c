@@ -128,6 +128,8 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, t_diskv_s *kv)
         return copy_or_die_str(&(csrv->http_root), kv->val);
     if (!strcmp(kv->key, "default_page"))
         return copy_or_die_str(&(csrv->default_page), kv->val);
+    if (!strcmp(kv->key, "log_on_file"))
+        return copy_or_die_int(&(csrv->log_on_file), kv->val);
     if (!strcmp(kv->key, "log_file"))
         return copy_or_die_str(&(csrv->log_file), kv->val);
     if (!strcmp(kv->key, "err_file"))
@@ -251,6 +253,7 @@ static t_config_server_s *disobj_to_config_server(t_disobj_s *obj)
     ret->uid = ret->gid = ret->keepalive_timeout = 0;
     ret->http_root = ret->default_page = ret->log_file = ret->err_file =
         ret->server_meta = ret->modules_basepath = NULL;
+    ret->log_on_file = 0;
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
         if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */

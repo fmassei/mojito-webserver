@@ -21,9 +21,15 @@
 #define SOCKBUFSIZE 8196    /* TODO: calculate this one! */
 
 /* parse the request first line */
-static int parse_first_line(t_request_s *req, const char *line)
+static ret_t parse_first_line(t_request_s *req, const char *line)
 {
     const char *st, *st2;
+    /* save the line */
+    if ((req->first_line = xstrdup(line))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        return MMP_ERR_ENOMEM;
+    }
+    /* check method */
     if (!memcmp(line, "GET ", 4))
         req->method = REQUEST_METHOD_GET;
     else if (!memcmp(line, "HEAD ", 5))
@@ -31,7 +37,7 @@ static int parse_first_line(t_request_s *req, const char *line)
     else if (!memcmp(line, "POST ", 5))
         req->method = REQUEST_METHOD_POST;
     else
-        return -1;
+        return MMP_ERR_GENERIC;
     /* go to next arg. Here and below we skip more than one whitespace if
      * present between arguments. This is not RFC2616 conforming, but adds
      * some robustness to the client/server communication. */
@@ -40,7 +46,11 @@ static int parse_first_line(t_request_s *req, const char *line)
     while (*(++st)==' ' && *st!='\0') ;
     /* find end or space */
     for (st2=st; *st2!='\0' && *st2!=' '; ++st2);
-    req->URI = xmalloc(st2-st+1);
+    /* save URI */
+    if ((req->URI = xmalloc(st2-st+1))==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        return MMP_ERR_ENOMEM;
+    }
     memcpy(req->URI, st, st2-st);
     req->URI[st2-st] = '\0';
     /* find protocol version */
@@ -58,7 +68,7 @@ static int parse_first_line(t_request_s *req, const char *line)
         else if (!memcmp(st, "HTTP/1.0", 8))
             req->protocol = REQUEST_PROTOCOL_HTTP10;
     }
-    return 0;
+    return MMP_ERR_OK;
 }
 
 /* a smarter toupper() function */
@@ -74,12 +84,12 @@ static char *head_to_upper(char *str)
 }
 
 /* parse a generic header line */
-static int parse_header_line(t_request_s *req, char *line)
+static ret_t parse_header_line(t_request_s *req, char *line)
 {
     char *value, c;
     char *endptr; /* useded by strtol */
     if ((value = strchr(line, ':'))==NULL)
-        return 0;
+        return MMP_ERR_OK;
     *value++ = '\0';
     for(c=*value; c=='\0' || c==' ' || c=='\t'; c=*value)
         ++value;
@@ -92,7 +102,7 @@ static int parse_header_line(t_request_s *req, char *line)
                     req->content_length==LONG_MIN))
                 || (errno!=0 && value==0) || (endptr==value)) {
             req->content_length = 0;
-            return 0;
+            return MMP_ERR_OK;
         }
     } else if (!memcmp(line, "ACCEPT_ENCODING", 15) &&
             !req->accept_encoding) {
@@ -106,14 +116,24 @@ static int parse_header_line(t_request_s *req, char *line)
         else if ( (req->protocol==REQUEST_PROTOCOL_HTTP11) &&
                 (!xstrncasecmp(value, "close", strlen(value))) )
             req->keeping_alive = 0;
+    } else if (!memcmp(line, "REFERER", 7)) {
+        if ((req->referer = xstrdup(value))==NULL) {
+            mmp_setError(MMP_ERR_ENOMEM);
+            return MMP_ERR_ENOMEM;
+        }
+    } else if (!memcmp(line, "USER_AGENT", 10)) {
+        if ((req->user_agent = xstrdup(value))==NULL) {
+            mmp_setError(MMP_ERR_ENOMEM);
+            return MMP_ERR_ENOMEM;
+        }
     }
-    return 0;
+    return MMP_ERR_OK;
 }
 
 /* parse an option */
-static int parse_option(t_request_s *req, char *line)
+static ret_t parse_option(t_request_s *req, char *line)
 {
-    if (req->method==0)
+    if (req->method==REQUEST_METHOD_UNKNOWN)
         return parse_first_line(req, line);
     else
         return parse_header_line(req, line);
@@ -208,7 +228,10 @@ t_request_parse_e request_parse_read(t_socket_unit_s *su)
             if (req->parse.status==REQUEST_PARSE_STATUS_LF1) {
                 /* header found */
                 req->parse.buf[req->parse.pos-2] = '\0';
-                parse_option(req, req->parse.cur_head);
+                if (parse_option(req, req->parse.cur_head)!=MMP_ERR_OK) {
+                    mmp_setError(MMP_ERR_PARSE);
+                    return REQUEST_PARSE_ERROR;
+                }
                 req->parse.cur_head = req->parse.buf+req->parse.pos;
             } else if (req->parse.status==REQUEST_PARSE_STATUS_BODY) {
                 filter_sanitize_queue(&req->accept_encoding);

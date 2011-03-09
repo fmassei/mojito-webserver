@@ -20,6 +20,17 @@
 #include "response.h"
 #include <mmp/mmp_mmap.h>
 
+int hresp2int(t_hresp_e resp)
+{
+    switch(resp) {
+    case HRESP_200: return 200;
+    case HRESP_404: return 404;
+    case HRESP_406: return 406;
+    case HRESP_500: return 500;
+    case HRESP_501: return 501;
+    }
+}
+
 void response_init(t_response_s *res)
 {
     *res->resbuf = *res->tmpbuf = '\0';

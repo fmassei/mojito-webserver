@@ -32,6 +32,7 @@ typedef struct config_server_s {
     int keepalive_timeout;
     char *http_root;
     char *default_page;
+    int log_on_file;
     char *log_file;
     char *err_file;
     char *server_meta;

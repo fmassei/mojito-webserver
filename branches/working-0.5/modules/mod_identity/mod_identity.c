@@ -89,6 +89,7 @@ static t_module_ret_e _on_send(t_response_s *res)
             return MOD_ERR;
     }
     res->rstate.sent += ret;
+    res->final_data_sent = res->rstate.sent;
     if (res->rstate.sent>=res->rstate.sb.st_size)
         return MOD_PROCDONE;
     return MOD_AGAIN;

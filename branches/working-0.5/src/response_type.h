@@ -56,6 +56,9 @@ struct response_s {
     t_module_s *mods2run[20];   /* FIXME: max 20 modules */
     int content_length_sent;    /**< has the content-length been sent? */
     t_response_state_s rstate;
+    /* response final data */
+    t_hresp_e final_code;
+    size_t final_data_sent;
 };
 
 #endif /* H_RESPONSE_TYPE_H */

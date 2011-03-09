@@ -203,6 +203,7 @@ static t_module_ret_e _on_send(t_response_s *res)
                 deflate(&state->strm, state->flush);
                 have = s_chunk_length - state->strm.avail_out;
                 written = mmp_write(res->sock, state->out, have);
+                res->final_data_sent += written;
                 if (written!=have) {
                     state->out_written = (written>0) ? written : 0;
                     return MOD_AGAIN;
@@ -214,6 +215,7 @@ static t_module_ret_e _on_send(t_response_s *res)
         have = s_chunk_length - state->out_written;
         if (have>0) {
             written = mmp_write(res->sock, state->out+state->out_written, have);
+            res->final_data_sent += written;
             if (written!=have) {
                 state->out_written += (written>0) ? written : 0;
                 return MOD_AGAIN;
@@ -230,6 +232,7 @@ static t_module_ret_e _on_send(t_response_s *res)
                 deflate(&state->strm, state->flush);
                 have = s_chunk_length - state->strm.avail_out;
                 written = mmp_write(res->sock, state->out, have);
+                res->final_data_sent += written;
                 if (written!=have) {
                     state->out_written = (written>0) ? written : 0;
                     return MOD_AGAIN;
