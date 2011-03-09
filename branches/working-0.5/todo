@@ -20,3 +20,4 @@
 22- signal trap for interruptions
 23- keep alive
 24- trovare dove fa leak, rimuovere più alloc. dinamiche..
+25- rimuovere tutti i warnings

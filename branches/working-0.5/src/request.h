@@ -62,7 +62,7 @@ struct request_s {
     t_request_parse_s parse;
     t_request_method_e method;
     t_request_protocol_e protocol;
-    char *IPaddr;
+    char IPaddr[50];
     char *URI;
     int keeping_alive;
     int post_fd;
