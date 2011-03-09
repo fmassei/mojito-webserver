@@ -2,7 +2,7 @@
 3- load balancer (pre: 8)
 4- mod_fastcgi (pre: 6,5)
 5- mod_cgi (to clean/to test)
-6- prendere post (to test)
+6- prendere post (modificare perché sia continuabile come header)
 7- caching?
 8- binding su una interfaccia (to test)
 9- benchmark
@@ -18,3 +18,5 @@
 19- strings in one file only
 20- cfg for installation
 22- signal trap for interruptions
+23- keep alive
+24- trovare dove fa leak, rimuovere più alloc. dinamiche..

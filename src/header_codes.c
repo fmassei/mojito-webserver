@@ -49,6 +49,7 @@ void header_push_code(t_response_s *resp, t_hresp_e code,
     if ((config = config_get())!=NULL && config->server->server_meta!=NULL) {
         header_send_hs(resp, "Server", config->server->server_meta);
     }
+    resp->final_code = code;
 }
 
 void header_send(t_response_s *resp)
@@ -63,5 +64,7 @@ void header_kill_w_code(t_response_s *resp, t_hresp_e code,
     header_push_code(resp, code, proto_version);
     header_push_contentlength(resp, 0);
     header_send(resp);
+    resp->final_code = code;
+    resp->final_data_sent = 0;
 }
 

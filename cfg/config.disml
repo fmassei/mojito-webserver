@@ -21,7 +21,9 @@ config
   http_root = "/var/www/public_html/default"
   default_page = "index.html"
   # --- logging ---
-  # main log file
+  # use files instead of stdout/stderr (0=no/1=yes)
+  log_on_file = 0
+  # access log file
   log_file = "/tmp/mojito-webserver.log"
   # error log file
   err_file = "/tmp/mojito-webserver.elog"

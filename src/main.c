@@ -26,6 +26,7 @@
 #include "defaults.h"
 #include "module_loader.h"
 #include "scheduler.h"
+#include "logger.h"
 #include "utils.h"
 
 #define SCHEDULER_LEN   10000 /* TODO move to config */
@@ -63,6 +64,11 @@ static ret_t accept_client(void)
         return MMP_ERR_GENERIC;
     }
     socket_unit_init(&s_sockunits[cl_sock]);
+    s_sockunits[cl_sock].req.IPaddr = xstrdup(inet_ntoa(addr.sin_addr));
+    if (s_sockunits[cl_sock].req.IPaddr==NULL) {
+        mmp_setError(MMP_ERR_ENOMEM);
+        return MMP_ERR_ENOMEM;
+    }
     s_sockunits[cl_sock].socket = cl_sock;
 #ifndef HAVE_ACCEPT4 /* already done with accept4() */
     mmp_socket_set_nonblocking(&cl_sock);
@@ -78,6 +84,7 @@ static void kill_client(t_socket sock, int shut)
         DBG_PRINT(("shutting slot %d\n", sock));
     else
         DBG_PRINT(("closing on slot %d\n", sock));
+    log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
     (void)mmp_socket_close(&sock, shut);
     scheduler_del_socket(s_sched_id, sock);
 }
@@ -195,6 +202,7 @@ int main(const int argc, char * const *argv)
     printf(PACKAGE" starting\n");
     printf("using config file '%s'\n", s_conffile);
     if (    (config_manager_loadfile(s_conffile)!=MMP_ERR_OK) ||
+            (log_init()!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
             ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
@@ -204,6 +212,7 @@ int main(const int argc, char * const *argv)
                                         &s_srv_sock)!=MMP_ERR_OK) ||
             (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
+    log_err(LOGTYPE_INFO, "up and running");
     if (s_conffile!=NULL)
         MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_reset();
@@ -216,11 +225,14 @@ int main(const int argc, char * const *argv)
     mmp_socket_close(&s_srv_sock, 1);
     scheduler_destroy(s_sched_id);
     mmp_socket_finiSystem();
+    log_fini();
     config_manager_freeall();
     return EXIT_SUCCESS;
 
 bad_exit:
-    printf("fatal error!\n");
+    /* bad exit (on fatal error). We can rely on the logger, as log_err simply
+     * writes on stderr in any case. */
+    log_err(LOGTYPE_FATAL, "fatal error!\n");
     if (s_conffile!=NULL)
         MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_print(stdout);

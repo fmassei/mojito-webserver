@@ -30,13 +30,24 @@ void request_init(t_request_s *req)
     req->content_length = 0;
     req->content_type = NULL;
     req->accept_encoding = NULL;
+    req->referer = req->user_agent = req->first_line = NULL;
     req->post_fd = -1;
 }
 
 void request_drop(t_request_s *req)
 {
     if (req==NULL) return;
+    if (req->parse.buf!=NULL)
+        xfree(req->parse.buf);
     if (req->accept_encoding!=NULL)
         qhead_list_destroy(&req->accept_encoding);
+    if (req->URI!=NULL)
+        xfree(req->URI);
+    if (req->referer!=NULL)
+        xfree(req->referer);
+    if (req->user_agent!=NULL)
+        xfree(req->user_agent);
+    if (req->first_line!=NULL)
+        xfree(req->first_line);
 }
 

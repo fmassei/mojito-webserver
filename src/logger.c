@@ -16,6 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with Mojito.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <stdio.h>
+#include <stdarg.h>
+#include <mmp/mmp_date.h>
+#include "config_manager.h"
 #include "logger.h"
 
 static const char *logtype2str(t_logtype_e type)
@@ -31,10 +35,12 @@ static const char *logtype2str(t_logtype_e type)
 ret_t log_init(void)
 {
     const t_config_s *cfg = config_get();
-    if ((freopen(cfg->server->log_file, "w+", stdout)==NULL) ||
-        (freopen(cfg->server->err_file, "w+", stderr)==NULL) ) {
-        mmp_setError(MMP_ERR_FILE);
-        return MMP_ERR_FILE;
+    if (cfg->server->log_on_file) {
+        if ((freopen(cfg->server->log_file, "w+", stdout)==NULL) ||
+            (freopen(cfg->server->err_file, "w+", stderr)==NULL) ) {
+            mmp_setError(MMP_ERR_FILE);
+            return MMP_ERR_FILE;
+        }
     }
     return MMP_ERR_OK;
 }
@@ -46,13 +52,23 @@ static void outdate(char *datestr, size_t datestr_len)
     strftime(datestr, datestr_len, "%a %b %d %H:%M:%S %Y", localtime(&t));
 }
 
-void log_hit(void)
+/* log in combined log format */
+void log_hit(t_request_s *req, t_response_s *res)
 {
     char datestr[30];
     outdate(datestr, sizeof(datestr));
-    fprintf(stdout, "%s - - [%s] \"%s\" %d %ul \"%s\" \"%s\",
-        in_ip, datestr, request_line, response_code, response_length,
-        request_referer, request_agent);
+    fprintf(stdout, "%s - - [%s] \"%s\" %d %lu",
+        req->IPaddr, datestr,
+        req->first_line,
+        hresp2int(res->final_code),
+        (unsigned long)res->final_data_sent);
+    if (req->referer!=NULL)
+        fprintf(stdout, " \"%s\"", req->referer);
+    else fprintf(stdout, " -");
+    if (req->user_agent!=NULL)
+        fprintf(stdout, " \"%s\"", req->user_agent);
+    else fprintf(stdout, " -");
+    fprintf(stdout, "\n");
 #ifndef NDEBUG
     fflush(stdout);
 #endif
@@ -79,6 +95,7 @@ void log_err(t_logtype_e type, const char *fmt, ...)
 
 void log_fini(void)
 {
+    fflush(stdout);
+    fflush(stderr);
 }
 
-#endif /* H_LOGGER_H */

@@ -20,15 +20,19 @@
 #define H_LOGGER_H
 
 #include "utils.h"
+#include <mmp/mmp_error.h>
+#include "request.h"
+#include "response_type.h"
 
 typedef enum logtype_e {
     LOGTYPE_INFO,
     LOGTYPE_WARN,
     LOGTYPE_ERR,
+    LOGTYPE_FATAL,
 } t_logtype_e;
 
 ret_t log_init(void);
-void log_hit(void);
+void log_hit(t_request_s *req, t_response_s *res);
 void log_err(t_logtype_e type, const char *fmt, ...);
 void log_fini(void);
 

@@ -62,12 +62,15 @@ struct request_s {
     t_request_parse_s parse;
     t_request_method_e method;
     t_request_protocol_e protocol;
+    char *IPaddr;
     char *URI;
     int keeping_alive;
+    int post_fd;
+    /* specific header infos */
     size_t content_length;
     char *content_type;
     t_qhead_list_s *accept_encoding;
-    int post_fd;
+    char *first_line, *referer, *user_agent;
     /* filled by response */
     char *page, *query_string, *abs_filename;
     const char *mime_type;
