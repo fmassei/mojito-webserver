@@ -37,7 +37,7 @@ struct socket_unit_s {
     t_response_s res;
 };
 
-void socket_unit_init(t_socket_unit_s *su);
-void socket_unit_drop(t_socket_unit_s *su);
+void socket_unit_init(t_socket_unit_s *su, int min_keep);
+void socket_unit_drop(t_socket_unit_s *su, int min_keep);
 
 #endif /* H_SOCKET_UNIT_H */

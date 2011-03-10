@@ -33,10 +33,11 @@ int hresp2int(t_hresp_e resp)
     return 0;
 }
 
-void response_init(t_response_s *res)
+void response_init(t_response_s *res, int min_keep)
 {
     *res->resbuf = *res->tmpbuf = '\0';
-    res->sock = SOCKET_INVALID;
+    if (!min_keep)
+        res->sock = SOCKET_INVALID;
     res->ch_filter = NULL;
     res->content_length_sent = 0;
     res->rstate.fd = -1;
@@ -46,7 +47,7 @@ void response_init(t_response_s *res)
     module_fill_response_vector(res);
 }
 
-void response_drop(t_response_s *resp)
+void response_drop(t_response_s *resp, int min_keep)
 {
 }
 

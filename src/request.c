@@ -19,7 +19,7 @@
 #include "request.h"
 #include <mmp/mmp_files.h>
 
-void request_init(t_request_s *req)
+void request_init(t_request_s *req, int min_keep)
 {
     req->parse.buf = req->parse.cur_head = NULL;
     req->parse.status = REQUEST_PARSE_STATUS_HEAD;
@@ -34,7 +34,7 @@ void request_init(t_request_s *req)
     req->post_fd = -1;
 }
 
-void request_drop(t_request_s *req)
+void request_drop(t_request_s *req, int min_keep)
 {
     if (req==NULL) return;
     if (req->parse.buf!=NULL)
