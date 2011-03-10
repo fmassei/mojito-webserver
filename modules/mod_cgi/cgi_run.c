@@ -21,6 +21,7 @@
 #include "../../common_src/resp_headers.h"
 #include "../../common_src/env_setter.h"
 #include "../../src/utils.h"
+#include <mmp/mmp_dir.h>
 
 static char **nuenv = NULL;
 static int nenv = 0;
@@ -39,7 +40,7 @@ static ret_t prepare_env(t_request_s *req)
 /*    if (env_add(nuenv, nenv, "PATH_INFO=/")!=0) return -1;
     if (env_add_kv(nuenv, nenv, "PATH_TRANSLATED", dirname(filename))!=0)
         return -1;
-    if (env_add_kv(nuenv, nenv, "SCRIPT_NAME", basename(filename))!=0)
+    if (env_add_kv(nuenv, nenv, "SCRIPT_NAME", mmp_basename(filename))!=0)
         return -1;*/
     if (env_add_kv(nuenv, nenv, "REQUEST_METHOD", request_method_string(req->method))!=0)
         return -1;
@@ -86,7 +87,7 @@ int cgi_run(t_request_s *req, t_response_s *res)
         header_push_code(res, HRESP_200, req->protocol);
         mmp_socket_write(&res->sock, res->resbuf, strlen(res->resbuf));
         /* FIXME: check for basename */
-        execle(req->abs_filename, basename(req->abs_filename), (char*)0, nuenv);
+        execle(req->abs_filename, mmp_basename(req->abs_filename), (char*)0, nuenv);
         /* should not happen */
         DBG_PRINT(("[mod_cgi] Error execle!\n"));
         mmp_setError(MMP_ERR_FILE);
