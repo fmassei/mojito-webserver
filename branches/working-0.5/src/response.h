@@ -29,8 +29,8 @@
 #include "filter_manager.h"
 #include "socket_unit.h"
 
-void response_init(t_response_s *res);
-void response_drop(t_response_s *res);
+void response_init(t_response_s *res, int min_keep);
+void response_drop(t_response_s *res, int min_keep);
 t_response_send_e response_send(t_socket_unit_s *su);
 
 int hresp2int(t_hresp_e resp);

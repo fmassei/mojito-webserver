@@ -76,7 +76,7 @@ struct request_s {
     const char *mime_type;
 };
 
-void request_init(t_request_s *req);
-void request_drop(t_request_s *req);
+void request_init(t_request_s *req, int min_keep);
+void request_drop(t_request_s *req, int min_keep);
 
 #endif /* H_REQUEST_H */

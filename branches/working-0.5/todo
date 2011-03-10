@@ -22,3 +22,5 @@
 24- trovare dove fa leak, rimuovere più alloc. dinamiche..
 25- rimuovere tutti i warnings (deep fix)
 26- sistemare tutti FIXME/TODO/XXX
+27- provare le configurazioni con dynamic disabilitato
+28- aggiungere altri scheduler

@@ -19,16 +19,16 @@
 #include "socket_unit.h"
 #include "utils.h"
 
-void socket_unit_init(t_socket_unit_s *su)
+void socket_unit_init(t_socket_unit_s *su, int min_keep)
 {
     su->state = SOCKET_STATE_READREQUEST;
-    request_init(&su->req);
-    response_init(&su->res);
+    request_init(&su->req, min_keep);
+    response_init(&su->res, min_keep);
 }
 
-void socket_unit_drop(t_socket_unit_s *su)
+void socket_unit_drop(t_socket_unit_s *su, int min_keep)
 {
-    request_drop(&su->req);
-    response_drop(&su->res);
+    request_drop(&su->req, min_keep);
+    response_drop(&su->res, min_keep);
 }
 

@@ -63,7 +63,7 @@ static ret_t accept_client(void)
         mmp_setError(MMP_ERR_GENERIC);
         return MMP_ERR_GENERIC;
     }
-    socket_unit_init(&s_sockunits[cl_sock]);
+    socket_unit_init(&s_sockunits[cl_sock], 0);
     strcpy(s_sockunits[cl_sock].req.IPaddr, inet_ntoa(addr.sin_addr));
     s_sockunits[cl_sock].socket = cl_sock;
 #ifndef HAVE_ACCEPT4 /* already done with accept4() */
@@ -74,6 +74,13 @@ static ret_t accept_client(void)
     return MMP_ERR_OK;
 }
 
+static void keep_alive(t_socket sock)
+{
+    DBG_PRINT(("keeping alive slot %d\n", sock));
+    socket_unit_drop(&s_sockunits[sock], 1);
+    socket_unit_init(&s_sockunits[sock], 1);
+}
+
 static void kill_client(t_socket sock, int shut)
 {
     if (shut)
@@ -81,8 +88,9 @@ static void kill_client(t_socket sock, int shut)
     else
         DBG_PRINT(("closing on slot %d\n", sock));
     log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
-    (void)mmp_socket_close(&sock, shut);
     scheduler_del_socket(s_sched_id, sock);
+    socket_unit_drop(&s_sockunits[sock], 0);
+    (void)mmp_socket_close(&sock, shut);
 }
 
 static ret_t client_action(t_socket sock)
@@ -103,12 +111,17 @@ static ret_t client_action(t_socket sock)
             if (rres==RESPONSE_SEND_MODDONE) {
                 /* done by module */
                 DBG_PRINT(("done by module\n"));
-                kill_client(sock, 0);
-            } else if (rres!=RESPONSE_SEND_CONTINUE) {
-                /* error, or it's already finished */
-                kill_client(sock, 1);
-            } else {
+                kill_client(sock, 0); /* don't shutdown the socket */
+            } else if (rres==RESPONSE_SEND_FINISH) {
+                if (s_sockunits[sock].req.keeping_alive)
+                    keep_alive(sock);
+                else
+                    kill_client(sock, 1);
+            } else if (rres==RESPONSE_SEND_CONTINUE) {
                 s_sockunits[sock].state = SOCKET_STATE_WRITERESPONSE;
+            } else {
+                /* error */
+                kill_client(sock, 1);
             }
             break;
         case REQUEST_PARSE_CONTINUE:
@@ -121,10 +134,16 @@ static ret_t client_action(t_socket sock)
         case RESPONSE_SEND_CLOSECONN:
         case RESPONSE_SEND_ERROR:
         case RESPONSE_SEND_FINISH:
-            kill_client(sock, 1);
+            if (s_sockunits[sock].req.keeping_alive)
+                keep_alive(sock);
+            else
+                kill_client(sock, 1);
             break;
         case RESPONSE_SEND_MODDONE:
-            kill_client(sock, 0);
+            if (s_sockunits[sock].req.keeping_alive)
+                keep_alive(sock);
+            else
+                kill_client(sock, 0); /* don't shut down the socket */
             break;
         case RESPONSE_SEND_CONTINUE:
             DBG_PRINT(("continue sending on slot %d\n", sock));
