@@ -23,4 +23,6 @@
 25- rimuovere tutti i warnings (deep fix)
 26- sistemare tutti FIXME/TODO/XXX
 27- provare le configurazioni con dynamic disabilitato
-28- aggiungere altri scheduler
+28- aggiungere altri scheduler (select/kevent/etc)
+29- correggere gestione fd (socket_units/stdin/etc.)
+30- gestione mime 

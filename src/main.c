@@ -76,9 +76,12 @@ static ret_t accept_client(void)
 
 static void keep_alive(t_socket sock)
 {
+    const t_config_s *cfg = config_get();
     DBG_PRINT(("keeping alive slot %d\n", sock));
     socket_unit_drop(&s_sockunits[sock], 1);
     socket_unit_init(&s_sockunits[sock], 1);
+    s_sockunits[sock].req.keeping_alive_killtime = 
+            time(NULL) + cfg->server->keepalive_timeout;
 }
 
 static void kill_client(t_socket sock, int shut)
