@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <mmp/mmp_memory.h>
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_files.h>
@@ -64,8 +65,9 @@ struct request_s {
     t_request_protocol_e protocol;
     char IPaddr[50];
     char *URI;
-    int keeping_alive;
     int post_fd;
+    int keeping_alive;
+    time_t keeping_alive_killtime;
     /* specific header infos */
     size_t content_length;
     char *content_type;
