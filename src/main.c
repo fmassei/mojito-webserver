@@ -20,16 +20,19 @@
 #include <mmp/mmp_trace.h>
 #include <mmp/mmp_socket.h>
 #include <mmp/mmp_getopt.h>
+#include <mmp/mmp_queue.h>
 #include "socket_unit.h"
 #include "config_manager.h"
 #include "request_parse.h"
 #include "defaults.h"
 #include "module_loader.h"
 #include "scheduler.h"
+#include "lptask.h"
 #include "logger.h"
 #include "utils.h"
 
 #define SCHEDULER_LEN   10000 /* TODO move to config */
+#define LPTASKSEC       4
 
 /* very very static global stuff.. */
 static t_socket s_srv_sock;                         /* listener socket */
@@ -37,6 +40,21 @@ static t_sched_id s_sched_id;                       /* scheduler id */
 static t_socket_unit_s s_sockunits[SCHEDULER_LEN];  /* socket units */
 /* options from command line */
 static char *s_conffile = NULL;                     /* custom config file */
+
+static t_mmp_queue_s *s_ka_queue;
+
+ret_t kaqueue_create(int size)
+{
+    if ((s_ka_queue = mmp_queue_create(size))==NULL) {
+        mmp_setError_ext(MMP_ERR_GENERIC, "error creating kaqueue.");
+        return MMP_ERR_GENERIC;
+    }
+    return MMP_ERR_OK;
+}
+void kaqueue_destroy(void)
+{
+    mmp_queue_destroy(&s_ka_queue);
+}
 
 /* TODO: wrap the accept calls */
 static ret_t accept_client(void)
@@ -74,33 +92,56 @@ static ret_t accept_client(void)
     return MMP_ERR_OK;
 }
 
-static void keep_alive(t_socket sock)
-{
-    const t_config_s *cfg = config_get();
-    DBG_PRINT(("keeping alive slot %d\n", sock));
-    socket_unit_drop(&s_sockunits[sock], 1);
-    socket_unit_init(&s_sockunits[sock], 1);
-    s_sockunits[sock].req.keeping_alive_killtime = 
-            time(NULL) + cfg->server->keepalive_timeout;
-}
-
 static void kill_client(t_socket sock, int shut)
 {
     if (shut)
         DBG_PRINT(("shutting slot %d\n", sock));
     else
         DBG_PRINT(("closing on slot %d\n", sock));
-    log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
+    if (s_sockunits[sock].state!=SOCKET_STATE_KEEPALIVE)
+        log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
     scheduler_del_socket(s_sched_id, sock);
     socket_unit_drop(&s_sockunits[sock], 0);
     (void)mmp_socket_close(&sock, shut);
 }
 
+static void keep_alive(t_socket sock)
+{
+    const t_config_s *cfg = config_get();
+    log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
+    DBG_PRINT(("keeping alive slot %d\n", sock));
+    socket_unit_drop(&s_sockunits[sock], 1);
+    socket_unit_init(&s_sockunits[sock], 1);
+    s_sockunits[sock].state = SOCKET_STATE_KEEPALIVE;
+    s_sockunits[sock].req.keeping_alive_killtime = 
+            time(NULL) + cfg->server->keepalive_timeout;
+    if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK) {
+        lptask();
+        if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK)
+            kill_client(sock, 1);
+    }
+}
+
+void lptask(void)
+{
+    t_socket_unit_s *eptr;
+    DBG_PRINT(("lptask running.\n"));
+    lptask_update_timer();
+    while (mmp_queue_first(s_ka_queue, &eptr)!=MMP_ERR_EMPTY) {
+        if (eptr->req.keeping_alive_killtime>time(NULL))
+            break;
+        DBG_PRINT(("ka timeout.\n"));
+        mmp_queue_dequeue(s_ka_queue, &eptr);
+        kill_client(eptr->res.sock, 1);
+    }
+}
 static ret_t client_action(t_socket sock)
 {
     t_request_parse_e rreq;
     t_response_send_e rres;
     DBG_PRINT(("data on slot %d\n", sock));
+    if (s_sockunits[sock].state==SOCKET_STATE_KEEPALIVE)
+        s_sockunits[sock].state = SOCKET_STATE_READREQUEST;
     if (s_sockunits[sock].state==SOCKET_STATE_READREQUEST) {
         rreq = request_parse_read(&s_sockunits[sock]);
         switch(rreq) {
@@ -221,6 +262,8 @@ int main(const int argc, char * const *argv)
     printf("using config file '%s'\n", s_conffile);
     if (    (config_manager_loadfile(s_conffile)!=MMP_ERR_OK) ||
             (log_init()!=MMP_ERR_OK) ||
+            (lptask_init()!=MMP_ERR_OK) ||
+            (kaqueue_create(SCHEDULER_LEN)!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
             ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
@@ -235,7 +278,8 @@ int main(const int argc, char * const *argv)
         MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_reset();
     while(!done) {
-        if (scheduler_loop(s_sched_id, someone_calling)!=SCHEDRET_OK) {
+        if (scheduler_loop(s_sched_id, someone_calling,
+                    lptask_ms2run(), lptask)!=SCHEDRET_OK) {
             mmp_trace_print(stdout);
             goto bad_exit;
         }

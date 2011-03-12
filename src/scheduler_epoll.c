@@ -77,22 +77,30 @@ ret_t scheduler_epoll_del_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_OK;
 }
 
-t_sched_ret_e scheduler_epoll_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp)
+t_sched_ret_e scheduler_epoll_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp,
+                                        int millisecs, t_schedto_fp cback_to)
 {
     int nfds, n, cback_err = 0;
 repoll:
-    if ((nfds = epoll_wait(sched_id, s_events, s_pool_size, -1))==-1) {
+    if ((nfds = epoll_wait(sched_id, s_events, s_pool_size, millisecs))==-1) {
 #ifndef NDEBUG
         if (errno==EINTR) goto repoll; /* FIXME: remove this */
 #endif
         mmp_setError(MMP_ERR_GENERIC);
         return SCHEDRET_ERR;
     }
-    for (n=0; n<nfds; ++n)
-        if (cback_fp(s_events[n].data.fd)!=SCHEDFNCRET_OK) {
-            mmp_setError(MMP_ERR_GENERIC);
-            cback_err = 1;
-        } 
+    if (nfds==0) {
+        if (cback_to!=NULL)
+            cback_to();
+        return SCHEDRET_OK;
+    } else {
+        for (n=0; n<nfds; ++n) {
+            if (cback_fp(s_events[n].data.fd)!=SCHEDFNCRET_OK) {
+                mmp_setError(MMP_ERR_GENERIC);
+                cback_err = 1;
+            }
+        }
+    }
     return (cback_err) ? SCHEDRET_CBACKERR : SCHEDRET_OK;
 }
 

@@ -48,7 +48,8 @@ ret_t scheduler_fake_del_socket(t_sched_id sched_id, t_socket sock)
     return MMP_ERR_GENERIC;
 }
 
-t_sched_ret_e scheduler_fake_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp)
+t_sched_ret_e scheduler_fake_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp,
+                                        int millisecs, t_schedto_fp cback_to)
 {
     mmp_setError_ext(MMP_ERR_GENERIC, "Could not work with fake scheduler!");
     return SCHEDRET_ERR;

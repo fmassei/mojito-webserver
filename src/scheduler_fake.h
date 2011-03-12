@@ -26,7 +26,8 @@ void scheduler_fake_destroy(t_sched_id sched_id);
 ret_t scheduler_fake_add_listen_socket(t_sched_id sched_id, t_socket sock);
 ret_t scheduler_fake_add_client_socket(t_sched_id sched_id, t_socket sock);
 ret_t scheduler_fake_del_socket(t_sched_id sched_id, t_socket sock);
-t_sched_ret_e scheduler_fake_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp);
+t_sched_ret_e scheduler_fake_loop(t_sched_id sched_id, t_schedfnc_fp cback_fp,
+                                        int millisecs, t_schedto_fp cback_to);
 #endif /* BUILD_FAKE_SCHEDULER */
 
 #endif /* H_SCHEDULER_FAKE_H */
