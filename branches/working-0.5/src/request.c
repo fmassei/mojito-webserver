@@ -38,16 +38,16 @@ void request_drop(t_request_s *req, int min_keep)
 {
     if (req==NULL) return;
     if (req->parse.buf!=NULL)
-        xfree(req->parse.buf);
+        MMP_XFREE_AND_NULL(req->parse.buf);
     if (req->accept_encoding!=NULL)
         qhead_list_destroy(&req->accept_encoding);
     if (req->URI!=NULL)
-        xfree(req->URI);
+        MMP_XFREE_AND_NULL(req->URI);
     if (req->referer!=NULL)
-        xfree(req->referer);
+        MMP_XFREE_AND_NULL(req->referer);
     if (req->user_agent!=NULL)
-        xfree(req->user_agent);
+        MMP_XFREE_AND_NULL(req->user_agent);
     if (req->first_line!=NULL)
-        xfree(req->first_line);
+        MMP_XFREE_AND_NULL(req->first_line);
 }
 

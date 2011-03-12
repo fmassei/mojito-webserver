@@ -35,7 +35,11 @@ typedef enum schedfnc_ret_e {
     SCHEDFNCRET_OK,
     SCHEDFNCRET_ERR
 } t_schedfnc_ret_e;
+
+/* callback function */
 typedef t_schedfnc_ret_e(*t_schedfnc_fp)(t_socket);
+/* timeout function */
+typedef void(*t_schedto_fp)(void);
 
 #ifdef HAVE_SYS_EPOLL_H
 #   define BUILD_EPOLL_SCHEDULER

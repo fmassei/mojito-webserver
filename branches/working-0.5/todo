@@ -26,3 +26,4 @@
 28- aggiungere altri scheduler (select/kevent/etc)
 29- correggere gestione fd (socket_units/stdin/etc.)
 30- gestione mime 
+31- rimuovere valori dagli enum
