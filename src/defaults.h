@@ -27,6 +27,7 @@
 #define DEFAULT_LISTEN_QUEUE    100
 #define DEFAULT_TMP_DIR         "/tmp/"
 #define DEFAULT_KEEPALIVE_TO    5
+#define DEFAULT_KEEPALIVE_MAX   10
 #define DEFAULT_DEFAULT_PAGE    "index.html"
 #define DEFAULT_SERVER_META     "Mojito 0.4b"
 #define DEFAULT_NUM_SU          64

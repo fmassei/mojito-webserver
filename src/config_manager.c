@@ -56,6 +56,11 @@ static ret_t check_config(void)
             DEFAULT_KEEPALIVE_TO);
         s_config->server->keepalive_timeout = DEFAULT_KEEPALIVE_TO;
     }
+    if (s_config->server->keepalive_max==0) {
+        printf("config_manager: missing keepalive_max, defaulting to %d\n",
+            DEFAULT_KEEPALIVE_MAX);
+        s_config->server->keepalive_timeout = DEFAULT_KEEPALIVE_MAX;
+    }
     if (s_config->server->default_page==NULL) {
         printf("config_manager: missing deafault_page, defaulting to %s\n",
             DEFAULT_DEFAULT_PAGE);
@@ -89,6 +94,10 @@ ret_t config_manager_loadfile(const char *filename)
     }
     if ((s_config = disobj_to_config(obj))==NULL) {
         mmp_trace_print(stdout);
+        return MMP_ERR_PARSE;
+    }
+    if (check_config()!=MMP_ERR_OK) {
+        mmp_setError(MMP_ERR_PARSE);
         return MMP_ERR_PARSE;
     }
     disobj_destroy(&obj);

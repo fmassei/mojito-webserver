@@ -115,10 +115,19 @@ static void keep_alive(t_socket sock)
     s_sockunits[sock].state = SOCKET_STATE_KEEPALIVE;
     s_sockunits[sock].req.keeping_alive_killtime = 
             time(NULL) + cfg->server->keepalive_timeout;
-    if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK) {
-        lptask();
-        if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK)
-            kill_client(sock, 1);
+    if (s_sockunits[sock].req.keeping_alive_hits==-1) {
+        s_sockunits[sock].req.keeping_alive_hits = cfg->server->keepalive_max;
+        if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK) {
+            /* error. try to free the queue and retry */
+            lptask();
+            if (mmp_queue_enqueue(s_ka_queue, &s_sockunits[sock])!=MMP_ERR_OK)
+                /* whatever. just die. */
+                kill_client(sock, 1);
+        }
+    }
+    if ((--s_sockunits[sock].req.keeping_alive_hits)<=0) {
+        DBG_PRINT(("max keepalive hits for slot %d\n", sock));
+        kill_client(sock, 1);
     }
 }
 

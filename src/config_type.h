@@ -30,6 +30,7 @@ typedef struct config_server_s {
     char *pid_file;
     int uid, gid;
     int keepalive_timeout;
+    int keepalive_max;
     char *http_root;
     char *default_page;
     int log_on_file;

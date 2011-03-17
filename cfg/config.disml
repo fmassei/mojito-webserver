@@ -17,6 +17,7 @@ config
   gid = 1000
   # --- keepalive stuff ---
   keepalive_timeout = 5
+  keepalive_max = 10
   # --- base folder for files ---
   http_root = "/var/www/public_html/default"
   default_page = "index.html"
