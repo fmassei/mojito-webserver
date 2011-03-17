@@ -27,6 +27,8 @@ void request_init(t_request_s *req, int min_keep)
     req->protocol = REQUEST_PROTOCOL_UNKNOWN;
     req->URI = NULL;
     req->keeping_alive = 0;
+    if (min_keep==0)
+        req->keeping_alive_hits = -1;
     req->content_length = 0;
     req->content_type = NULL;
     req->accept_encoding = NULL;

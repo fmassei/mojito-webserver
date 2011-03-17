@@ -124,6 +124,8 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, t_diskv_s *kv)
         return copy_or_die_int(&(csrv->gid), kv->val);
     if (!strcmp(kv->key, "keepalive_timeout"))
         return copy_or_die_int(&(csrv->keepalive_timeout), kv->val);
+    if (!strcmp(kv->key, "keepalive_max"))
+        return copy_or_die_int(&(csrv->keepalive_max), kv->val);
     if (!strcmp(kv->key, "http_root"))
         return copy_or_die_str(&(csrv->http_root), kv->val);
     if (!strcmp(kv->key, "default_page"))
@@ -250,7 +252,8 @@ static t_config_server_s *disobj_to_config_server(t_disobj_s *obj)
     }
     ret->listen_port = ret->listen_queue = 0;
     ret->tmp_dir = ret->pid_file = NULL;
-    ret->uid = ret->gid = ret->keepalive_timeout = 0;
+    ret->uid = ret->gid = 0;
+    ret->keepalive_timeout = ret->keepalive_max = 0;
     ret->http_root = ret->default_page = ret->log_file = ret->err_file =
         ret->server_meta = ret->modules_basepath = NULL;
     ret->log_on_file = 0;

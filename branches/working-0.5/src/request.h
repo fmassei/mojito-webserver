@@ -67,6 +67,7 @@ struct request_s {
     char *URI;
     int post_fd;
     int keeping_alive;
+    int keeping_alive_hits;
     time_t keeping_alive_killtime;
     /* specific header infos */
     size_t content_length;

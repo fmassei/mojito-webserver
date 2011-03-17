@@ -157,10 +157,17 @@ t_response_send_e response_send(t_socket_unit_s *su)
          * FIXME this is very ugly. Move this check somewhere else */
         req->keeping_alive = 0;
     } else if (req->keeping_alive==1 &&
-            req->protocol!=REQUEST_PROTOCOL_HTTP11) {
+            req->protocol==REQUEST_PROTOCOL_HTTP10) {
         /* HTTP10 requests need to know that we accepted the persistent
          * connection */
-        header_send_hs(res, "Keep-Alive", "timeout=15, max=99");
+        const t_config_s *cfg = config_get();
+        char tmpbuf[0xff];
+        sprintf(tmpbuf, "timeout=%d, max=%d",
+            cfg->server->keepalive_timeout,
+            req->keeping_alive_hits>=0
+                    ? req->keeping_alive_hits
+                    : cfg->server->keepalive_max);
+        header_send_hs(res, "Keep-Alive", tmpbuf);
         header_send_hs(res, "Connection", "Keep-Alive");
     }
     header_send(res);
