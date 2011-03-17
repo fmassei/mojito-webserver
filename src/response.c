@@ -152,10 +152,17 @@ t_response_send_e response_send(t_socket_unit_s *su)
     if ((mod_ret = on_prehead(res))!=MODRET_OK) {
         return RESPONSE_SEND_FINISH;
     }
-    /* no length? no party. We can't keep the connection alive 
-     * FIXME this is very ugly. Move this check somewhere else */
-    if (req->keeping_alive==1 && res->content_length_sent==0)
+    if (req->keeping_alive==1 && res->content_length_sent==0) {
+        /* no length? no party. We can't keep the connection alive 
+         * FIXME this is very ugly. Move this check somewhere else */
         req->keeping_alive = 0;
+    } else if (req->keeping_alive==1 &&
+            req->protocol!=REQUEST_PROTOCOL_HTTP11) {
+        /* HTTP10 requests need to know that we accepted the persistent
+         * connection */
+        header_send_hs(res, "Keep-Alive", "timeout=15, max=99");
+        header_send_hs(res, "Connection", "Keep-Alive");
+    }
     header_send(res);
     if (req->method==REQUEST_METHOD_HEAD) {
         return RESPONSE_SEND_FINISH;
