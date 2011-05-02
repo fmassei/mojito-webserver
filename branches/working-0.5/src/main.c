@@ -21,12 +21,12 @@
 #include <mmp/mmp_socket.h>
 #include <mmp/mmp_getopt.h>
 #include <mmp/mmp_queue.h>
+#include <mmp/mmp_sock_scheduler.h>
 #include "socket_unit.h"
 #include "config_manager.h"
 #include "request_parse.h"
 #include "defaults.h"
 #include "module_loader.h"
-#include "scheduler.h"
 #include "lptask.h"
 #include "logger.h"
 #include "utils.h"
@@ -36,7 +36,7 @@
 
 /* very very static global stuff.. */
 static t_socket s_srv_sock;                         /* listener socket */
-static t_sched_id s_sched_id;                       /* scheduler id */
+static t_mmp_sched_id s_sched_id;                   /* scheduler id */
 static t_socket_unit_s s_sockunits[SCHEDULER_LEN];  /* socket units */
 /* options from command line */
 static char *s_conffile = NULL;                     /* custom config file */
@@ -87,7 +87,7 @@ static ret_t accept_client(void)
 #ifndef HAVE_ACCEPT4 /* already done with accept4() */
     mmp_socket_set_nonblocking(&cl_sock);
 #endif
-    scheduler_add_client_socket(s_sched_id, cl_sock);
+    mmp_scheduler_add_client_socket(s_sched_id, cl_sock);
     DBG_PRINT(("main loop: accepted %s\n", inet_ntoa(addr.sin_addr)));
     return MMP_ERR_OK;
 }
@@ -100,7 +100,7 @@ static void kill_client(t_socket sock, int shut)
         DBG_PRINT(("closing on slot %d\n", sock));
     if (s_sockunits[sock].state!=SOCKET_STATE_KEEPALIVE)
         log_hit(&s_sockunits[sock].req, &s_sockunits[sock].res);
-    scheduler_del_socket(s_sched_id, sock);
+    mmp_scheduler_del_socket(s_sched_id, sock);
     socket_unit_drop(&s_sockunits[sock], 0);
     (void)mmp_socket_close(&sock, shut);
 }
@@ -206,20 +206,20 @@ static ret_t client_action(t_socket sock)
     return MMP_ERR_OK;
 }
 
-static t_schedfnc_ret_e someone_calling(t_socket sock)
+static t_mmp_schedfnc_ret_e someone_calling(t_socket sock)
 {
     if (sock==s_srv_sock) {
         if (accept_client()!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_GENERIC);
-            return SCHEDRET_CBACKERR;
+            return MMP_SCHEDRET_CBACKERR;
         }
     } else {
         if (client_action(sock)!=MMP_ERR_OK) {
             mmp_setError(MMP_ERR_GENERIC);
-            return SCHEDRET_CBACKERR;
+            return MMP_SCHEDRET_CBACKERR;
         }
     }
-    return SCHEDFNCRET_OK;
+    return MMP_SCHEDFNCRET_OK;
 }
 
 static void usage(void)
@@ -275,26 +275,27 @@ int main(const int argc, char * const *argv)
             (kaqueue_create(SCHEDULER_LEN)!=MMP_ERR_OK) ||
             (mmp_socket_initSystem()!=MMP_ERR_OK) ||
             (module_loader_load(config_get())!=MMP_ERR_OK) ||
-            ((s_sched_id = scheduler_create(SCHEDULER_LEN))<0) ||
+            ((s_sched_id = mmp_scheduler_create(SCHEDULER_LEN))<0) ||
             (mmp_socket_server_start_bind(config_get()->server->listen_port,
                                         config_get()->server->listen_queue,
                                         config_get()->server->interface,
                                         &s_srv_sock)!=MMP_ERR_OK) ||
-            (scheduler_add_listen_socket(s_sched_id, s_srv_sock)!=MMP_ERR_OK) )
+            (mmp_scheduler_add_listen_socket(s_sched_id,
+                                        s_srv_sock)!=MMP_ERR_OK) )
         goto bad_exit;
     log_err(LOGTYPE_INFO, "up and running");
     if (s_conffile!=NULL)
         MMP_XFREE_AND_NULL(s_conffile);
     mmp_trace_reset();
     while(!done) {
-        if (scheduler_loop(s_sched_id, someone_calling,
-                    lptask_ms2run(), lptask)!=SCHEDRET_OK) {
+        if (mmp_scheduler_loop(s_sched_id, someone_calling,
+                    lptask_ms2run(), lptask)!=MMP_SCHEDRET_OK) {
             mmp_trace_print(stdout);
             goto bad_exit;
         }
     }
     mmp_socket_close(&s_srv_sock, 1);
-    scheduler_destroy(s_sched_id);
+    mmp_scheduler_destroy(s_sched_id);
     mmp_socket_finiSystem();
     log_fini();
     config_manager_freeall();
