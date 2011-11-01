@@ -18,14 +18,13 @@
 */
 #include <time.h>
 #include "lptask.h"
-
-#define LPTASKSEC       4
+#include "config_manager.h"
 
 static time_t s_time4lptask;
 
 void lptask_update_timer(void)
 {
-    s_time4lptask = time(NULL)+LPTASKSEC;
+    s_time4lptask = time(NULL)+config_get()->server->lptask_sec;
 }
 
 ret_t lptask_init(void)

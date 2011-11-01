@@ -33,6 +33,8 @@ config
   # --- socket units data ---
   num_socket_units = 64
   num_socket_units_fds = 64
+  # --- low priority task delay --
+  lptask_sec = 4
   # --- module base path --- 
   modules_basepath = "/usr/local/lib/mojito-webserver"
  modules

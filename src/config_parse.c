@@ -144,6 +144,8 @@ static ret_t parse_config_server_kv(t_config_server_s *csrv, t_diskv_s *kv)
         return copy_or_die_int(&(csrv->num_socket_units), kv->val);
     if (!strcmp(kv->key, "num_socket_units_fds"))
         return copy_or_die_int(&(csrv->num_socket_units_fds), kv->val);
+    if (!strcmp(kv->key, "lptask_sec"))
+        return copy_or_die_int(&(csrv->lptask_sec), kv->val);
     sprintf(buf, "Unknown option %.80s\n", kv->key);
     mmp_setError_ext(MMP_ERR_PARSE, buf);
     return MMP_ERR_PARSE;
@@ -257,6 +259,7 @@ static t_config_server_s *disobj_to_config_server(t_disobj_s *obj)
     ret->http_root = ret->default_page = ret->log_file = ret->err_file =
         ret->server_meta = ret->modules_basepath = NULL;
     ret->log_on_file = 0;
+    ret->lptask_sec = 0;
     for (p=obj->elemlist->head; p!=NULL; p=p->next) {
         if ((de = (t_diselem_s *)p->data)==NULL)
             continue; /* try to go on anyway */
