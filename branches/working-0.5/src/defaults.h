@@ -32,5 +32,6 @@
 #define DEFAULT_SERVER_META     "Mojito 0.4b"
 #define DEFAULT_NUM_SU          64
 #define DEFAULT_NUM_SU_FDS      64
+#define DEFAULT_LPTASK_SEC      4
 
 #endif /* H_DEFAULTS_H */

@@ -40,6 +40,7 @@ typedef struct config_server_s {
     char *modules_basepath;
     int num_socket_units;
     int num_socket_units_fds;
+    int lptask_sec;
 } t_config_server_s;
 
 /* a single module setting conf. We have a list of these in t_config_module_s */

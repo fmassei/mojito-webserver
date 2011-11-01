@@ -76,6 +76,9 @@ static ret_t check_config(void)
     if (s_config->server->num_socket_units_fds==0) {
         s_config->server->num_socket_units_fds = DEFAULT_NUM_SU_FDS;
     }
+    if (s_config->server->lptask_sec==0) {
+        s_config->server->lptask_sec = DEFAULT_LPTASK_SEC;
+    }
     return MMP_ERR_OK;
 }
 
